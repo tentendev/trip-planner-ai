@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import InputForm from './components/InputForm';
 import ItineraryDisplay from './components/ItineraryDisplay';
+import LoadingOverlay from './components/LoadingOverlay';
 import { generateTripPlan } from './services/geminiService';
 import { TripInput, LoadingState, GeneratedPlan, Language } from './types';
 import { Globe, Terminal, ChevronDown, Check } from 'lucide-react';
@@ -211,6 +212,11 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen text-slate-800 pb-20 flex flex-col font-sans relative">
       <div className="aurora-bg"></div>
+
+      {/* Loading Overlay */}
+      {loadingState === LoadingState.GENERATING && (
+        <LoadingOverlay language={language} />
+      )}
       
       <header className="bg-white/70 backdrop-blur-md border-b border-white/20 sticky top-0 z-50 no-print flex-none supports-[backdrop-filter]:bg-white/60">
         <div className="max-w-5xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">

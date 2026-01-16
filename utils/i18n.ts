@@ -23,8 +23,20 @@ const BASE_EN = {
     title: 'Perfect Trip,<br/>Zero Friction.',
     desc: 'Your AI-powered comprehensive travel planner. We craft actionable, optimized itineraries based on your pace, budget, and constraints.',
   },
-  loading: 'Optimizing route & budget...',
   error: 'Generation failed. Please check your API Key or try again later.',
+  loading: {
+    title: 'Crafting Your Journey',
+    subtitle: 'AI is planning your perfect trip',
+    tip_label: 'Did you know?',
+    tips: [
+      'Our AI analyzes weather forecasts to optimize your outdoor activities.',
+      'We geo-cluster attractions to minimize your travel time between spots.',
+      'Trip OS considers local events and peak hours for each destination.',
+      'Your pace preference helps us balance relaxation with exploration.',
+      'We check real-time data to suggest the best dining options.',
+    ],
+    estimated_time: 'Usually takes 30-60 seconds'
+  },
   actions: {
     submit: 'Generate Trip OS Plan',
     refine: 'Refine Trip',
@@ -103,7 +115,19 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       title: '完美旅程，<br/>零摩擦体验。',
       desc: 'AI 驱动的全方位旅游规划师，根据您的节奏、预算和限制，打造可直接执行的最佳化行程。',
     },
-    loading: '正在优化路线与预算...',
+    loading: {
+      title: '正在规划您的旅程',
+      subtitle: 'AI 正在为您打造完美行程',
+      tip_label: '小知识',
+      tips: [
+        '我们的 AI 会分析天气预报，优化您的户外活动安排。',
+        '我们会将相邻景点分组，减少您在景点间的移动时间。',
+        'Trip OS 会考虑当地活动和高峰时段。',
+        '您的节奏偏好帮助我们平衡休闲与探索。',
+        '我们会查询实时数据，为您推荐最佳餐饮选择。',
+      ],
+      estimated_time: '通常需要 30-60 秒'
+    },
     error: '生成失败，请检查 API Key 或稍后再试。',
     actions: { ...BASE_EN.actions, submit: '生成行程计划', refine: '调整行程', export: '导出行程', copy: '复制 Markdown', copied: '已复制', download: '导出 Markdown 文件', print: '打印行程', clear: '清除历史', share: '分享链接' },
     form: {
@@ -172,7 +196,19 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       title: '完美旅程，<br/>零摩擦體驗。',
       desc: 'AI 驅動的全方位旅遊規劃師，根據您的節奏、預算和限制，打造可直接執行的最佳化行程。',
     },
-    loading: '正在優化路線與預算...',
+    loading: {
+      title: '正在規劃您的旅程',
+      subtitle: 'AI 正在為您打造完美行程',
+      tip_label: '小知識',
+      tips: [
+        '我們的 AI 會分析天氣預報，優化您的戶外活動安排。',
+        '我們會將相鄰景點分組，減少您在景點間的移動時間。',
+        'Trip OS 會考慮當地活動和尖峰時段。',
+        '您的節奏偏好幫助我們平衡休閒與探索。',
+        '我們會查詢即時數據，為您推薦最佳餐飲選擇。',
+      ],
+      estimated_time: '通常需要 30-60 秒'
+    },
     error: '行程生成失敗，請確認 API Key 設定或稍後再試。',
     actions: {
       submit: '生成 Trip OS 行程計畫',
@@ -249,7 +285,19 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       title: '完璧な旅を、<br/>ストレスフリーで。',
       desc: 'AIがあなたのペース、予算、条件に合わせて、実行可能な最適化された旅程を作成します。',
     },
-    loading: 'ルートと予算を最適化中...',
+    loading: {
+      title: '旅程を計画中',
+      subtitle: 'AIが最適な旅程を作成しています',
+      tip_label: '豆知識',
+      tips: [
+        'AIが天気予報を分析し、屋外活動を最適化します。',
+        '近隣の観光地をグループ化し、移動時間を短縮します。',
+        'Trip OSは地域のイベントや混雑時間を考慮します。',
+        'お好みのペースに合わせて、リラックスと探索のバランスを取ります。',
+        'リアルタイムデータを確認し、最適なお食事をご提案します。',
+      ],
+      estimated_time: '通常30〜60秒かかります'
+    },
     error: '生成に失敗しました。後でもう一度お試しください。',
     actions: { ...BASE_EN.actions, submit: '旅程を作成する', refine: '条件を修正', export: 'エクスポート', copy: 'コピー', copied: 'コピー完了', download: 'Markdownをエクスポート', print: '印刷 / PDF', clear: '履歴削除', share: '共有リンク' },
     form: {
@@ -316,7 +364,19 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       title: '완벽한 여행,<br/>제로 스트레스.',
       desc: 'AI 기반 종합 여행 플래너. 당신의 속도, 예산, 제약 조건에 맞춰 실행 가능한 최적화된 일정을 만듭니다.',
     },
-    loading: '경로 및 예산 최적화 중...',
+    loading: {
+      title: '여행을 계획 중입니다',
+      subtitle: 'AI가 완벽한 여정을 만들고 있습니다',
+      tip_label: '알고 계셨나요?',
+      tips: [
+        'AI가 날씨 예보를 분석하여 야외 활동을 최적화합니다.',
+        '인근 명소를 그룹화하여 이동 시간을 단축합니다.',
+        'Trip OS는 현지 이벤트와 혼잡 시간을 고려합니다.',
+        '선호하는 페이스에 맞춰 휴식과 탐험의 균형을 맞춥니다.',
+        '실시간 데이터를 확인하여 최적의 식사 옵션을 제안합니다.',
+      ],
+      estimated_time: '보통 30-60초 소요됩니다'
+    },
     actions: { ...BASE_EN.actions, submit: '일정 생성하기', refine: '일정 수정', export: '내보내기', copy: '복사', copied: '복사됨', download: 'Markdown 파일 내보내기', print: '인쇄 / PDF', clear: '기록 삭제', share: '링크 공유' },
     form: {
       ...BASE_EN.form,
@@ -366,7 +426,19 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       title: 'Viaje Perfecto,<br/>Cero Fricción.',
       desc: 'Tu planificador de viajes integral impulsado por IA. Creamos itinerarios procesables y optimizados basados en tu ritmo y presupuesto.',
     },
-    loading: 'Optimizando ruta y presupuesto...',
+    loading: {
+      title: 'Planificando tu viaje',
+      subtitle: 'La IA está creando tu itinerario perfecto',
+      tip_label: '¿Sabías que?',
+      tips: [
+        'Nuestra IA analiza pronósticos del tiempo para optimizar actividades al aire libre.',
+        'Agrupamos atracciones cercanas para minimizar tu tiempo de desplazamiento.',
+        'Trip OS considera eventos locales y horas pico de cada destino.',
+        'Tu preferencia de ritmo nos ayuda a equilibrar descanso y exploración.',
+        'Consultamos datos en tiempo real para sugerirte las mejores opciones gastronómicas.',
+      ],
+      estimated_time: 'Generalmente toma 30-60 segundos'
+    },
     actions: { ...BASE_EN.actions, submit: 'Generar Plan', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Markdown', print: 'Imprimir', clear: 'Borrar', share: 'Compartir Enlace' },
     form: {
       ...BASE_EN.form,
@@ -413,7 +485,19 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       title: 'Voyage Parfait,<br/>Zéro Friction.',
       desc: 'Votre planificateur de voyage complet propulsé par l\'IA. Itinéraires optimisés selon votre rythme et budget.',
     },
-    loading: 'Optimisation en cours...',
+    loading: {
+      title: 'Planification de votre voyage',
+      subtitle: "L'IA crée votre itinéraire parfait",
+      tip_label: 'Le saviez-vous ?',
+      tips: [
+        'Notre IA analyse les prévisions météo pour optimiser vos activités en plein air.',
+        'Nous regroupons les attractions proches pour minimiser vos temps de trajet.',
+        'Trip OS prend en compte les événements locaux et les heures de pointe.',
+        'Votre préférence de rythme nous aide à équilibrer détente et exploration.',
+        'Nous consultons les données en temps réel pour vous suggérer les meilleures options de restauration.',
+      ],
+      estimated_time: 'Généralement 30 à 60 secondes'
+    },
     actions: { ...BASE_EN.actions, submit: 'Générer le Plan', refine: 'Modifier', export: 'Exporter', copy: 'Copier', copied: 'Copié', download: 'Exporter Markdown', print: 'Imprimer', clear: 'Effacer', share: 'Partager le Lien' },
     form: {
       ...BASE_EN.form,
@@ -460,7 +544,19 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       title: 'सही यात्रा,<br/>बिना किसी परेशानी के।',
       desc: 'आपका AI-संचालित व्यापक यात्रा योजनाकार। हम आपकी गति और बजट के आधार पर अनुकूलित यात्रा कार्यक्रम बनाते हैं।',
     },
-    loading: 'रूट और बजट को ऑप्टिमाइज़ कर रहा है...',
+    loading: {
+      title: 'आपकी यात्रा की योजना बना रहे हैं',
+      subtitle: 'AI आपके लिए सही यात्रा कार्यक्रम बना रहा है',
+      tip_label: 'क्या आप जानते हैं?',
+      tips: [
+        'हमारा AI मौसम पूर्वानुमान का विश्लेषण करता है ताकि बाहरी गतिविधियों को अनुकूलित किया जा सके।',
+        'हम आकर्षण को समूहित करते हैं ताकि यात्रा का समय कम हो।',
+        'Trip OS स्थानीय कार्यक्रमों और व्यस्त समय को ध्यान में रखता है।',
+        'आपकी गति वरीयता हमें आराम और अन्वेषण में संतुलन बनाने में मदद करती है।',
+        'हम रीयल-टाइम डेटा की जांच करते हैं ताकि सर्वोत्तम भोजन विकल्प सुझाए जा सकें।',
+      ],
+      estimated_time: 'आमतौर पर 30-60 सेकंड लगते हैं'
+    },
     actions: { ...BASE_EN.actions, submit: 'यात्रा योजना बनाएं', refine: 'सुधारें', export: 'एक्सपोर्ट', copy: 'कॉपी', copied: 'कॉपी किया', download: 'मार्कडाउन फ़ाइल निर्यात करें', print: 'प्रिंट', clear: 'इतिहास मिटाएं', share: 'लिंक साझा करें' },
     form: {
       ...BASE_EN.form,
@@ -493,7 +589,19 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       title: 'رحلة مثالية،<br/>بدون متاعب.',
       desc: 'مخطط السفر الشامل المدعوم بالذكاء الاصطناعي. نصمم مسارات قابلة للتنفيذ ومحسنة بناءً على وتيرتك وميزانيتك.',
     },
-    loading: 'جاري تحسين المسار والميزانية...',
+    loading: {
+      title: 'جاري التخطيط لرحلتك',
+      subtitle: 'الذكاء الاصطناعي يُعد لك الرحلة المثالية',
+      tip_label: 'هل تعلم؟',
+      tips: [
+        'يحلل الذكاء الاصطناعي توقعات الطقس لتحسين الأنشطة الخارجية.',
+        'نجمع المعالم القريبة لتقليل وقت التنقل.',
+        'يأخذ Trip OS في الاعتبار الفعاليات المحلية وأوقات الذروة.',
+        'تفضيلات وتيرتك تساعدنا في تحقيق التوازن بين الاسترخاء والاستكشاف.',
+        'نتحقق من البيانات الفورية لاقتراح أفضل خيارات الطعام.',
+      ],
+      estimated_time: 'عادة ما يستغرق 30-60 ثانية'
+    },
     actions: { ...BASE_EN.actions, submit: 'إنشاء خطة السفر', refine: 'تعديل', export: 'تصدير', copy: 'نسخ', copied: 'تم النسخ', download: 'تصدير ملف Markdown', print: 'طباعة', clear: 'مسح التاريخ', share: 'مشاركة الرابط' },
     form: {
       ...BASE_EN.form,
@@ -526,7 +634,19 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       title: 'Viagem Perfeita,<br/>Zero Atrito.',
       desc: 'Seu planejador de viagens completo. Criamos itinerários acionáveis e otimizados com base no seu ritmo e orçamento.',
     },
-    loading: 'Otimizando rota...',
+    loading: {
+      title: 'Planejando sua viagem',
+      subtitle: 'A IA está criando seu roteiro perfeito',
+      tip_label: 'Você sabia?',
+      tips: [
+        'Nossa IA analisa previsões do tempo para otimizar atividades ao ar livre.',
+        'Agrupamos atrações próximas para minimizar seu tempo de deslocamento.',
+        'O Trip OS considera eventos locais e horários de pico.',
+        'Sua preferência de ritmo nos ajuda a equilibrar descanso e exploração.',
+        'Verificamos dados em tempo real para sugerir as melhores opções gastronômicas.',
+      ],
+      estimated_time: 'Geralmente leva 30-60 segundos'
+    },
     actions: { ...BASE_EN.actions, submit: 'Gerar Plano', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Arquivo Markdown', print: 'Imprimir', clear: 'Limpar', share: 'Compartilhar Link' },
     form: {
       ...BASE_EN.form,
@@ -559,7 +679,19 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       title: 'Идеальное путешествие,<br/>Ноль проблем.',
       desc: 'Ваш комплексный планировщик путешествий на базе ИИ. Мы создаем действенные, оптимизированные маршруты.',
     },
-    loading: 'Оптимизация маршрута...',
+    loading: {
+      title: 'Планируем вашу поездку',
+      subtitle: 'ИИ создаёт ваш идеальный маршрут',
+      tip_label: 'Знаете ли вы?',
+      tips: [
+        'Наш ИИ анализирует прогноз погоды для оптимизации активностей на открытом воздухе.',
+        'Мы группируем близлежащие достопримечательности, чтобы сократить время в пути.',
+        'Trip OS учитывает местные события и часы пик.',
+        'Ваши предпочтения темпа помогают нам балансировать отдых и исследования.',
+        'Мы проверяем данные в реальном времени, чтобы предложить лучшие варианты питания.',
+      ],
+      estimated_time: 'Обычно занимает 30-60 секунд'
+    },
     actions: { ...BASE_EN.actions, submit: 'Создать план', refine: 'Уточнить', export: 'Экспорт', copy: 'Копировать', copied: 'Скопировано', download: 'Экспорт файла Markdown', print: 'Печать', clear: 'Очистить', share: 'Поделиться ссылкой' },
     form: {
       ...BASE_EN.form,
