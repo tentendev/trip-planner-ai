@@ -1,8 +1,24 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Download, X, Instagram, Twitter, MessageCircle, Copy, Check, Sparkles, MapPin, Calendar, Users, Wallet } from 'lucide-react';
+import { Download, X, Instagram, Twitter, MessageCircle, Copy, Check, Sparkles, MapPin, Calendar, Users, Wallet, Plane, Clock, Star, Heart, Compass } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../utils/i18n';
+
+// Clean markdown formatting from text
+function cleanMarkdown(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '$1') // Bold **text**
+    .replace(/\*([^*]+)\*/g, '$1')     // Italic *text*
+    .replace(/__([^_]+)__/g, '$1')     // Bold __text__
+    .replace(/_([^_]+)_/g, '$1')       // Italic _text_
+    .replace(/~~([^~]+)~~/g, '$1')     // Strikethrough
+    .replace(/`([^`]+)`/g, '$1')       // Inline code
+    .replace(/#{1,6}\s*/g, '')         // Headers
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Links
+    .replace(/^\s*[-*+]\s*/gm, '')     // List markers
+    .replace(/^\s*\d+\.\s*/gm, '')     // Numbered list markers
+    .trim();
+}
 
 interface ShareCardProps {
   isOpen: boolean;
@@ -35,6 +51,8 @@ const CARD_TRANSLATIONS: Record<Language, {
   shareInstagram: string;
   shareLine: string;
   shareWeChat: string;
+  modalTitle: string;
+  modalSubtitle: string;
 }> = {
   'en': {
     title: 'My Trip Plan',
@@ -50,6 +68,8 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareInstagram: 'Instagram Story',
     shareLine: 'Share on LINE',
     shareWeChat: 'Share on WeChat',
+    modalTitle: 'Share Your Trip',
+    modalSubtitle: 'Create a beautiful share card',
   },
   'zh-TW': {
     title: '我的旅行計畫',
@@ -65,6 +85,8 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareInstagram: 'Instagram 限動',
     shareLine: '分享到 LINE',
     shareWeChat: '分享到微信',
+    modalTitle: '分享你的行程',
+    modalSubtitle: '生成精美分享卡片',
   },
   'zh-CN': {
     title: '我的旅行计划',
@@ -80,6 +102,8 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareInstagram: 'Instagram 故事',
     shareLine: '分享到 LINE',
     shareWeChat: '分享到微信',
+    modalTitle: '分享你的行程',
+    modalSubtitle: '生成精美分享卡片',
   },
   'ja': {
     title: '旅行プラン',
@@ -95,6 +119,8 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareInstagram: 'Instagramストーリー',
     shareLine: 'LINEでシェア',
     shareWeChat: 'WeChatでシェア',
+    modalTitle: '旅行をシェア',
+    modalSubtitle: '美しいシェアカードを作成',
   },
   'ko': {
     title: '나의 여행 계획',
@@ -110,6 +136,8 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareInstagram: '인스타그램 스토리',
     shareLine: 'LINE에서 공유',
     shareWeChat: 'WeChat에서 공유',
+    modalTitle: '여행 공유하기',
+    modalSubtitle: '아름다운 공유 카드 만들기',
   },
   'es': {
     title: 'Mi Plan de Viaje',
@@ -125,6 +153,8 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareInstagram: 'Historia de Instagram',
     shareLine: 'Compartir en LINE',
     shareWeChat: 'Compartir en WeChat',
+    modalTitle: 'Comparte tu Viaje',
+    modalSubtitle: 'Crea una tarjeta para compartir',
   },
   'fr': {
     title: 'Mon Plan de Voyage',
@@ -140,6 +170,8 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareInstagram: 'Story Instagram',
     shareLine: 'Partager sur LINE',
     shareWeChat: 'Partager sur WeChat',
+    modalTitle: 'Partagez votre Voyage',
+    modalSubtitle: 'Créez une belle carte à partager',
   },
   'hi': {
     title: 'मेरी यात्रा योजना',
@@ -155,6 +187,8 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareInstagram: 'Instagram स्टोरी',
     shareLine: 'LINE पर साझा करें',
     shareWeChat: 'WeChat पर साझा करें',
+    modalTitle: 'अपनी यात्रा साझा करें',
+    modalSubtitle: 'एक सुंदर शेयर कार्ड बनाएं',
   },
   'ar': {
     title: 'خطة رحلتي',
@@ -170,6 +204,8 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareInstagram: 'ستوري انستغرام',
     shareLine: 'مشاركة على LINE',
     shareWeChat: 'مشاركة على WeChat',
+    modalTitle: 'شارك رحلتك',
+    modalSubtitle: 'إنشاء بطاقة مشاركة جميلة',
   },
   'pt': {
     title: 'Meu Plano de Viagem',
@@ -185,6 +221,8 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareInstagram: 'Story do Instagram',
     shareLine: 'Compartilhar no LINE',
     shareWeChat: 'Compartilhar no WeChat',
+    modalTitle: 'Compartilhe sua Viagem',
+    modalSubtitle: 'Crie um cartão de compartilhamento',
   },
   'ru': {
     title: 'Мой План Путешествия',
@@ -200,6 +238,8 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareInstagram: 'История в Instagram',
     shareLine: 'Поделиться в LINE',
     shareWeChat: 'Поделиться в WeChat',
+    modalTitle: 'Поделитесь путешествием',
+    modalSubtitle: 'Создайте красивую карточку',
   },
 };
 
@@ -262,8 +302,9 @@ const ShareCard: React.FC<ShareCardProps> = ({
   const duration = extractDuration(tripData.dates);
   const paceConfig = PACE_CONFIG[tripData.pace] || PACE_CONFIG['Moderate'];
 
-  // Extract highlights from interests
-  const highlights = tripData.highlights || tripData.interests.split(/[,，、]/).slice(0, 4).map(s => s.trim()).filter(Boolean);
+  // Extract highlights from interests and clean markdown
+  const rawHighlights = tripData.highlights || tripData.interests.split(/[,，、]/).slice(0, 4).map(s => s.trim()).filter(Boolean);
+  const highlights = rawHighlights.map(h => cleanMarkdown(h)).filter(h => h.length > 0 && h.length < 50);
 
   const generateImage = async (aspectRatio: '9:16' | '1:1') => {
     setIsGenerating(true);
@@ -554,106 +595,157 @@ const ShareCard: React.FC<ShareCardProps> = ({
       {/* Modal */}
       <div className="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+              <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-slate-900">分享你的行程</h3>
-              <p className="text-sm text-slate-500">生成精美分享卡片</p>
+              <h3 className="font-bold text-lg text-slate-900">{cardT.modalTitle}</h3>
+              <p className="text-sm text-slate-500">{cardT.modalSubtitle}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-full transition"
+            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
           >
             <X className="w-5 h-5 text-slate-400" />
           </button>
         </div>
 
-        {/* Preview Card */}
-        <div className="p-6">
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white relative overflow-hidden">
-            {/* Decorative grid */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute inset-0" style={{
-                backgroundImage: 'linear-gradient(to right, #3b82f6 1px, transparent 1px), linear-gradient(to bottom, #3b82f6 1px, transparent 1px)',
-                backgroundSize: '20px 20px'
-              }} />
-            </div>
-
-            <div className="relative z-10">
-              {/* Branding */}
-              <div className="flex items-center gap-2 text-slate-400 text-xs font-medium mb-4">
-                <span className="uppercase tracking-wider">Trip OS</span>
-                <span>•</span>
-                <span>{cardT.subtitle}</span>
-              </div>
-
-              {/* Destination */}
-              <h4 className="text-2xl font-bold mb-3">
-                {getDestinationEmoji(tripData.destination)} {tripData.destination}
-              </h4>
-
-              {/* Info row */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {duration && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 rounded-full text-sm">
-                    <Calendar className="w-3 h-3" /> {duration}
-                  </span>
-                )}
-                {tripData.travelers && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/10 rounded-full text-sm">
-                    <Users className="w-3 h-3" /> {tripData.travelers}
-                  </span>
-                )}
-                {tripData.budget && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/10 rounded-full text-sm">
-                    <Wallet className="w-3 h-3" /> {tripData.budget}
-                  </span>
-                )}
-              </div>
-
-              {/* Highlights */}
-              {highlights.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {highlights.slice(0, 4).map((h, i) => (
-                    <span key={i} className="px-2 py-1 bg-white/10 rounded text-xs">
-                      {h}
-                    </span>
-                  ))}
+        {/* Preview Card - Attractive Infographic Style */}
+        <div className="p-6 overflow-y-auto max-h-[50vh]">
+          <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 rounded-2xl p-1 shadow-xl shadow-purple-500/20">
+            <div className="bg-white rounded-xl overflow-hidden">
+              {/* Hero Section with Destination */}
+              <div className="relative bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 p-6 text-white overflow-hidden">
+                {/* Animated background elements */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="absolute top-0 left-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl" />
+                  <div className="absolute bottom-0 right-0 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl" />
+                  {/* Floating plane icon */}
+                  <Plane className="absolute top-4 right-4 w-8 h-8 text-white/10 transform rotate-45" />
                 </div>
-              )}
 
-              {/* Footer */}
-              <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
-                <span>{cardT.poweredBy}</span>
-                <span className="text-blue-400">tripOS.ai</span>
+                <div className="relative z-10">
+                  {/* Branding badge */}
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium mb-4 border border-white/10">
+                    <Compass className="w-3 h-3" />
+                    <span className="uppercase tracking-wider">Trip OS</span>
+                    <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
+                  </div>
+
+                  {/* Destination with large emoji */}
+                  <div className="flex items-start gap-3 mb-2">
+                    <span className="text-4xl">{getDestinationEmoji(tripData.destination)}</span>
+                    <div>
+                      <h4 className="text-2xl font-bold leading-tight">{cleanMarkdown(tripData.destination)}</h4>
+                      <p className="text-white/60 text-sm">{cardT.subtitle}</p>
+                    </div>
+                  </div>
+
+                  {/* Duration highlight */}
+                  {duration && (
+                    <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full text-sm font-semibold shadow-lg shadow-blue-500/30">
+                      <Calendar className="w-4 h-4" />
+                      <span>{cleanMarkdown(duration)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Info Cards Section */}
+              <div className="p-4 bg-gradient-to-b from-slate-50 to-white">
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {tripData.travelers && (
+                    <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 text-center group hover:shadow-md hover:border-blue-200 transition-all">
+                      <div className="w-8 h-8 mx-auto mb-1.5 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-500 transition-colors">
+                        <Users className="w-4 h-4 text-blue-600 group-hover:text-white transition-colors" />
+                      </div>
+                      <p className="text-xs text-slate-500 mb-0.5">Travelers</p>
+                      <p className="font-semibold text-slate-900 text-sm truncate">{cleanMarkdown(tripData.travelers)}</p>
+                    </div>
+                  )}
+                  {tripData.budget && (
+                    <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 text-center group hover:shadow-md hover:border-green-200 transition-all">
+                      <div className="w-8 h-8 mx-auto mb-1.5 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-500 transition-colors">
+                        <Wallet className="w-4 h-4 text-green-600 group-hover:text-white transition-colors" />
+                      </div>
+                      <p className="text-xs text-slate-500 mb-0.5">Budget</p>
+                      <p className="font-semibold text-slate-900 text-sm truncate">{cleanMarkdown(tripData.budget)}</p>
+                    </div>
+                  )}
+                  {tripData.pace && (
+                    <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 text-center group hover:shadow-md hover:border-amber-200 transition-all">
+                      <div className="w-8 h-8 mx-auto mb-1.5 bg-amber-100 rounded-full flex items-center justify-center group-hover:bg-amber-500 transition-colors">
+                        <Clock className="w-4 h-4 text-amber-600 group-hover:text-white transition-colors" />
+                      </div>
+                      <p className="text-xs text-slate-500 mb-0.5">Pace</p>
+                      <p className="font-semibold text-slate-900 text-sm">{paceConfig.emoji}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Highlights Section */}
+                {highlights.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Star className="w-4 h-4 text-amber-500" />
+                      <span className="text-sm font-semibold text-slate-700">{cardT.highlights}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {highlights.slice(0, 4).map((h, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-full text-xs font-medium text-indigo-700"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500" />
+                          {h}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer with branding */}
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                      <Sparkles className="w-3 h-3 text-white" />
+                    </div>
+                    <span className="text-xs text-slate-500">{cardT.poweredBy}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-slate-400">
+                    <Heart className="w-3 h-3 text-pink-400" />
+                    <span>tripos.ai</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="p-6 pt-0 space-y-4">
+        <div className="p-6 pt-0 space-y-4 bg-gradient-to-b from-white to-slate-50">
           {/* Download buttons */}
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => generateImage('9:16')}
               disabled={isGenerating}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-medium hover:opacity-90 transition disabled:opacity-50"
+              className="group flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
             >
-              <Instagram className="w-4 h-4" />
-              {cardT.downloadStory}
+              <Instagram className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+              <span className="text-sm">{cardT.downloadStory}</span>
             </button>
             <button
               onClick={() => generateImage('1:1')}
               disabled={isGenerating}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-medium hover:opacity-90 transition disabled:opacity-50"
+              className="group flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
             >
-              <Download className="w-4 h-4" />
-              {cardT.downloadSquare}
+              <Download className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
+              <span className="text-sm">{cardT.downloadSquare}</span>
             </button>
           </div>
 
@@ -661,10 +753,10 @@ const ShareCard: React.FC<ShareCardProps> = ({
           <div className="flex gap-2">
             <button
               onClick={handleCopyLink}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition ${
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
                 copySuccess
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  ? 'bg-green-100 text-green-700 ring-2 ring-green-200'
+                  : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 hover:border-slate-300 shadow-sm'
               }`}
             >
               {copySuccess ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -672,19 +764,24 @@ const ShareCard: React.FC<ShareCardProps> = ({
             </button>
             <button
               onClick={handleShareTwitter}
-              className="p-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition"
+              className="p-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
               title={cardT.shareTwitter}
             >
               <Twitter className="w-5 h-5" />
             </button>
             <button
               onClick={handleShareLine}
-              className="p-3 bg-[#00B900] text-white rounded-xl hover:opacity-90 transition"
+              className="p-3 bg-[#00B900] text-white rounded-xl hover:brightness-110 shadow-lg shadow-green-500/20 hover:shadow-green-500/40 hover:scale-105 active:scale-95 transition-all"
               title={cardT.shareLine}
             >
               <MessageCircle className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Tip text */}
+          <p className="text-center text-xs text-slate-400 pt-2">
+            {language.startsWith('zh') ? '下載圖片後可直接分享到社群媒體' : 'Download the image to share on social media'}
+          </p>
         </div>
 
         {/* Hidden canvas for image generation */}
