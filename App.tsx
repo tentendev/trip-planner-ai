@@ -6,6 +6,7 @@ import { generateTripPlan } from './services/geminiService';
 import { TripInput, LoadingState, GeneratedPlan, Language } from './types';
 import { Globe, Terminal, ChevronDown, Check } from 'lucide-react';
 import { TRANSLATIONS, LANGUAGE_NAMES } from './utils/i18n';
+import { getSharedPlan } from './utils/shareStorage';
 
 const STORAGE_KEY = 'trip_os_v1_state';
 
@@ -60,8 +61,29 @@ const App: React.FC = () => {
   // Check for shared itinerary in URL on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const sharedData = params.get('shared');
 
+    // New short ID based sharing (preferred)
+    const shareId = params.get('share');
+    if (shareId) {
+      const sharedPlan = getSharedPlan(shareId);
+      if (sharedPlan) {
+        setTripPlan({
+          markdown: sharedPlan.markdown,
+          sources: sharedPlan.sources || []
+        });
+        setIsSharedView(true);
+        setLoadingState(LoadingState.SUCCESS);
+
+        // Set language from shared data if available
+        if (sharedPlan.lang && Object.prototype.hasOwnProperty.call(LANGUAGE_NAMES, sharedPlan.lang)) {
+          setLanguage(sharedPlan.lang as Language);
+        }
+        return;
+      }
+    }
+
+    // Legacy: base64 encoded sharing (backward compatibility)
+    const sharedData = params.get('shared');
     if (sharedData) {
       try {
         const decoded = JSON.parse(decodeURIComponent(atob(sharedData)));
@@ -155,10 +177,18 @@ const App: React.FC = () => {
     setLoadingState(LoadingState.IDLE);
     setIsSharedView(false);
 
-    // Clear shared param from URL if present
+    // Clear share params from URL if present
     const url = new URL(window.location.href);
+    let needsUpdate = false;
+    if (url.searchParams.has('share')) {
+      url.searchParams.delete('share');
+      needsUpdate = true;
+    }
     if (url.searchParams.has('shared')) {
       url.searchParams.delete('shared');
+      needsUpdate = true;
+    }
+    if (needsUpdate) {
       window.history.replaceState({}, '', url);
     }
 

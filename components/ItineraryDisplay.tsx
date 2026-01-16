@@ -4,6 +4,7 @@ import MarkdownRenderer from './MarkdownRenderer';
 import { Download, Map, Compass, Printer, Copy, FileDown, ChevronDown, Check, PenLine, CloudSun, Globe, Radio, Share2, Link } from 'lucide-react';
 import { GeneratedPlan, Language } from '../types';
 import { TRANSLATIONS } from '../utils/i18n';
+import { saveSharedPlan, generateShareUrl } from '../utils/shareStorage';
 
 interface ItineraryDisplayProps {
   plan: GeneratedPlan;
@@ -60,18 +61,9 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
 
   const handleShare = async () => {
     try {
-      // Compress the markdown using base64 encoding
-      const compressedData = btoa(encodeURIComponent(JSON.stringify({
-        markdown: plan.markdown,
-        sources: plan.sources,
-        lang: language
-      })));
-
-      const url = new URL(window.location.origin);
-      url.searchParams.set('shared', compressedData);
-      url.searchParams.set('lang', language);
-
-      const fullUrl = url.toString();
+      // Save to localStorage and get short ID
+      const shareId = saveSharedPlan(plan, language);
+      const fullUrl = generateShareUrl(shareId, language);
 
       // Try native share API first (mobile)
       if (navigator.share) {
@@ -100,17 +92,11 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
 
   const handleCopyShareLink = async () => {
     try {
-      const compressedData = btoa(encodeURIComponent(JSON.stringify({
-        markdown: plan.markdown,
-        sources: plan.sources,
-        lang: language
-      })));
+      // Save to localStorage and get short ID
+      const shareId = saveSharedPlan(plan, language);
+      const fullUrl = generateShareUrl(shareId, language);
 
-      const url = new URL(window.location.origin);
-      url.searchParams.set('shared', compressedData);
-      url.searchParams.set('lang', language);
-
-      await navigator.clipboard.writeText(url.toString());
+      await navigator.clipboard.writeText(fullUrl);
       setShareSuccess(true);
       setTimeout(() => setShareSuccess(false), 2000);
       setShowDropdown(false);
