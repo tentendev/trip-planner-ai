@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trip OS - AI 全端旅遊規劃總監</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8fafc;
+      }
+      
+      /* Tech/OS Monospace Font Class */
+      .font-mono {
+        font-family: 'JetBrains Mono', monospace;
+      }
+
+      /* Animated Aurora Background */
+      .aurora-bg {
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.15;
+      }
+
+      @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1; 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8; 
+      }
+
+      /* Print Optimization Styles */
+      @media print {
+        @page {
+          margin: 10mm 15mm;
+          size: auto;
+        }
+
+        body {
+          background-color: white !important;
+          background-image: none !important; 
+          color: black !important;
+          font-size: 11pt;
+          line-height: 1.4;
+        }
+
+        .aurora-bg { display: none !important; }
+        
+        /* Specific Hide Classes */
+        .no-print, header, footer, button {
+          display: none !important;
+        }
+
+        /* Force Background Colors */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          box-shadow: none !important;
+          text-shadow: none !important;
+        }
+
+        /* Container Overrides to use full width */
+        .max-w-5xl, .max-w-none {
+          max-width: 100% !important;
+          width: 100% !important;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+
+        /* Card Reset */
+        .bg-white\/80, .backdrop-blur-xl, .shadow-2xl, .border {
+          background: white !important;
+          backdrop-filter: none !important;
+          border: none !important;
+          box-shadow: none !important;
+          border-radius: 0 !important;
+        }
+
+        /* Typography tweaks for print */
+        h1 { font-size: 24pt !important; color: #000 !important; margin-bottom: 0.5em !important; }
+        h2 { font-size: 16pt !important; color: #000 !important; margin-top: 1.5em !important; border-bottom: 2px solid #eee !important; padding-bottom: 0.2em !important; page-break-after: avoid; }
+        h3 { font-size: 13pt !important; color: #1e40af !important; margin-top: 1em !important; page-break-after: avoid; }
+        h4 { font-size: 11pt !important; color: #334155 !important; page-break-after: avoid; }
+        p, li { font-size: 10.5pt !important; color: #333 !important; }
+
+        /* Table Handling - Crucial for Itineraries */
+        table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+          margin-bottom: 1em !important;
+          font-size: 9.5pt !important;
+          page-break-inside: auto;
+          border: 1px solid #e2e8f0 !important;
+        }
+        
+        thead {
+          display: table-header-group; /* Repeat header on new pages */
+          background-color: #f8fafc !important;
+          border-bottom: 2px solid #cbd5e1 !important;
+        }
+        
+        tr {
+          page-break-inside: avoid;
+          page-break-after: auto;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        
+        td, th {
+          padding: 6px 8px !important;
+          border-left: 1px solid #f1f5f9;
+        }
+
+        /* Links */
+        a {
+          text-decoration: none !important;
+          color: #000 !important;
+        }
+        
+        /* Show the specific print header */
+        .print-only {
+          display: block !important;
+        }
+      }
+      
+      /* Helper to hide print elements on screen */
+      .print-only {
+        display: none;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
