@@ -33,7 +33,8 @@ const BASE_EN = {
     copied: 'Copied',
     download: 'Export Markdown File',
     print: 'Print Itinerary',
-    clear: 'Clear History'
+    clear: 'Clear History',
+    share: 'Share Link'
   },
   form: {
     section_basics: 'Trip Basics',
@@ -104,7 +105,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
     },
     loading: '正在优化路线与预算...',
     error: '生成失败，请检查 API Key 或稍后再试。',
-    actions: { ...BASE_EN.actions, submit: '生成行程计划', refine: '调整行程', export: '导出行程', copy: '复制 Markdown', copied: '已复制', download: '导出 Markdown 文件', print: '打印行程', clear: '清除历史' },
+    actions: { ...BASE_EN.actions, submit: '生成行程计划', refine: '调整行程', export: '导出行程', copy: '复制 Markdown', copied: '已复制', download: '导出 Markdown 文件', print: '打印行程', clear: '清除历史', share: '分享链接' },
     form: {
       ...BASE_EN.form,
       section_basics: '基本信息',
@@ -181,7 +182,8 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       copied: '已複製',
       download: '匯出 Markdown 檔案',
       print: '列印 / 存為 PDF',
-      clear: '清除暫存資料'
+      clear: '清除暫存資料',
+      share: '分享連結'
     },
     form: {
       section_basics: '旅程基本資訊',
@@ -249,7 +251,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
     },
     loading: 'ルートと予算を最適化中...',
     error: '生成に失敗しました。後でもう一度お試しください。',
-    actions: { ...BASE_EN.actions, submit: '旅程を作成する', refine: '条件を修正', export: 'エクスポート', copy: 'コピー', copied: 'コピー完了', download: 'Markdownをエクスポート', print: '印刷 / PDF', clear: '履歴削除' },
+    actions: { ...BASE_EN.actions, submit: '旅程を作成する', refine: '条件を修正', export: 'エクスポート', copy: 'コピー', copied: 'コピー完了', download: 'Markdownをエクスポート', print: '印刷 / PDF', clear: '履歴削除', share: '共有リンク' },
     form: {
       ...BASE_EN.form,
       section_basics: '基本情報',
@@ -315,7 +317,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       desc: 'AI 기반 종합 여행 플래너. 당신의 속도, 예산, 제약 조건에 맞춰 실행 가능한 최적화된 일정을 만듭니다.',
     },
     loading: '경로 및 예산 최적화 중...',
-    actions: { ...BASE_EN.actions, submit: '일정 생성하기', refine: '일정 수정', export: '내보내기', copy: '복사', copied: '복사됨', download: 'Markdown 파일 내보내기', print: '인쇄 / PDF', clear: '기록 삭제' },
+    actions: { ...BASE_EN.actions, submit: '일정 생성하기', refine: '일정 수정', export: '내보내기', copy: '복사', copied: '복사됨', download: 'Markdown 파일 내보내기', print: '인쇄 / PDF', clear: '기록 삭제', share: '링크 공유' },
     form: {
       ...BASE_EN.form,
       section_basics: '기본 정보',
@@ -365,7 +367,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       desc: 'Tu planificador de viajes integral impulsado por IA. Creamos itinerarios procesables y optimizados basados en tu ritmo y presupuesto.',
     },
     loading: 'Optimizando ruta y presupuesto...',
-    actions: { ...BASE_EN.actions, submit: 'Generar Plan', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Markdown', print: 'Imprimir', clear: 'Borrar' },
+    actions: { ...BASE_EN.actions, submit: 'Generar Plan', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Markdown', print: 'Imprimir', clear: 'Borrar', share: 'Compartir Enlace' },
     form: {
       ...BASE_EN.form,
       section_basics: 'Datos Básicos',
@@ -412,7 +414,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       desc: 'Votre planificateur de voyage complet propulsé par l\'IA. Itinéraires optimisés selon votre rythme et budget.',
     },
     loading: 'Optimisation en cours...',
-    actions: { ...BASE_EN.actions, submit: 'Générer le Plan', refine: 'Modifier', export: 'Exporter', copy: 'Copier', copied: 'Copié', download: 'Exporter Markdown', print: 'Imprimer', clear: 'Effacer' },
+    actions: { ...BASE_EN.actions, submit: 'Générer le Plan', refine: 'Modifier', export: 'Exporter', copy: 'Copier', copied: 'Copié', download: 'Exporter Markdown', print: 'Imprimer', clear: 'Effacer', share: 'Partager le Lien' },
     form: {
       ...BASE_EN.form,
       section_basics: 'Infos de Base',
@@ -459,7 +461,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       desc: 'आपका AI-संचालित व्यापक यात्रा योजनाकार। हम आपकी गति और बजट के आधार पर अनुकूलित यात्रा कार्यक्रम बनाते हैं।',
     },
     loading: 'रूट और बजट को ऑप्टिमाइज़ कर रहा है...',
-    actions: { ...BASE_EN.actions, submit: 'यात्रा योजना बनाएं', refine: 'सुधारें', export: 'एक्सपोर्ट', copy: 'कॉपी', copied: 'कॉपी किया', download: 'मार्कडाउन फ़ाइल निर्यात करें', print: 'प्रिंट', clear: 'इतिहास मिटाएं' },
+    actions: { ...BASE_EN.actions, submit: 'यात्रा योजना बनाएं', refine: 'सुधारें', export: 'एक्सपोर्ट', copy: 'कॉपी', copied: 'कॉपी किया', download: 'मार्कडाउन फ़ाइल निर्यात करें', print: 'प्रिंट', clear: 'इतिहास मिटाएं', share: 'लिंक साझा करें' },
     form: {
       ...BASE_EN.form,
       section_basics: 'यात्रा की जानकारी',
@@ -492,7 +494,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       desc: 'مخطط السفر الشامل المدعوم بالذكاء الاصطناعي. نصمم مسارات قابلة للتنفيذ ومحسنة بناءً على وتيرتك وميزانيتك.',
     },
     loading: 'جاري تحسين المسار والميزانية...',
-    actions: { ...BASE_EN.actions, submit: 'إنشاء خطة السفر', refine: 'تعديل', export: 'تصدير', copy: 'نسخ', copied: 'تم النسخ', download: 'تصدير ملف Markdown', print: 'طباعة', clear: 'مسح التاريخ' },
+    actions: { ...BASE_EN.actions, submit: 'إنشاء خطة السفر', refine: 'تعديل', export: 'تصدير', copy: 'نسخ', copied: 'تم النسخ', download: 'تصدير ملف Markdown', print: 'طباعة', clear: 'مسح التاريخ', share: 'مشاركة الرابط' },
     form: {
       ...BASE_EN.form,
       section_basics: 'أساسيات الرحلة',
@@ -525,7 +527,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       desc: 'Seu planejador de viagens completo. Criamos itinerários acionáveis e otimizados com base no seu ritmo e orçamento.',
     },
     loading: 'Otimizando rota...',
-    actions: { ...BASE_EN.actions, submit: 'Gerar Plano', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Arquivo Markdown', print: 'Imprimir', clear: 'Limpar' },
+    actions: { ...BASE_EN.actions, submit: 'Gerar Plano', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Arquivo Markdown', print: 'Imprimir', clear: 'Limpar', share: 'Compartilhar Link' },
     form: {
       ...BASE_EN.form,
       section_basics: 'Básico',
@@ -558,7 +560,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       desc: 'Ваш комплексный планировщик путешествий на базе ИИ. Мы создаем действенные, оптимизированные маршруты.',
     },
     loading: 'Оптимизация маршрута...',
-    actions: { ...BASE_EN.actions, submit: 'Создать план', refine: 'Уточнить', export: 'Экспорт', copy: 'Копировать', copied: 'Скопировано', download: 'Экспорт файла Markdown', print: 'Печать', clear: 'Очистить' },
+    actions: { ...BASE_EN.actions, submit: 'Создать план', refine: 'Уточнить', export: 'Экспорт', copy: 'Копировать', copied: 'Скопировано', download: 'Экспорт файла Markdown', print: 'Печать', clear: 'Очистить', share: 'Поделиться ссылкой' },
     form: {
       ...BASE_EN.form,
       section_basics: 'Основное',

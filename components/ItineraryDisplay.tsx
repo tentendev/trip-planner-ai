@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import MarkdownRenderer from './MarkdownRenderer';
-import { Download, Map, Compass, Printer, Copy, FileDown, ChevronDown, Check, PenLine, CloudSun, Globe, Radio } from 'lucide-react';
+import { Download, Map, Compass, Printer, Copy, FileDown, ChevronDown, Check, PenLine, CloudSun, Globe, Radio, Share2, Link } from 'lucide-react';
 import { GeneratedPlan, Language } from '../types';
 import { TRANSLATIONS } from '../utils/i18n';
 
@@ -9,12 +9,15 @@ interface ItineraryDisplayProps {
   plan: GeneratedPlan;
   onReset: () => void;
   language: Language;
+  planId?: string;
 }
 
-const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, language }) => {
+const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, language, planId }) => {
   const t = TRANSLATIONS[language];
   const [showDropdown, setShowDropdown] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [shareSuccess, setShareSuccess] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,6 +56,67 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
   const handlePrint = () => {
     window.print();
     setShowDropdown(false);
+  };
+
+  const handleShare = async () => {
+    try {
+      // Compress the markdown using base64 encoding
+      const compressedData = btoa(encodeURIComponent(JSON.stringify({
+        markdown: plan.markdown,
+        sources: plan.sources,
+        lang: language
+      })));
+
+      const url = new URL(window.location.origin);
+      url.searchParams.set('shared', compressedData);
+      url.searchParams.set('lang', language);
+
+      const fullUrl = url.toString();
+
+      // Try native share API first (mobile)
+      if (navigator.share) {
+        await navigator.share({
+          title: t.title + ' - ' + t.itinerary.title,
+          text: t.hero.desc,
+          url: fullUrl
+        });
+        setShareSuccess(true);
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(fullUrl);
+        setShareUrl(fullUrl);
+        setShareSuccess(true);
+      }
+
+      setTimeout(() => {
+        setShareSuccess(false);
+        setShareUrl(null);
+      }, 3000);
+      setShowDropdown(false);
+    } catch (err) {
+      console.error('Failed to share', err);
+    }
+  };
+
+  const handleCopyShareLink = async () => {
+    try {
+      const compressedData = btoa(encodeURIComponent(JSON.stringify({
+        markdown: plan.markdown,
+        sources: plan.sources,
+        lang: language
+      })));
+
+      const url = new URL(window.location.origin);
+      url.searchParams.set('shared', compressedData);
+      url.searchParams.set('lang', language);
+
+      await navigator.clipboard.writeText(url.toString());
+      setShareSuccess(true);
+      setTimeout(() => setShareSuccess(false), 2000);
+      setShowDropdown(false);
+    } catch (err) {
+      console.error('Failed to copy share link', err);
+    }
   };
 
   return (
@@ -107,11 +171,19 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
             </div>
 
             <div className="flex gap-3">
-              <button 
+              <button
                 onClick={onReset}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 backdrop-blur text-sm font-medium transition"
               >
                 <PenLine className="w-4 h-4" /> {t.actions.refine}
+              </button>
+
+              <button
+                onClick={handleCopyShareLink}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-white border border-white/10 backdrop-blur text-sm font-medium transition ${shareSuccess ? 'bg-green-600' : 'bg-white/10 hover:bg-white/20'}`}
+              >
+                {shareSuccess ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                {shareSuccess ? t.actions.copied : t.actions.share}
               </button>
 
               <div className="relative" ref={dropdownRef}>

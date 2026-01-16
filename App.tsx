@@ -19,7 +19,8 @@ const App: React.FC = () => {
   const [tripPlan, setTripPlan] = useState<GeneratedPlan | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [lastInput, setLastInput] = useState<TripInput | undefined>(undefined);
-  
+  const [isSharedView, setIsSharedView] = useState(false);
+
   // Language Dropdown State
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
@@ -36,7 +37,7 @@ const App: React.FC = () => {
     // 2. Check Browser Settings
     if (typeof navigator !== 'undefined' && navigator.language) {
       const browserLang = navigator.language.toLowerCase();
-      
+
       if (browserLang.startsWith('zh')) {
         // Traditional Chinese for Taiwan or Hong Kong regions
         return (browserLang.includes('tw') || browserLang.includes('hk')) ? 'zh-TW' : 'zh-CN';
@@ -55,6 +56,33 @@ const App: React.FC = () => {
     // 3. Fallback
     return 'zh-TW';
   });
+
+  // Check for shared itinerary in URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sharedData = params.get('shared');
+
+    if (sharedData) {
+      try {
+        const decoded = JSON.parse(decodeURIComponent(atob(sharedData)));
+        if (decoded.markdown) {
+          setTripPlan({
+            markdown: decoded.markdown,
+            sources: decoded.sources || []
+          });
+          setIsSharedView(true);
+          setLoadingState(LoadingState.SUCCESS);
+
+          // Set language from shared data if available
+          if (decoded.lang && Object.prototype.hasOwnProperty.call(LANGUAGE_NAMES, decoded.lang)) {
+            setLanguage(decoded.lang as Language);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse shared itinerary", e);
+      }
+    }
+  }, []);
 
   // Defensive check: Ensure t exists. If invalid lang is somehow passed, fallback to English.
   const t = TRANSLATIONS[language] || TRANSLATIONS['en'];
@@ -125,6 +153,15 @@ const App: React.FC = () => {
   const handleRefineTrip = () => {
     setTripPlan(null);
     setLoadingState(LoadingState.IDLE);
+    setIsSharedView(false);
+
+    // Clear shared param from URL if present
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('shared')) {
+      url.searchParams.delete('shared');
+      window.history.replaceState({}, '', url);
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
