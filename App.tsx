@@ -226,21 +226,22 @@ const App: React.FC = () => {
             </div>
           </div>
           
-          <div className="hidden md:flex items-center gap-4 text-sm font-medium text-slate-500">
+          <div className="flex items-center gap-2 md:gap-4 text-sm font-medium text-slate-500">
+            {/* Clear History - Desktop only */}
             {(lastInput || tripPlan) && (
-                <button onClick={handleClearHistory} className="hover:text-red-500 transition mr-2 text-xs font-mono opacity-60 hover:opacity-100">
+                <button onClick={handleClearHistory} className="hidden md:block hover:text-red-500 transition mr-2 text-xs font-mono opacity-60 hover:opacity-100">
                     [ {t.actions.clear} ]
                 </button>
             )}
-            
-            {/* Language Dropdown */}
+
+            {/* Language Dropdown - Works on both mobile and desktop */}
             <div className="relative" ref={langMenuRef}>
-               <button 
-                onClick={() => setIsLangMenuOpen(!isLangMenuOpen)} 
-                className="flex items-center gap-2 hover:text-blue-600 transition px-3 py-2 rounded-lg hover:bg-white/50 backdrop-blur-sm"
+               <button
+                onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+                className="flex items-center gap-1 md:gap-2 hover:text-blue-600 transition px-2 md:px-3 py-2 rounded-lg hover:bg-white/50 backdrop-blur-sm"
                >
                  <Globe className="w-4 h-4" />
-                 <span>{LANGUAGE_NAMES[language]}</span>
+                 <span className="hidden md:inline">{LANGUAGE_NAMES[language]}</span>
                  <ChevronDown className={`w-3 h-3 transition-transform ${isLangMenuOpen ? 'rotate-180' : ''}`} />
                </button>
 
