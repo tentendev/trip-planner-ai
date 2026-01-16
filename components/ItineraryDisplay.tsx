@@ -1,7 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import MarkdownRenderer from './MarkdownRenderer';
-import ShareCard from './ShareCard';
 import { Download, Map, Compass, Printer, Copy, FileDown, ChevronDown, Check, PenLine, CloudSun, Globe, Radio, Share2, Link, Sparkles, Image } from 'lucide-react';
 import { GeneratedPlan, Language, TripInput } from '../types';
 import { TRANSLATIONS } from '../utils/i18n';
@@ -13,16 +12,15 @@ interface ItineraryDisplayProps {
   language: Language;
   planId?: string;
   tripInput?: TripInput;
+  onOpenShareCard?: (shareUrl: string, highlights: string[]) => void;
 }
 
-const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, language, planId, tripInput }) => {
+const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, language, planId, tripInput, onOpenShareCard }) => {
   const t = TRANSLATIONS[language];
   const [showDropdown, setShowDropdown] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
-  const [showShareCard, setShowShareCard] = useState(false);
-  const [currentShareUrl, setCurrentShareUrl] = useState<string>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -113,8 +111,12 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
     // Generate share URL first
     const shareId = saveSharedPlan(plan, language);
     const fullUrl = generateShareUrl(shareId, language);
-    setCurrentShareUrl(fullUrl);
-    setShowShareCard(true);
+    const highlights = extractHighlights();
+
+    // Call parent callback to open ShareCard at root level
+    if (onOpenShareCard) {
+      onOpenShareCard(fullUrl, highlights);
+    }
   };
 
   // Extract trip highlights from markdown content
@@ -322,22 +324,6 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
         </p>
       </div>
 
-      {/* Share Card Modal */}
-      <ShareCard
-        isOpen={showShareCard}
-        onClose={() => setShowShareCard(false)}
-        language={language}
-        tripData={{
-          destination: tripInput?.destination || extractDestinationFromMarkdown(plan.markdown),
-          dates: tripInput?.dates || '',
-          travelers: tripInput?.travelers || '',
-          budget: tripInput?.budget || '',
-          pace: tripInput?.pace || 'Moderate',
-          interests: tripInput?.interests || '',
-          highlights: extractHighlights(),
-        }}
-        shareUrl={currentShareUrl}
-      />
     </div>
   );
 };

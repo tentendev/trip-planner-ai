@@ -4,6 +4,7 @@ import InputForm from './components/InputForm';
 import ItineraryDisplay from './components/ItineraryDisplay';
 import LoadingOverlay from './components/LoadingOverlay';
 import SocialProof from './components/SocialProof';
+import ShareCard from './components/ShareCard';
 import { generateTripPlan } from './services/geminiService';
 import { TripInput, LoadingState, GeneratedPlan, Language } from './types';
 import { Globe, Terminal, ChevronDown, Check } from 'lucide-react';
@@ -27,6 +28,13 @@ const App: React.FC = () => {
   // Language Dropdown State
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
+
+  // ShareCard State (placed at root level for proper mobile positioning)
+  const [showShareCard, setShowShareCard] = useState(false);
+  const [shareCardData, setShareCardData] = useState<{ shareUrl: string; highlights: string[] }>({
+    shareUrl: '',
+    highlights: []
+  });
 
   // Initialize language priority: URL -> Browser -> Default (zh-TW)
   const [language, setLanguage] = useState<Language>(() => {
@@ -215,16 +223,22 @@ const App: React.FC = () => {
   };
 
   const handleClearHistory = () => {
-    const confirmMsg = language === 'zh-TW' 
-      ? "確定要清除歷史紀錄嗎？" 
+    const confirmMsg = language === 'zh-TW'
+      ? "確定要清除歷史紀錄嗎？"
       : "Are you sure you want to clear history?";
-      
+
     if(window.confirm(confirmMsg)) {
         localStorage.removeItem(STORAGE_KEY);
         setLastInput(undefined);
         setTripPlan(null);
         setLoadingState(LoadingState.IDLE);
     }
+  };
+
+  // Handler for opening ShareCard from ItineraryDisplay
+  const handleOpenShareCard = (shareUrl: string, highlights: string[]) => {
+    setShareCardData({ shareUrl, highlights });
+    setShowShareCard(true);
   };
 
   return (
@@ -315,7 +329,7 @@ const App: React.FC = () => {
         )}
 
         {tripPlan ? (
-          <ItineraryDisplay plan={tripPlan} onReset={handleRefineTrip} language={language} tripInput={lastInput} />
+          <ItineraryDisplay plan={tripPlan} onReset={handleRefineTrip} language={language} tripInput={lastInput} onOpenShareCard={handleOpenShareCard} />
         ) : (
           <InputForm 
             onSubmit={handleFormSubmit} 
@@ -331,6 +345,23 @@ const App: React.FC = () => {
            © Built with Love ❤️ by <a href="https://tenten.co/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Tenten AI</a> | The Leading AI-First Agency in Asia
         </p>
       </footer>
+
+      {/* ShareCard Modal - Placed at root level for proper mobile centering */}
+      <ShareCard
+        isOpen={showShareCard}
+        onClose={() => setShowShareCard(false)}
+        language={language}
+        tripData={{
+          destination: lastInput?.destination || '',
+          dates: lastInput?.dates || '',
+          travelers: lastInput?.travelers || '',
+          budget: lastInput?.budget || '',
+          pace: lastInput?.pace || 'Moderate',
+          interests: lastInput?.interests || '',
+          highlights: shareCardData.highlights,
+        }}
+        shareUrl={shareCardData.shareUrl}
+      />
     </div>
   );
 };
