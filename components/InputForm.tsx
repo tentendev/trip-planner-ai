@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { TripInput, Language } from '../types';
 import { TRANSLATIONS } from '../utils/i18n';
-import { Plane, Users, DollarSign, Activity, Heart, AlertTriangle, Coffee, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Bed, Utensils, PlaneLanding, PlaneTakeoff, Plus, Gauge, Zap } from 'lucide-react';
+import { Plane, Users, DollarSign, Activity, Heart, AlertTriangle, Coffee, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Bed, Utensils, PlaneLanding, PlaneTakeoff, Plus, Gauge, Zap, CheckCircle2 } from 'lucide-react';
 
 interface InputFormProps {
   onSubmit: (data: TripInput) => void;
@@ -127,6 +127,55 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
     e.preventDefault();
     onSubmit(formData);
   };
+
+  // Calculate form completion progress
+  const formProgress = useMemo(() => {
+    const fields = {
+      // Required fields (higher weight)
+      destination: { value: formData.destination, weight: 3 },
+      dates: { value: formData.dates, weight: 3 },
+      // Important fields
+      travelers: { value: formData.travelers, weight: 2 },
+      budget: { value: formData.budget, weight: 2 },
+      pace: { value: formData.pace, weight: 2 },
+      // Optional fields
+      interests: { value: formData.interests, weight: 1 },
+      mustDos: { value: formData.mustDos, weight: 1 },
+      constraints: { value: formData.constraints, weight: 1 },
+      accommodation: { value: formData.accommodation, weight: 1 },
+      transportPref: { value: formData.transportPref, weight: 1 },
+    };
+
+    let totalWeight = 0;
+    let completedWeight = 0;
+
+    Object.values(fields).forEach(({ value, weight }) => {
+      totalWeight += weight;
+      if (value && value.trim() !== '' && value !== 'Moderate') {
+        completedWeight += weight;
+      } else if (value === 'Moderate') {
+        // Pace has a default value, count as half completed
+        completedWeight += weight * 0.5;
+      }
+    });
+
+    return Math.min(Math.round((completedWeight / totalWeight) * 100), 100);
+  }, [formData]);
+
+  // Progress bar color based on completion
+  const getProgressColor = (progress: number) => {
+    if (progress < 30) return 'bg-slate-300';
+    if (progress < 60) return 'bg-blue-400';
+    if (progress < 90) return 'bg-blue-500';
+    return 'bg-green-500';
+  };
+
+  // Section completion indicators
+  const sectionCompletion = useMemo(() => ({
+    basics: !!(formData.destination && formData.dates),
+    style: !!(formData.budget || formData.pace !== 'Moderate'),
+    prefs: !!(formData.interests || formData.mustDos || formData.constraints || formData.accommodation || formData.transportPref),
+  }), [formData]);
 
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
@@ -316,14 +365,90 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
 
   return (
     <form onSubmit={handleSubmit} className="space-y-10 bg-white/60 backdrop-blur-xl p-6 md:p-10 rounded-3xl shadow-2xl border border-white/40 relative">
-      
+
       {/* Decorative Grid */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none rounded-3xl"></div>
+
+      {/* Form Progress Indicator */}
+      <div className="relative z-10 -mt-2 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-4">
+            {/* Step indicators */}
+            <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                sectionCompletion.basics
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-blue-100 text-blue-700'
+              }`}>
+                {sectionCompletion.basics ? (
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                ) : (
+                  <span className="w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center">1</span>
+                )}
+                <span className="hidden md:inline">{t.form.section_basics}</span>
+              </div>
+
+              <div className="w-8 h-0.5 bg-slate-200 hidden md:block" />
+
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                sectionCompletion.style
+                  ? 'bg-green-100 text-green-700'
+                  : sectionCompletion.basics
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-slate-100 text-slate-400'
+              }`}>
+                {sectionCompletion.style ? (
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                ) : (
+                  <span className={`w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center ${sectionCompletion.basics ? 'bg-emerald-500' : 'bg-slate-300'}`}>2</span>
+                )}
+                <span className="hidden md:inline">{t.form.section_style}</span>
+              </div>
+
+              <div className="w-8 h-0.5 bg-slate-200 hidden md:block" />
+
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                sectionCompletion.prefs
+                  ? 'bg-green-100 text-green-700'
+                  : sectionCompletion.style
+                    ? 'bg-pink-100 text-pink-700'
+                    : 'bg-slate-100 text-slate-400'
+              }`}>
+                {sectionCompletion.prefs ? (
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                ) : (
+                  <span className={`w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center ${sectionCompletion.style ? 'bg-pink-500' : 'bg-slate-300'}`}>3</span>
+                )}
+                <span className="hidden md:inline">{t.form.section_prefs}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Completion percentage */}
+          <div className="flex items-center gap-2">
+            <span className={`text-sm font-bold transition-colors ${formProgress >= 90 ? 'text-green-600' : 'text-slate-600'}`}>
+              {formProgress}%
+            </span>
+            {formProgress >= 90 && (
+              <span className="text-xs text-green-600 hidden md:inline animate-in fade-in">Ready!</span>
+            )}
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div
+            className={`h-full transition-all duration-500 ease-out rounded-full ${getProgressColor(formProgress)}`}
+            style={{ width: `${formProgress}%` }}
+          />
+        </div>
+      </div>
 
       {/* Section 1: The Basics - High Z-Index for DatePicker */}
       <div className="space-y-6 relative z-30">
         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-200/50">
           <Plane className="w-5 h-5 text-blue-600" /> {t.form.section_basics}
+          {sectionCompletion.basics && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-3">
@@ -418,6 +543,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
       <div className="space-y-6 relative z-20">
         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-200/50">
           <Activity className="w-5 h-5 text-emerald-600" /> {t.form.section_style}
+          {sectionCompletion.style && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
            <div className="space-y-3">
@@ -435,6 +561,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
       <div className="space-y-6 relative z-10">
         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-200/50">
           <Heart className="w-5 h-5 text-pink-600" /> {t.form.section_prefs}
+          {sectionCompletion.prefs && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />}
         </h3>
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

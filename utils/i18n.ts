@@ -46,7 +46,8 @@ const BASE_EN = {
     download: 'Export Markdown File',
     print: 'Print Itinerary',
     clear: 'Clear History',
-    share: 'Share Link'
+    share: 'Share Link',
+    shareCard: 'Share Card'
   },
   form: {
     section_basics: 'Trip Basics',
@@ -129,7 +130,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       estimated_time: '通常需要 30-60 秒'
     },
     error: '生成失败，请检查 API Key 或稍后再试。',
-    actions: { ...BASE_EN.actions, submit: '生成行程计划', refine: '调整行程', export: '导出行程', copy: '复制 Markdown', copied: '已复制', download: '导出 Markdown 文件', print: '打印行程', clear: '清除历史', share: '分享链接' },
+    actions: { ...BASE_EN.actions, submit: '生成行程计划', refine: '调整行程', export: '导出行程', copy: '复制 Markdown', copied: '已复制', download: '导出 Markdown 文件', print: '打印行程', clear: '清除历史', share: '分享链接', shareCard: '分享卡片' },
     form: {
       ...BASE_EN.form,
       section_basics: '基本信息',
@@ -219,7 +220,8 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       download: '匯出 Markdown 檔案',
       print: '列印 / 存為 PDF',
       clear: '清除暫存資料',
-      share: '分享連結'
+      share: '分享連結',
+      shareCard: '分享卡片'
     },
     form: {
       section_basics: '旅程基本資訊',
@@ -299,7 +301,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       estimated_time: '通常30〜60秒かかります'
     },
     error: '生成に失敗しました。後でもう一度お試しください。',
-    actions: { ...BASE_EN.actions, submit: '旅程を作成する', refine: '条件を修正', export: 'エクスポート', copy: 'コピー', copied: 'コピー完了', download: 'Markdownをエクスポート', print: '印刷 / PDF', clear: '履歴削除', share: '共有リンク' },
+    actions: { ...BASE_EN.actions, submit: '旅程を作成する', refine: '条件を修正', export: 'エクスポート', copy: 'コピー', copied: 'コピー完了', download: 'Markdownをエクスポート', print: '印刷 / PDF', clear: '履歴削除', share: '共有リンク', shareCard: 'シェアカード' },
     form: {
       ...BASE_EN.form,
       section_basics: '基本情報',
@@ -377,7 +379,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       ],
       estimated_time: '보통 30-60초 소요됩니다'
     },
-    actions: { ...BASE_EN.actions, submit: '일정 생성하기', refine: '일정 수정', export: '내보내기', copy: '복사', copied: '복사됨', download: 'Markdown 파일 내보내기', print: '인쇄 / PDF', clear: '기록 삭제', share: '링크 공유' },
+    actions: { ...BASE_EN.actions, submit: '일정 생성하기', refine: '일정 수정', export: '내보내기', copy: '복사', copied: '복사됨', download: 'Markdown 파일 내보내기', print: '인쇄 / PDF', clear: '기록 삭제', share: '링크 공유', shareCard: '공유 카드' },
     form: {
       ...BASE_EN.form,
       section_basics: '기본 정보',
@@ -439,7 +441,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       ],
       estimated_time: 'Generalmente toma 30-60 segundos'
     },
-    actions: { ...BASE_EN.actions, submit: 'Generar Plan', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Markdown', print: 'Imprimir', clear: 'Borrar', share: 'Compartir Enlace' },
+    actions: { ...BASE_EN.actions, submit: 'Generar Plan', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Markdown', print: 'Imprimir', clear: 'Borrar', share: 'Compartir Enlace', shareCard: 'Tarjeta' },
     form: {
       ...BASE_EN.form,
       section_basics: 'Datos Básicos',
@@ -498,7 +500,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       ],
       estimated_time: 'Généralement 30 à 60 secondes'
     },
-    actions: { ...BASE_EN.actions, submit: 'Générer le Plan', refine: 'Modifier', export: 'Exporter', copy: 'Copier', copied: 'Copié', download: 'Exporter Markdown', print: 'Imprimer', clear: 'Effacer', share: 'Partager le Lien' },
+    actions: { ...BASE_EN.actions, submit: 'Générer le Plan', refine: 'Modifier', export: 'Exporter', copy: 'Copier', copied: 'Copié', download: 'Exporter Markdown', print: 'Imprimer', clear: 'Effacer', share: 'Partager le Lien', shareCard: 'Carte' },
     form: {
       ...BASE_EN.form,
       section_basics: 'Infos de Base',
@@ -557,7 +559,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       ],
       estimated_time: 'आमतौर पर 30-60 सेकंड लगते हैं'
     },
-    actions: { ...BASE_EN.actions, submit: 'यात्रा योजना बनाएं', refine: 'सुधारें', export: 'एक्सपोर्ट', copy: 'कॉपी', copied: 'कॉपी किया', download: 'मार्कडाउन फ़ाइल निर्यात करें', print: 'प्रिंट', clear: 'इतिहास मिटाएं', share: 'लिंक साझा करें' },
+    actions: { ...BASE_EN.actions, submit: 'यात्रा योजना बनाएं', refine: 'सुधारें', export: 'एक्सपोर्ट', copy: 'कॉपी', copied: 'कॉपी किया', download: 'मार्कडाउन फ़ाइल निर्यात करें', print: 'प्रिंट', clear: 'इतिहास मिटाएं', share: 'लिंक साझा करें', shareCard: 'शेयर कार्ड' },
     form: {
       ...BASE_EN.form,
       section_basics: 'यात्रा की जानकारी',
@@ -602,7 +604,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       ],
       estimated_time: 'عادة ما يستغرق 30-60 ثانية'
     },
-    actions: { ...BASE_EN.actions, submit: 'إنشاء خطة السفر', refine: 'تعديل', export: 'تصدير', copy: 'نسخ', copied: 'تم النسخ', download: 'تصدير ملف Markdown', print: 'طباعة', clear: 'مسح التاريخ', share: 'مشاركة الرابط' },
+    actions: { ...BASE_EN.actions, submit: 'إنشاء خطة السفر', refine: 'تعديل', export: 'تصدير', copy: 'نسخ', copied: 'تم النسخ', download: 'تصدير ملف Markdown', print: 'طباعة', clear: 'مسح التاريخ', share: 'مشاركة الرابط', shareCard: 'بطاقة' },
     form: {
       ...BASE_EN.form,
       section_basics: 'أساسيات الرحلة',
@@ -647,7 +649,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       ],
       estimated_time: 'Geralmente leva 30-60 segundos'
     },
-    actions: { ...BASE_EN.actions, submit: 'Gerar Plano', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Arquivo Markdown', print: 'Imprimir', clear: 'Limpar', share: 'Compartilhar Link' },
+    actions: { ...BASE_EN.actions, submit: 'Gerar Plano', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Arquivo Markdown', print: 'Imprimir', clear: 'Limpar', share: 'Compartilhar Link', shareCard: 'Cartão' },
     form: {
       ...BASE_EN.form,
       section_basics: 'Básico',
@@ -692,7 +694,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       ],
       estimated_time: 'Обычно занимает 30-60 секунд'
     },
-    actions: { ...BASE_EN.actions, submit: 'Создать план', refine: 'Уточнить', export: 'Экспорт', copy: 'Копировать', copied: 'Скопировано', download: 'Экспорт файла Markdown', print: 'Печать', clear: 'Очистить', share: 'Поделиться ссылкой' },
+    actions: { ...BASE_EN.actions, submit: 'Создать план', refine: 'Уточнить', export: 'Экспорт', copy: 'Копировать', copied: 'Скопировано', download: 'Экспорт файла Markdown', print: 'Печать', clear: 'Очистить', share: 'Поделиться ссылкой', shareCard: 'Карточка' },
     form: {
       ...BASE_EN.form,
       section_basics: 'Основное',

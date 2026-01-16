@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import InputForm from './components/InputForm';
 import ItineraryDisplay from './components/ItineraryDisplay';
 import LoadingOverlay from './components/LoadingOverlay';
+import SocialProof from './components/SocialProof';
 import { generateTripPlan } from './services/geminiService';
 import { TripInput, LoadingState, GeneratedPlan, Language } from './types';
 import { Globe, Terminal, ChevronDown, Check } from 'lucide-react';
@@ -124,6 +125,23 @@ const App: React.FC = () => {
     document.documentElement.lang = language;
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
 
+    // Update OG meta tags based on language
+    const updateMetaTag = (property: string, content: string) => {
+      let meta = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+      if (!meta) {
+        meta = document.querySelector(`meta[name="${property}"]`) as HTMLMetaElement;
+      }
+      if (meta) {
+        meta.content = content;
+      }
+    };
+
+    updateMetaTag('og:title', t.metaTitle);
+    updateMetaTag('og:description', t.hero.desc);
+    updateMetaTag('twitter:title', t.metaTitle);
+    updateMetaTag('twitter:description', t.hero.desc);
+    updateMetaTag('description', t.hero.desc);
+
     const savedState = localStorage.getItem(STORAGE_KEY);
     if (savedState) {
       try {
@@ -134,7 +152,7 @@ const App: React.FC = () => {
         console.error("Failed to restore state", e);
       }
     }
-  }, [language, t.metaTitle]);
+  }, [language, t.metaTitle, t.hero.desc]);
 
   // Handle clicking outside language menu
   useEffect(() => {
@@ -277,9 +295,12 @@ const App: React.FC = () => {
             <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 tracking-tight">
                <span dangerouslySetInnerHTML={{ __html: t.hero.title }} />
             </h2>
-            <p className="text-lg md:text-xl text-slate-600 leading-relaxed font-light">
+            <p className="text-lg md:text-xl text-slate-600 leading-relaxed font-light mb-8">
               {t.hero.desc}
             </p>
+
+            {/* Social Proof Section */}
+            <SocialProof language={language} />
           </div>
         )}
 
@@ -294,7 +315,7 @@ const App: React.FC = () => {
         )}
 
         {tripPlan ? (
-          <ItineraryDisplay plan={tripPlan} onReset={handleRefineTrip} language={language} />
+          <ItineraryDisplay plan={tripPlan} onReset={handleRefineTrip} language={language} tripInput={lastInput} />
         ) : (
           <InputForm 
             onSubmit={handleFormSubmit} 

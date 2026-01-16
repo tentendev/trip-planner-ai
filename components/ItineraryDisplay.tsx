@@ -1,8 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import MarkdownRenderer from './MarkdownRenderer';
-import { Download, Map, Compass, Printer, Copy, FileDown, ChevronDown, Check, PenLine, CloudSun, Globe, Radio, Share2, Link } from 'lucide-react';
-import { GeneratedPlan, Language } from '../types';
+import ShareCard from './ShareCard';
+import { Download, Map, Compass, Printer, Copy, FileDown, ChevronDown, Check, PenLine, CloudSun, Globe, Radio, Share2, Link, Sparkles, Image } from 'lucide-react';
+import { GeneratedPlan, Language, TripInput } from '../types';
 import { TRANSLATIONS } from '../utils/i18n';
 import { saveSharedPlan, generateShareUrl } from '../utils/shareStorage';
 
@@ -11,14 +12,17 @@ interface ItineraryDisplayProps {
   onReset: () => void;
   language: Language;
   planId?: string;
+  tripInput?: TripInput;
 }
 
-const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, language, planId }) => {
+const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, language, planId, tripInput }) => {
   const t = TRANSLATIONS[language];
   const [showDropdown, setShowDropdown] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [showShareCard, setShowShareCard] = useState(false);
+  const [currentShareUrl, setCurrentShareUrl] = useState<string>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -105,6 +109,48 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
     }
   };
 
+  const handleOpenShareCard = () => {
+    // Generate share URL first
+    const shareId = saveSharedPlan(plan, language);
+    const fullUrl = generateShareUrl(shareId, language);
+    setCurrentShareUrl(fullUrl);
+    setShowShareCard(true);
+  };
+
+  // Extract trip highlights from markdown content
+  const extractHighlights = (): string[] => {
+    const markdown = plan.markdown;
+    const highlights: string[] = [];
+
+    // Try to extract from Day 1 activities or main attractions
+    const dayMatch = markdown.match(/Day\s*1[^\n]*\n([^\n]+)/i) ||
+                     markdown.match(/第[一1]天[^\n]*\n([^\n]+)/i);
+    if (dayMatch) {
+      const activities = dayMatch[1].match(/[^|]+/g);
+      if (activities) {
+        activities.slice(0, 3).forEach(a => {
+          const cleaned = a.replace(/[*#\-|]/g, '').trim();
+          if (cleaned && cleaned.length > 2 && cleaned.length < 30) {
+            highlights.push(cleaned);
+          }
+        });
+      }
+    }
+
+    // Also try to extract from bullet points
+    const bulletMatches = markdown.match(/[-•]\s*([^-•\n]{5,40})/g);
+    if (bulletMatches && highlights.length < 4) {
+      bulletMatches.slice(0, 4 - highlights.length).forEach(match => {
+        const cleaned = match.replace(/[-•]\s*/, '').trim();
+        if (cleaned && !highlights.includes(cleaned)) {
+          highlights.push(cleaned);
+        }
+      });
+    }
+
+    return highlights.slice(0, 4);
+  };
+
   return (
     <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 overflow-hidden relative">
       
@@ -162,6 +208,15 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 backdrop-blur text-sm font-medium transition"
               >
                 <PenLine className="w-4 h-4" /> {t.actions.refine}
+              </button>
+
+              <button
+                onClick={handleOpenShareCard}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg shadow-pink-500/30 text-sm font-bold transition"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span className="hidden md:inline">{t.actions.shareCard || 'Share Card'}</span>
+                <span className="md:hidden"><Image className="w-4 h-4" /></span>
               </button>
 
               <button
@@ -266,8 +321,43 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
            © Built with Love ❤️ by <a href="https://tenten.co/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-bold">Tenten AI</a> | The Leading AI-First Agency in Asia
         </p>
       </div>
+
+      {/* Share Card Modal */}
+      <ShareCard
+        isOpen={showShareCard}
+        onClose={() => setShowShareCard(false)}
+        language={language}
+        tripData={{
+          destination: tripInput?.destination || extractDestinationFromMarkdown(plan.markdown),
+          dates: tripInput?.dates || '',
+          travelers: tripInput?.travelers || '',
+          budget: tripInput?.budget || '',
+          pace: tripInput?.pace || 'Moderate',
+          interests: tripInput?.interests || '',
+          highlights: extractHighlights(),
+        }}
+        shareUrl={currentShareUrl}
+      />
     </div>
   );
 };
+
+// Helper to extract destination from markdown if tripInput not available
+function extractDestinationFromMarkdown(markdown: string): string {
+  // Try to find destination in title or first heading
+  const h1Match = markdown.match(/^#\s+(.+)/m);
+  if (h1Match) {
+    const title = h1Match[1];
+    // Remove common suffixes like "行程", "Itinerary", etc.
+    return title.replace(/(行程|旅行|旅程|Itinerary|Trip|Travel|Plan).*/gi, '').trim();
+  }
+
+  const h2Match = markdown.match(/^##\s+(.+)/m);
+  if (h2Match) {
+    return h2Match[1].replace(/(行程|旅行|Itinerary|Trip).*/gi, '').trim();
+  }
+
+  return 'My Trip';
+}
 
 export default ItineraryDisplay;
