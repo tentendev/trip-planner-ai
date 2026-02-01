@@ -113,6 +113,8 @@ const LANGUAGE_INSTRUCTIONS: Record<Language, string> = {
 
 export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW'): Promise<GeneratedPlan> => {
   const apiKey = process.env.OPENROUTER_API_KEY;
+  const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
+
   if (!apiKey) {
     throw new Error("API Key is missing. Please set process.env.OPENROUTER_API_KEY.");
   }
@@ -152,7 +154,7 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
         "X-Title": "Trip OS - AI Travel Planner"
       },
       body: JSON.stringify({
-        model: "xiaomi/mimo-v2-flash:free",
+        model: model,
         messages: [
           {
             role: "system",
