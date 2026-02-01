@@ -7,8 +7,12 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
 
     // Use process.env for Vercel builds (injected at build time), fallback to loadEnv for local
-    const apiKey = process.env.OPENROUTER_API_KEY || env.OPENROUTER_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY || env.OPENROUTER_API_KEY || '';
     const model = process.env.OPENROUTER_MODEL || env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
+
+    // Debug: Log env vars during build (will show in Vercel build logs)
+    console.log('[Vite Build] OPENROUTER_MODEL:', model);
+    console.log('[Vite Build] OPENROUTER_API_KEY set:', !!apiKey);
 
     return {
       server: {
