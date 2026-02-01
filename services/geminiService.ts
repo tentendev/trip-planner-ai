@@ -148,6 +148,10 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
   `;
 
   try {
+    // Create AbortController for timeout (3 minutes for complex itineraries)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 180000);
+
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -169,18 +173,29 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
           }
         ],
         temperature: 0.4
-      })
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error("API Response Error:", response.status, errorData);
       throw new Error(errorData.error?.message || `OpenRouter API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log("API Response received:", {
+      model: data.model,
+      hasChoices: !!data.choices?.length,
+      hasContent: !!data.choices?.[0]?.message?.content
+    });
+
     const content = data.choices?.[0]?.message?.content;
 
     if (!content) {
+      console.error("No content in response:", data);
       throw new Error("No content in response");
     }
 
@@ -188,7 +203,11 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
       markdown: content,
       sources: []
     };
-  } catch (error) {
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      console.error("Request timed out after 3 minutes");
+      throw new Error("Request timed out. Please try again.");
+    }
     console.error("OpenRouter API Error:", error);
     throw error;
   }
