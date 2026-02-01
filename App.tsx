@@ -5,7 +5,7 @@ import ItineraryDisplay from './components/ItineraryDisplay';
 import LoadingOverlay from './components/LoadingOverlay';
 import SocialProof from './components/SocialProof';
 import ShareCard from './components/ShareCard';
-import { generateTripPlan } from './services/geminiService';
+import { generateTripPlan, CURRENT_MODEL } from './services/geminiService';
 import { TripInput, LoadingState, GeneratedPlan, Language } from './types';
 import { Globe, Terminal, ChevronDown, Check } from 'lucide-react';
 import { TRANSLATIONS, LANGUAGE_NAMES } from './utils/i18n';
@@ -343,6 +343,10 @@ const App: React.FC = () => {
       <footer className="py-8 text-center text-slate-400 text-sm no-print relative z-10">
          <p>
            © Built with Love ❤️ by <a href="https://tenten.co/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Tenten AI</a> | The Leading AI-First Agency in Asia
+        </p>
+        <p className="mt-2 text-xs text-slate-400/70 font-mono flex items-center justify-center gap-1.5">
+          <span className="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+          Powered by <span className="text-slate-500">{CURRENT_MODEL}</span>
         </p>
       </footer>
 

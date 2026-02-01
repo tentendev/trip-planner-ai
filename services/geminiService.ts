@@ -1,6 +1,9 @@
 
 import { TripInput, GeneratedPlan, Language } from "../types";
 
+// Export model name for UI display
+export const CURRENT_MODEL = process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
+
 // Base instructions that apply to all languages
 const BASE_INSTRUCTION = `
 You are "Trip OS", a full-stack AI travel director capable of being a local guide, transport optimizer, budget controller, and risk manager.
@@ -113,7 +116,7 @@ const LANGUAGE_INSTRUCTIONS: Record<Language, string> = {
 
 export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW'): Promise<GeneratedPlan> => {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
+  const model = CURRENT_MODEL;
 
   if (!apiKey) {
     throw new Error("API Key is missing. Please set process.env.OPENROUTER_API_KEY.");
