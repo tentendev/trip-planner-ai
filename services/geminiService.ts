@@ -2,7 +2,7 @@
 import { TripInput, GeneratedPlan, Language } from "../types";
 
 // Export model name for UI display
-export const CURRENT_MODEL = process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
+export const CURRENT_MODEL = process.env.OPENROUTER_MODEL || 'minimax/minimax-m2.7';
 
 // Base instructions that apply to all languages
 const BASE_INSTRUCTION = `
@@ -31,10 +31,26 @@ Your goal is to produce a complete, actionable, bookable, and optimized itinerar
 4. **Plan B**: One alternative per day (Rain/Tired/Crowded).
 5. **Booking OS**: List of items needing reservation, best time to book, alternatives.
 6. **Budget Table**: Accommodation/Transport/Food/Tickets/Misc; Conservative/Standard/Luxury tiers.
-7. **Accommodation**: Suggest 2-3 "Areas" (not specific hotels unless unique), pros/cons.
-8. **Transport Rules**: Commute limits, transfer logic, taxi vs train thresholds.
-9. **Risks**: Safety, scams, altitude, local rules.
-10. **Packing List**: Use Markdown Checkbox syntax (e.g. - [ ] Passport).
+7. **Hotel Recommendations**:
+   - **FORMAT: MUST BE A MARKDOWN TABLE.**
+   - Suggest **3-5 specific hotels/hostels/accommodations** tailored to the traveler's budget tier and preferences.
+   - Columns: **Hotel Name** | **Area / Location** | **Price Range (per night)** | **Rating** | **Why This Pick**
+   - For each hotel, include a short insight (e.g., walkable to key attractions, best rooftop view, great breakfast, hidden gem locals love, best value-for-money).
+   - Group recommendations by budget tier: Budget, Mid-Range, Luxury (show tiers relevant to the traveler's stated budget).
+   - Include practical notes: distance to main attractions, nearest transit, check-in flexibility, cancellation policy tips.
+   - Use local currency + USD equivalent for prices.
+8. **Flight Ticket Recommendations**:
+   - **FORMAT: MUST BE A MARKDOWN TABLE.**
+   - Suggest **Top 5 best flight options** for the traveler's route and dates.
+   - Columns: **Rank** | **Airline** | **Route & Stops** | **Departure → Arrival** | **Duration** | **Estimated Price** | **Why This Pick**
+   - Consider: direct vs connecting flights, departure time convenience, airline reputation, baggage policy, layover duration.
+   - Label each pick with a tag: 🏆 Best Overall, 💰 Best Value, ⚡ Fastest, 🕐 Best Schedule, 🌟 Best Airline.
+   - Include booking tips: best platforms to book (Skyscanner, Google Flights, airline direct), ideal booking window, flexible date savings.
+   - Use local currency + USD equivalent for prices.
+   - If arrival/departure details are already provided with specific flights, skip this section and note the existing booking instead.
+9. **Transport Rules**: Commute limits, transfer logic, taxi vs train thresholds.
+10. **Risks**: Safety, scams, altitude, local rules.
+11. **Packing List**: Use Markdown Checkbox syntax (e.g. - [ ] Passport).
 
 ## 2) Planning Algorithm
 
