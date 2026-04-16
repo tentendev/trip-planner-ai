@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { TripInput, Language } from '../types';
 import { TRANSLATIONS } from '../utils/i18n';
-import { Plane, Users, DollarSign, Activity, Heart, AlertTriangle, Coffee, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Bed, Utensils, PlaneLanding, PlaneTakeoff, Plus, Gauge, Zap, CheckCircle2 } from 'lucide-react';
+import { buildFullPrompt } from '../services/geminiService';
+import { Plane, Users, DollarSign, Activity, Heart, AlertTriangle, Coffee, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Bed, Utensils, PlaneLanding, PlaneTakeoff, Plus, Gauge, Zap, CheckCircle2, Code, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface InputFormProps {
   onSubmit: (data: TripInput) => void;
@@ -10,6 +11,73 @@ interface InputFormProps {
   initialValues?: TripInput;
   language: Language;
 }
+
+const RawPromptPreview: React.FC<{ formData: TripInput; language: Language; t: typeof TRANSLATIONS['en'] }> = ({ formData, language, t }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const rawPrompt = useMemo(() => buildFullPrompt(formData, language), [formData, language]);
+
+  const filledCount = useMemo(() => {
+    const values = [
+      formData.destination, formData.arrivalDetail, formData.departureDetail,
+      formData.dates, formData.travelers, formData.budget, formData.pace,
+      formData.interests, formData.mustDos, formData.constraints,
+      formData.accommodation, formData.transportPref, formData.diet,
+      formData.work, formData.bookings, formData.other
+    ];
+    return values.filter(v => v && v.trim() !== '').length;
+  }, [formData]);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(rawPrompt);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="relative z-10">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-700 transition"
+      >
+        <Code className="w-4 h-4" />
+        {isOpen ? t.actions.hidePrompt : t.actions.viewPrompt}
+        <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 text-xs font-mono">{filledCount}/16</span>
+        {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      </button>
+
+      {isOpen && (
+        <div className="mt-3 rounded-xl border border-slate-200/60 bg-slate-900 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between px-4 py-2.5 bg-slate-800 border-b border-slate-700">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-mono text-slate-400">RAW PROMPT</span>
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-mono">
+                <Zap className="w-3 h-3" /> LIVE
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleCopy}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                copied
+                  ? 'bg-green-500/20 text-green-400'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+            >
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? t.actions.promptCopied : t.actions.copyPrompt}
+            </button>
+          </div>
+          <pre className="p-4 text-sm text-slate-300 font-mono whitespace-pre-wrap break-words max-h-80 overflow-y-auto leading-relaxed">
+            {rawPrompt}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValues, language }) => {
   const t = TRANSLATIONS[language];
@@ -595,9 +663,12 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
         </div>
       </div>
 
+      {/* Raw Prompt Preview */}
+      <RawPromptPreview formData={formData} language={language} t={t} />
+
       <div className="pt-6">
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={isLoading}
           className={`w-full py-5 px-6 rounded-2xl font-bold text-lg text-white shadow-xl transition-all transform hover:-translate-y-1 hover:shadow-2xl
             ${isLoading ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800'}`}

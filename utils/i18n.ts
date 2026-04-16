@@ -47,7 +47,23 @@ const BASE_EN = {
     print: 'Print Itinerary',
     clear: 'Clear History',
     share: 'Share Link',
-    shareCard: 'Share Card'
+    shareCard: 'Share Card',
+    viewPrompt: 'View Raw Prompt',
+    hidePrompt: 'Hide Prompt',
+    copyPrompt: 'Copy Prompt',
+    promptCopied: 'Prompt Copied!'
+  },
+  preAnalysis: {
+    badge: 'AI Pre-Analysis',
+    title: 'Let\'s refine your trip',
+    subtitle: 'Based on your input, we identified a few questions that could make your itinerary significantly better.',
+    answered: 'Answered:',
+    multiSelect: '(select multiple)',
+    confirmWithAnswers: 'Generate with Enhancements',
+    confirmSkipAll: 'Generate as-is',
+    skip: 'Skip & Generate',
+    analyzing: 'Analyzing your trip...',
+    analyzingSubtitle: 'AI is identifying ways to improve your itinerary',
   },
   form: {
     section_basics: 'Trip Basics',
@@ -112,6 +128,18 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
     ...BASE_EN,
     subtitle: 'AI 全栈旅游规划总监',
     metaTitle: 'Trip OS - AI 全栈旅游规划总监',
+    preAnalysis: {
+      badge: 'AI 预分析',
+      title: '让我们优化您的行程',
+      subtitle: '根据您的输入，我们发现了一些问题，回答后可以让行程更加完美。',
+      answered: '已回答：',
+      multiSelect: '（可多选）',
+      confirmWithAnswers: '生成优化行程',
+      confirmSkipAll: '直接生成',
+      skip: '跳过并生成',
+      analyzing: '正在分析您的旅行...',
+      analyzingSubtitle: 'AI 正在寻找优化行程的方式',
+    },
     hero: {
       title: '完美旅程，<br/>零摩擦体验。',
       desc: 'AI 驱动的全方位旅游规划师，根据您的节奏、预算和限制，打造可直接执行的最佳化行程。',
@@ -130,7 +158,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       estimated_time: '通常需要 30-60 秒'
     },
     error: '生成失败，请检查 API Key 或稍后再试。',
-    actions: { ...BASE_EN.actions, submit: '生成行程计划', refine: '调整行程', export: '导出行程', copy: '复制 Markdown', copied: '已复制', download: '导出 Markdown 文件', print: '打印行程', clear: '清除历史', share: '分享链接', shareCard: '分享卡片' },
+    actions: { ...BASE_EN.actions, submit: '生成行程计划', refine: '调整行程', export: '导出行程', copy: '复制 Markdown', copied: '已复制', download: '导出 Markdown 文件', print: '打印行程', clear: '清除历史', share: '分享链接', shareCard: '分享卡片', viewPrompt: '查看原始提示词', hidePrompt: '隐藏提示词', copyPrompt: '复制提示词', promptCopied: '提示词已复制！' },
     form: {
       ...BASE_EN.form,
       section_basics: '基本信息',
@@ -193,6 +221,18 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
     title: 'Trip OS',
     subtitle: 'AI 全端旅遊規劃總監',
     metaTitle: 'Trip OS - AI 全端旅遊規劃總監',
+    preAnalysis: {
+      badge: 'AI 預分析',
+      title: '讓我們優化您的行程',
+      subtitle: '根據您的輸入，我們發現了幾個問題，回答後可以讓行程更加完美。',
+      answered: '已回答：',
+      multiSelect: '（可多選）',
+      confirmWithAnswers: '生成優化行程',
+      confirmSkipAll: '直接生成',
+      skip: '跳過並生成',
+      analyzing: '正在分析您的旅行...',
+      analyzingSubtitle: 'AI 正在尋找優化行程的方式',
+    },
     hero: {
       title: '完美旅程，<br/>零摩擦體驗。',
       desc: 'AI 驅動的全方位旅遊規劃師，根據您的節奏、預算和限制，打造可直接執行的最佳化行程。',
@@ -221,7 +261,11 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       print: '列印 / 存為 PDF',
       clear: '清除暫存資料',
       share: '分享連結',
-      shareCard: '分享卡片'
+      shareCard: '分享卡片',
+      viewPrompt: '查看原始提示詞',
+      hidePrompt: '隱藏提示詞',
+      copyPrompt: '複製提示詞',
+      promptCopied: '提示詞已複製！'
     },
     form: {
       section_basics: '旅程基本資訊',
@@ -283,6 +327,18 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
     ...BASE_EN,
     subtitle: 'AI トラベルプランナー',
     metaTitle: 'Trip OS - AI トラベルプランナー',
+    preAnalysis: {
+      badge: 'AI 事前分析',
+      title: '旅程をさらに最適化しましょう',
+      subtitle: '入力内容をもとに、旅程をより良くするための質問をいくつか用意しました。',
+      answered: '回答済み：',
+      multiSelect: '（複数選択可）',
+      confirmWithAnswers: '最適化して生成',
+      confirmSkipAll: 'そのまま生成',
+      skip: 'スキップして生成',
+      analyzing: '旅行を分析中...',
+      analyzingSubtitle: 'AIが旅程の改善ポイントを探しています',
+    },
     hero: {
       title: '完璧な旅を、<br/>ストレスフリーで。',
       desc: 'AIがあなたのペース、予算、条件に合わせて、実行可能な最適化された旅程を作成します。',
@@ -301,7 +357,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       estimated_time: '通常30〜60秒かかります'
     },
     error: '生成に失敗しました。後でもう一度お試しください。',
-    actions: { ...BASE_EN.actions, submit: '旅程を作成する', refine: '条件を修正', export: 'エクスポート', copy: 'コピー', copied: 'コピー完了', download: 'Markdownをエクスポート', print: '印刷 / PDF', clear: '履歴削除', share: '共有リンク', shareCard: 'シェアカード' },
+    actions: { ...BASE_EN.actions, submit: '旅程を作成する', refine: '条件を修正', export: 'エクスポート', copy: 'コピー', copied: 'コピー完了', download: 'Markdownをエクスポート', print: '印刷 / PDF', clear: '履歴削除', share: '共有リンク', shareCard: 'シェアカード', viewPrompt: 'プロンプトを表示', hidePrompt: 'プロンプトを隠す', copyPrompt: 'プロンプトをコピー', promptCopied: 'コピーしました！' },
     form: {
       ...BASE_EN.form,
       section_basics: '基本情報',
@@ -362,6 +418,18 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
   'ko': {
     ...BASE_EN,
     subtitle: 'AI 풀스택 여행 플래너',
+    preAnalysis: {
+      badge: 'AI 사전 분석',
+      title: '여행을 더 완벽하게 만들어 보세요',
+      subtitle: '입력 내용을 바탕으로 일정을 개선할 수 있는 몇 가지 질문을 준비했습니다.',
+      answered: '답변 완료:',
+      multiSelect: '(복수 선택 가능)',
+      confirmWithAnswers: '최적화하여 생성',
+      confirmSkipAll: '그대로 생성',
+      skip: '건너뛰고 생성',
+      analyzing: '여행을 분석 중...',
+      analyzingSubtitle: 'AI가 일정 개선 방법을 찾고 있습니다',
+    },
     hero: {
       title: '완벽한 여행,<br/>제로 스트레스.',
       desc: 'AI 기반 종합 여행 플래너. 당신의 속도, 예산, 제약 조건에 맞춰 실행 가능한 최적화된 일정을 만듭니다.',
@@ -379,7 +447,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       ],
       estimated_time: '보통 30-60초 소요됩니다'
     },
-    actions: { ...BASE_EN.actions, submit: '일정 생성하기', refine: '일정 수정', export: '내보내기', copy: '복사', copied: '복사됨', download: 'Markdown 파일 내보내기', print: '인쇄 / PDF', clear: '기록 삭제', share: '링크 공유', shareCard: '공유 카드' },
+    actions: { ...BASE_EN.actions, submit: '일정 생성하기', refine: '일정 수정', export: '내보내기', copy: '복사', copied: '복사됨', download: 'Markdown 파일 내보내기', print: '인쇄 / PDF', clear: '기록 삭제', share: '링크 공유', shareCard: '공유 카드', viewPrompt: '프롬프트 보기', hidePrompt: '프롬프트 숨기기', copyPrompt: '프롬프트 복사', promptCopied: '복사 완료!' },
     form: {
       ...BASE_EN.form,
       section_basics: '기본 정보',
@@ -424,6 +492,18 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
   'es': {
     ...BASE_EN,
     subtitle: 'Director de Viajes AI',
+    preAnalysis: {
+      badge: 'Pre-análisis IA',
+      title: 'Refinemos tu viaje',
+      subtitle: 'Según tu entrada, identificamos algunas preguntas que podrían mejorar significativamente tu itinerario.',
+      answered: 'Respondidas:',
+      multiSelect: '(selección múltiple)',
+      confirmWithAnswers: 'Generar con mejoras',
+      confirmSkipAll: 'Generar tal cual',
+      skip: 'Omitir y generar',
+      analyzing: 'Analizando tu viaje...',
+      analyzingSubtitle: 'La IA está identificando formas de mejorar tu itinerario',
+    },
     hero: {
       title: 'Viaje Perfecto,<br/>Cero Fricción.',
       desc: 'Tu planificador de viajes integral impulsado por IA. Creamos itinerarios procesables y optimizados basados en tu ritmo y presupuesto.',
@@ -483,6 +563,18 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
   'fr': {
     ...BASE_EN,
     subtitle: 'Directeur de Voyage IA',
+    preAnalysis: {
+      badge: 'Pré-analyse IA',
+      title: 'Affinons votre voyage',
+      subtitle: 'En fonction de vos données, nous avons identifié quelques questions pour améliorer significativement votre itinéraire.',
+      answered: 'Répondu :',
+      multiSelect: '(sélection multiple)',
+      confirmWithAnswers: 'Générer avec améliorations',
+      confirmSkipAll: 'Générer tel quel',
+      skip: 'Passer et générer',
+      analyzing: 'Analyse de votre voyage...',
+      analyzingSubtitle: "L'IA identifie des façons d'améliorer votre itinéraire",
+    },
     hero: {
       title: 'Voyage Parfait,<br/>Zéro Friction.',
       desc: 'Votre planificateur de voyage complet propulsé par l\'IA. Itinéraires optimisés selon votre rythme et budget.',
@@ -542,6 +634,18 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
   'hi': {
     ...BASE_EN,
     subtitle: 'AI ट्रैवल प्लानर',
+    preAnalysis: {
+      badge: 'AI पूर्व-विश्लेषण',
+      title: 'आइए आपकी यात्रा को बेहतर बनाएं',
+      subtitle: 'आपकी जानकारी के आधार पर, हमने कुछ सवाल तैयार किए हैं जो आपकी यात्रा को और भी बेहतर बना सकते हैं।',
+      answered: 'उत्तर दिए:',
+      multiSelect: '(एक से अधिक चुनें)',
+      confirmWithAnswers: 'सुधार के साथ बनाएं',
+      confirmSkipAll: 'जैसा है वैसा बनाएं',
+      skip: 'छोड़ें और बनाएं',
+      analyzing: 'आपकी यात्रा का विश्लेषण हो रहा है...',
+      analyzingSubtitle: 'AI आपकी यात्रा को बेहतर बनाने के तरीके खोज रहा है',
+    },
     hero: {
       title: 'सही यात्रा,<br/>बिना किसी परेशानी के।',
       desc: 'आपका AI-संचालित व्यापक यात्रा योजनाकार। हम आपकी गति और बजट के आधार पर अनुकूलित यात्रा कार्यक्रम बनाते हैं।',
@@ -587,6 +691,18 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
   'ar': {
     ...BASE_EN,
     subtitle: 'مخطط السفر بالذكاء الاصطناعي',
+    preAnalysis: {
+      badge: 'تحليل مسبق بالذكاء الاصطناعي',
+      title: 'دعنا نحسّن رحلتك',
+      subtitle: 'بناءً على مدخلاتك، حددنا بعض الأسئلة التي يمكن أن تحسّن مسار رحلتك بشكل كبير.',
+      answered: 'تمت الإجابة:',
+      multiSelect: '(اختيار متعدد)',
+      confirmWithAnswers: 'إنشاء مع التحسينات',
+      confirmSkipAll: 'إنشاء كما هو',
+      skip: 'تخطي وإنشاء',
+      analyzing: 'جاري تحليل رحلتك...',
+      analyzingSubtitle: 'الذكاء الاصطناعي يحدد طرقًا لتحسين مسار رحلتك',
+    },
     hero: {
       title: 'رحلة مثالية،<br/>بدون متاعب.',
       desc: 'مخطط السفر الشامل المدعوم بالذكاء الاصطناعي. نصمم مسارات قابلة للتنفيذ ومحسنة بناءً على وتيرتك وميزانيتك.',
@@ -632,6 +748,18 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
   'pt': {
     ...BASE_EN,
     subtitle: 'Diretor de Viagens IA',
+    preAnalysis: {
+      badge: 'Pré-análise IA',
+      title: 'Vamos refinar sua viagem',
+      subtitle: 'Com base nos seus dados, identificamos algumas perguntas que podem melhorar significativamente seu roteiro.',
+      answered: 'Respondidas:',
+      multiSelect: '(seleção múltipla)',
+      confirmWithAnswers: 'Gerar com melhorias',
+      confirmSkipAll: 'Gerar como está',
+      skip: 'Pular e gerar',
+      analyzing: 'Analisando sua viagem...',
+      analyzingSubtitle: 'A IA está identificando formas de melhorar seu roteiro',
+    },
     hero: {
       title: 'Viagem Perfeita,<br/>Zero Atrito.',
       desc: 'Seu planejador de viagens completo. Criamos itinerários acionáveis e otimizados com base no seu ritmo e orçamento.',
@@ -677,6 +805,18 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
   'ru': {
     ...BASE_EN,
     subtitle: 'AI Тревел-директор',
+    preAnalysis: {
+      badge: 'Предварительный анализ ИИ',
+      title: 'Давайте улучшим вашу поездку',
+      subtitle: 'На основе ваших данных мы подготовили несколько вопросов, которые помогут значительно улучшить маршрут.',
+      answered: 'Отвечено:',
+      multiSelect: '(множественный выбор)',
+      confirmWithAnswers: 'Создать с улучшениями',
+      confirmSkipAll: 'Создать как есть',
+      skip: 'Пропустить и создать',
+      analyzing: 'Анализируем вашу поездку...',
+      analyzingSubtitle: 'ИИ определяет способы улучшить ваш маршрут',
+    },
     hero: {
       title: 'Идеальное путешествие,<br/>Ноль проблем.',
       desc: 'Ваш комплексный планировщик путешествий на базе ИИ. Мы создаем действенные, оптимизированные маршруты.',

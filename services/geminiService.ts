@@ -1,5 +1,5 @@
 
-import { TripInput, GeneratedPlan, Language } from "../types";
+import { TripInput, GeneratedPlan, Language, PreAnalysisQuestion } from "../types";
 
 // Export model name for UI display
 export const CURRENT_MODEL = process.env.OPENROUTER_MODEL || 'minimax/minimax-m2.7';
@@ -130,7 +130,138 @@ const LANGUAGE_INSTRUCTIONS: Record<Language, string> = {
   `
 };
 
-export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW'): Promise<GeneratedPlan> => {
+export const buildUserPrompt = (input: TripInput, lang: Language, preAnalysisAnswers?: Record<string, string[]>, preAnalysisQuestions?: PreAnalysisQuestion[]): string => {
+  const fields: { label: string; value: string }[] = [
+    { label: 'Destination', value: input.destination },
+    { label: 'Arrival', value: input.arrivalDetail },
+    { label: 'Departure', value: input.departureDetail },
+    { label: 'Dates', value: input.dates },
+    { label: 'Travelers', value: input.travelers },
+    { label: 'Budget', value: input.budget },
+    { label: 'Pace', value: input.pace },
+    { label: 'Interests', value: input.interests },
+    { label: 'Must Dos', value: input.mustDos },
+    { label: 'Constraints', value: input.constraints },
+    { label: 'Accommodation Prefs', value: input.accommodation },
+    { label: 'Transport Prefs', value: input.transportPref },
+    { label: 'Diet', value: input.diet },
+    { label: 'Work/Shopping', value: input.work },
+    { label: 'Existing Bookings', value: input.bookings },
+    { label: 'Other', value: input.other },
+  ];
+
+  const filledFields = fields
+    .filter(f => f.value && f.value.trim() !== '')
+    .map(f => `- ${f.label}: ${f.value}`)
+    .join('\n');
+
+  let prompt = `Trip OS Input Data:\n${filledFields}`;
+
+  // Append pre-analysis refinements if user answered any questions
+  if (preAnalysisAnswers) {
+    const answeredEntries = Object.entries(preAnalysisAnswers).filter(([, vals]) => vals.length > 0);
+    if (answeredEntries.length > 0) {
+      const questionMap = new Map(preAnalysisQuestions?.map(q => [q.id, q.question]) || []);
+      prompt += `\n\n## User Refinements (from pre-analysis Q&A — integrate these preferences deeply into the itinerary):\n`;
+      answeredEntries.forEach(([questionId, selections]) => {
+        const questionText = questionMap.get(questionId) || questionId;
+        prompt += `- Q: ${questionText}\n  A: ${selections.join(', ')}\n`;
+      });
+    }
+  }
+
+  prompt += `\n\nPlease generate the Trip OS plan following the system instructions.\nLanguage Requirement: ${lang}`;
+  return prompt;
+};
+
+export const buildFullPrompt = (input: TripInput, lang: Language, preAnalysisAnswers?: Record<string, string[]>, preAnalysisQuestions?: PreAnalysisQuestion[]): string => {
+  const systemInstruction = LANGUAGE_INSTRUCTIONS[lang];
+  const userPrompt = buildUserPrompt(input, lang, preAnalysisAnswers, preAnalysisQuestions);
+  return `[System]\n${systemInstruction.trim()}\n\n[User]\n${userPrompt}`;
+};
+
+const PRE_ANALYSIS_PROMPT = `You are "Trip OS Pre-Analyzer". Given the user's trip input, generate 4-6 smart follow-up questions that would significantly improve the itinerary quality.
+
+For each question:
+- Identify gaps, assumptions, or opportunities in the user's input
+- Suggest specific options relevant to their destination and travel style
+- Cover areas like: must-visit spots they might have missed, local experiences, timing optimization, hidden gems, practical concerns, food/dining specifics, neighborhood preferences
+
+You MUST respond with ONLY a valid JSON array. No markdown, no explanation, no code fences. Just the raw JSON array.
+
+Each object in the array must have:
+- "id": unique string (q1, q2, ...)
+- "question": the question text
+- "options": array of 3-6 specific, actionable options (not generic)
+- "allowMultiple": boolean (true if user can pick more than one)
+
+Make options SPECIFIC to the destination. For example, if going to Tokyo, don't say "Local food" — say "Tsukiji Outer Market sushi breakfast", "Shibuya izakaya hopping", etc.`;
+
+export const preAnalyzeTrip = async (input: TripInput, lang: Language): Promise<PreAnalysisQuestion[]> => {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  const model = CURRENT_MODEL;
+
+  if (!apiKey) {
+    throw new Error("API Key is missing.");
+  }
+
+  const userPrompt = buildUserPrompt(input, lang);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": window.location.origin,
+        "X-Title": "Trip OS - AI Travel Planner"
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: `${PRE_ANALYSIS_PROMPT}\n\nIMPORTANT: All questions and options MUST be in ${lang}. Respond ONLY with a JSON array.` },
+          { role: "user", content: userPrompt }
+        ],
+        temperature: 0.6
+      }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || `API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content) throw new Error("No content in pre-analysis response");
+
+    // Parse JSON from response, stripping any markdown fences
+    const jsonStr = content.replace(/```json?\s*/g, '').replace(/```\s*/g, '').trim();
+    const questions: PreAnalysisQuestion[] = JSON.parse(jsonStr);
+
+    return questions.map((q: any) => ({
+      id: q.id,
+      question: q.question,
+      options: q.options,
+      selected: [],
+      allowMultiple: q.allowMultiple ?? true
+    }));
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      throw new Error("Pre-analysis timed out. Please try again.");
+    }
+    throw error;
+  }
+};
+
+export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW', preAnalysisAnswers?: Record<string, string[]>, preAnalysisQuestions?: PreAnalysisQuestion[]): Promise<GeneratedPlan> => {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = CURRENT_MODEL;
 
@@ -139,29 +270,7 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
   }
 
   const systemInstruction = LANGUAGE_INSTRUCTIONS[lang];
-
-  const userPrompt = `
-  Trip OS Input Data:
-  - Destination: ${input.destination}
-  - Arrival: ${input.arrivalDetail}
-  - Departure: ${input.departureDetail}
-  - Dates: ${input.dates}
-  - Travelers: ${input.travelers}
-  - Budget: ${input.budget}
-  - Pace: ${input.pace}
-  - Interests: ${input.interests}
-  - Must Dos: ${input.mustDos}
-  - Constraints: ${input.constraints}
-  - Accommodation Prefs: ${input.accommodation}
-  - Transport Prefs: ${input.transportPref}
-  - Diet: ${input.diet}
-  - Work/Shopping: ${input.work}
-  - Existing Bookings: ${input.bookings}
-  - Other: ${input.other}
-
-  Please generate the Trip OS plan following the system instructions.
-  Language Requirement: ${lang}
-  `;
+  const userPrompt = buildUserPrompt(input, lang, preAnalysisAnswers, preAnalysisQuestions);
 
   try {
     // Create AbortController for timeout (3 minutes for complex itineraries)

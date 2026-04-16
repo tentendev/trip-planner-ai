@@ -3,10 +3,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import InputForm from './components/InputForm';
 import ItineraryDisplay from './components/ItineraryDisplay';
 import LoadingOverlay from './components/LoadingOverlay';
+import PreAnalysisView from './components/PreAnalysisView';
 import SocialProof from './components/SocialProof';
 import ShareCard from './components/ShareCard';
-import { generateTripPlan, CURRENT_MODEL } from './services/geminiService';
-import { TripInput, LoadingState, GeneratedPlan, Language } from './types';
+import { generateTripPlan, preAnalyzeTrip, CURRENT_MODEL } from './services/geminiService';
+import { TripInput, LoadingState, GeneratedPlan, Language, PreAnalysisQuestion } from './types';
 import { Globe, Terminal, ChevronDown, Check } from 'lucide-react';
 import { TRANSLATIONS, LANGUAGE_NAMES } from './utils/i18n';
 import { getSharedPlan } from './utils/shareStorage';
@@ -24,6 +25,7 @@ const App: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [lastInput, setLastInput] = useState<TripInput | undefined>(undefined);
   const [isSharedView, setIsSharedView] = useState(false);
+  const [preAnalysisQuestions, setPreAnalysisQuestions] = useState<PreAnalysisQuestion[] | null>(null);
 
   // Language Dropdown State
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -184,23 +186,54 @@ const App: React.FC = () => {
   }, [lastInput, tripPlan]);
 
   const handleFormSubmit = async (data: TripInput) => {
-    setLoadingState(LoadingState.GENERATING);
-    setLastInput(data); 
+    setLastInput(data);
     setErrorMsg(null);
-    
+    setLoadingState(LoadingState.PRE_ANALYZING);
+
     try {
-      const result = await generateTripPlan(data, language);
+      const questions = await preAnalyzeTrip(data, language);
+      setPreAnalysisQuestions(questions);
+      setLoadingState(LoadingState.IDLE);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err: any) {
+      // If pre-analysis fails, fall back to direct generation
+      console.warn("Pre-analysis failed, falling back to direct generation:", err);
+      await handleGenerate(data);
+    }
+  };
+
+  const handleGenerate = async (data: TripInput, answers?: Record<string, string[]>) => {
+    setLoadingState(LoadingState.GENERATING);
+    setErrorMsg(null);
+
+    try {
+      const result = await generateTripPlan(data, language, answers, preAnalysisQuestions || undefined);
       setTripPlan(result);
+      setPreAnalysisQuestions(null);
       setLoadingState(LoadingState.SUCCESS);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
       setLoadingState(LoadingState.ERROR);
       setErrorMsg(t.error);
+      setPreAnalysisQuestions(null);
+    }
+  };
+
+  const handlePreAnalysisConfirm = (answers: Record<string, string[]>) => {
+    if (lastInput) {
+      handleGenerate(lastInput, answers);
+    }
+  };
+
+  const handlePreAnalysisSkip = () => {
+    if (lastInput) {
+      handleGenerate(lastInput);
     }
   };
 
   const handleRefineTrip = () => {
     setTripPlan(null);
+    setPreAnalysisQuestions(null);
     setLoadingState(LoadingState.IDLE);
     setIsSharedView(false);
 
@@ -304,7 +337,7 @@ const App: React.FC = () => {
 
       <main className="max-w-5xl mx-auto px-4 md:px-8 pt-8 md:pt-12 flex-grow w-full relative z-10">
         
-        {loadingState === LoadingState.IDLE && !tripPlan && (
+        {loadingState === LoadingState.IDLE && !tripPlan && !preAnalysisQuestions && (
           <div className="mb-12 text-center max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
             <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 tracking-tight">
                <span dangerouslySetInnerHTML={{ __html: t.hero.title }} />
@@ -328,16 +361,35 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {/* Pre-Analysis Loading State */}
+        {loadingState === LoadingState.PRE_ANALYZING && (
+          <div className="flex flex-col items-center justify-center py-20 animate-in fade-in duration-300">
+            <div className="relative w-16 h-16 mb-6">
+              <div className="absolute inset-0 rounded-full border-4 border-slate-200"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-t-amber-500 animate-spin"></div>
+            </div>
+            <p className="text-lg font-bold text-slate-800">{t.preAnalysis.analyzing}</p>
+            <p className="text-sm text-slate-500 mt-2">{t.preAnalysis.analyzingSubtitle}</p>
+          </div>
+        )}
+
         {tripPlan ? (
           <ItineraryDisplay plan={tripPlan} onReset={handleRefineTrip} language={language} tripInput={lastInput} onOpenShareCard={handleOpenShareCard} />
-        ) : (
-          <InputForm 
-            onSubmit={handleFormSubmit} 
+        ) : preAnalysisQuestions ? (
+          <PreAnalysisView
+            questions={preAnalysisQuestions}
+            language={language}
+            onConfirm={handlePreAnalysisConfirm}
+            onSkip={handlePreAnalysisSkip}
+          />
+        ) : loadingState !== LoadingState.PRE_ANALYZING ? (
+          <InputForm
+            onSubmit={handleFormSubmit}
             isLoading={loadingState === LoadingState.GENERATING}
-            initialValues={lastInput} 
+            initialValues={lastInput}
             language={language}
           />
-        )}
+        ) : null}
       </main>
 
       <footer className="py-8 text-center text-slate-400 text-sm no-print relative z-10">

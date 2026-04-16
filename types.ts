@@ -33,9 +33,18 @@ export interface TripInput {
 
 export enum LoadingState {
   IDLE = 'IDLE',
+  PRE_ANALYZING = 'PRE_ANALYZING',
   GENERATING = 'GENERATING',
   SUCCESS = 'SUCCESS',
   ERROR = 'ERROR'
+}
+
+export interface PreAnalysisQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  selected: string[];
+  allowMultiple: boolean;
 }
 
 export interface GeneratedPlan {
