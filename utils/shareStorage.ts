@@ -2,7 +2,7 @@
 import { GeneratedPlan, Language } from '../types';
 
 const SHARE_STORAGE_KEY = 'trip_os_shared_plans';
-const MAX_STORED_PLANS = 50; // Limit to prevent localStorage bloat
+const MAX_STORED_PLANS = 50;
 
 export interface SharedPlan {
   id: string;
@@ -22,7 +22,8 @@ function generateShortId(): string {
   return result;
 }
 
-// Get all stored shared plans
+// --- localStorage helpers (used as cache + fallback) ---
+
 function getStoredPlans(): Record<string, SharedPlan> {
   try {
     const stored = localStorage.getItem(SHARE_STORAGE_KEY);
@@ -32,41 +33,93 @@ function getStoredPlans(): Record<string, SharedPlan> {
   }
 }
 
-// Clean up old plans if we exceed the limit
 function cleanupOldPlans(plans: Record<string, SharedPlan>): Record<string, SharedPlan> {
   const entries = Object.entries(plans);
   if (entries.length <= MAX_STORED_PLANS) return plans;
-
-  // Sort by creation time and keep only the newest
   const sorted = entries.sort((a, b) => b[1].createdAt - a[1].createdAt);
-  const kept = sorted.slice(0, MAX_STORED_PLANS);
-  return Object.fromEntries(kept);
+  return Object.fromEntries(sorted.slice(0, MAX_STORED_PLANS));
 }
 
-// Save a plan and return its short ID
-export function saveSharedPlan(plan: GeneratedPlan, lang: Language): string {
+function saveToLocalStorage(plan: SharedPlan) {
+  const plans = getStoredPlans();
+  plans[plan.id] = plan;
+  const cleaned = cleanupOldPlans(plans);
+  localStorage.setItem(SHARE_STORAGE_KEY, JSON.stringify(cleaned));
+}
+
+function getFromLocalStorage(id: string): SharedPlan | null {
+  const plans = getStoredPlans();
+  return plans[id] || null;
+}
+
+// --- API calls (primary storage via Vercel Blob) ---
+
+async function saveToApi(plan: SharedPlan): Promise<boolean> {
+  try {
+    const response = await fetch('/api/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(plan),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function getFromApi(id: string): Promise<SharedPlan | null> {
+  try {
+    const response = await fetch(`/api/share?id=${encodeURIComponent(id)}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (data.markdown) return data as SharedPlan;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// --- Public API ---
+
+// Save a plan and return its short ID.
+// Saves to both API (persistent, cross-device) and localStorage (cache).
+export async function saveSharedPlan(plan: GeneratedPlan, lang: Language): Promise<string> {
   const id = generateShortId();
   const sharedPlan: SharedPlan = {
     id,
     markdown: plan.markdown,
     sources: plan.sources || [],
     lang,
-    createdAt: Date.now()
+    createdAt: Date.now(),
   };
 
-  const plans = getStoredPlans();
-  plans[id] = sharedPlan;
+  // Save to localStorage immediately (fast, works offline)
+  saveToLocalStorage(sharedPlan);
 
-  const cleanedPlans = cleanupOldPlans(plans);
-  localStorage.setItem(SHARE_STORAGE_KEY, JSON.stringify(cleanedPlans));
+  // Also persist to API (async, for cross-device sharing)
+  saveToApi(sharedPlan).catch(() => {
+    // API save failed silently — localStorage still has it
+  });
 
   return id;
 }
 
-// Retrieve a shared plan by ID
-export function getSharedPlan(id: string): SharedPlan | null {
-  const plans = getStoredPlans();
-  return plans[id] || null;
+// Retrieve a shared plan by ID.
+// Tries localStorage first (instant), then falls back to API.
+export async function getSharedPlan(id: string): Promise<SharedPlan | null> {
+  // 1. Check localStorage cache first
+  const localPlan = getFromLocalStorage(id);
+  if (localPlan) return localPlan;
+
+  // 2. Fetch from API (cross-device case)
+  const apiPlan = await getFromApi(id);
+  if (apiPlan) {
+    // Cache in localStorage for future access
+    saveToLocalStorage(apiPlan);
+    return apiPlan;
+  }
+
+  return null;
 }
 
 // Generate the share URL with just the short ID

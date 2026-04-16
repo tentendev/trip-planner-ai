@@ -18,6 +18,7 @@ npm run preview      # Preview production build
 ## Environment Setup
 
 Set `OPENROUTER_API_KEY` in `.env.local` for the OpenRouter API integration.
+Set `BLOB_READ_WRITE_TOKEN` in Vercel env vars for cross-device share link storage (Vercel Blob).
 
 ## Architecture
 
@@ -41,11 +42,13 @@ Set `OPENROUTER_API_KEY` in `.env.local` for the OpenRouter API integration.
 - Persists to localStorage under `trip_os_v1_state` (trip input + generated plans)
 - Language detection: URL `?lang=` → browser language → fallback to `zh-TW`
 
-### Sharing System (utils/shareStorage.ts)
+### Sharing System (utils/shareStorage.ts + api/share.ts)
 
-- Stores shared plans in localStorage under `trip_os_shared_plans` (max 50 plans)
+- Primary storage: Vercel Blob via `/api/share` serverless function (cross-device)
+- Fallback/cache: localStorage under `trip_os_shared_plans` (max 50 plans)
 - Generates 8-character URL-safe IDs for share links
 - Share URL format: `?share={id}&lang={lang}`
+- Requires `BLOB_READ_WRITE_TOKEN` env var for Vercel Blob persistence
 
 ### Key Data Types (types.ts)
 

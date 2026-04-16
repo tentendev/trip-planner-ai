@@ -63,11 +63,9 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
 
   const handleShare = async () => {
     try {
-      // Save to localStorage and get short ID
-      const shareId = saveSharedPlan(plan, language);
+      const shareId = await saveSharedPlan(plan, language);
       const fullUrl = generateShareUrl(shareId, language);
 
-      // Try native share API first (mobile)
       if (navigator.share) {
         await navigator.share({
           title: t.title + ' - ' + t.itinerary.title,
@@ -76,7 +74,6 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
         });
         setShareSuccess(true);
       } else {
-        // Fallback: copy to clipboard
         await navigator.clipboard.writeText(fullUrl);
         setShareUrl(fullUrl);
         setShareSuccess(true);
@@ -94,8 +91,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
 
   const handleCopyShareLink = async () => {
     try {
-      // Save to localStorage and get short ID
-      const shareId = saveSharedPlan(plan, language);
+      const shareId = await saveSharedPlan(plan, language);
       const fullUrl = generateShareUrl(shareId, language);
 
       await navigator.clipboard.writeText(fullUrl);
@@ -107,13 +103,11 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, onReset, lang
     }
   };
 
-  const handleOpenShareCard = () => {
-    // Generate share URL first
-    const shareId = saveSharedPlan(plan, language);
+  const handleOpenShareCard = async () => {
+    const shareId = await saveSharedPlan(plan, language);
     const fullUrl = generateShareUrl(shareId, language);
     const highlights = extractHighlights();
 
-    // Call parent callback to open ShareCard at root level
     if (onOpenShareCard) {
       onOpenShareCard(fullUrl, highlights);
     }

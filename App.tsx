@@ -77,21 +77,29 @@ const App: React.FC = () => {
     // New short ID based sharing (preferred)
     const shareId = params.get('share');
     if (shareId) {
-      const sharedPlan = getSharedPlan(shareId);
-      if (sharedPlan) {
-        setTripPlan({
-          markdown: sharedPlan.markdown,
-          sources: sharedPlan.sources || []
-        });
-        setIsSharedView(true);
-        setLoadingState(LoadingState.SUCCESS);
+      // Show a loading state while fetching shared plan
+      setLoadingState(LoadingState.GENERATING);
 
-        // Set language from shared data if available
-        if (sharedPlan.lang && Object.prototype.hasOwnProperty.call(LANGUAGE_NAMES, sharedPlan.lang)) {
-          setLanguage(sharedPlan.lang as Language);
+      getSharedPlan(shareId).then(sharedPlan => {
+        if (sharedPlan) {
+          setTripPlan({
+            markdown: sharedPlan.markdown,
+            sources: sharedPlan.sources || []
+          });
+          setIsSharedView(true);
+          setLoadingState(LoadingState.SUCCESS);
+
+          if (sharedPlan.lang && Object.prototype.hasOwnProperty.call(LANGUAGE_NAMES, sharedPlan.lang)) {
+            setLanguage(sharedPlan.lang as Language);
+          }
+        } else {
+          // Share not found — reset to idle
+          setLoadingState(LoadingState.IDLE);
         }
-        return;
-      }
+      }).catch(() => {
+        setLoadingState(LoadingState.IDLE);
+      });
+      return;
     }
 
     // Legacy: base64 encoded sharing (backward compatibility)
@@ -107,7 +115,6 @@ const App: React.FC = () => {
           setIsSharedView(true);
           setLoadingState(LoadingState.SUCCESS);
 
-          // Set language from shared data if available
           if (decoded.lang && Object.prototype.hasOwnProperty.call(LANGUAGE_NAMES, decoded.lang)) {
             setLanguage(decoded.lang as Language);
           }
