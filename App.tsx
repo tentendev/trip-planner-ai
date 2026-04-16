@@ -84,7 +84,11 @@ const App: React.FC = () => {
         if (sharedPlan) {
           setTripPlan({
             markdown: sharedPlan.markdown,
-            sources: sharedPlan.sources || []
+            sources: sharedPlan.sources || [],
+            flights: sharedPlan.flights,
+            hotels: sharedPlan.hotels,
+            searchParams: sharedPlan.searchParams,
+            flightPriceInsights: sharedPlan.flightPriceInsights,
           });
           setIsSharedView(true);
           setLoadingState(LoadingState.SUCCESS);
@@ -138,26 +142,32 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    document.title = t.metaTitle;
     document.documentElement.lang = language;
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
 
-    // Update OG meta tags based on language
-    const updateMetaTag = (property: string, content: string) => {
-      let meta = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
-      if (!meta) {
-        meta = document.querySelector(`meta[name="${property}"]`) as HTMLMetaElement;
-      }
-      if (meta) {
-        meta.content = content;
-      }
-    };
+    // If the user is viewing a shared plan, the server (via /api/preview) has
+    // already injected meaningful meta tags — don't overwrite them with
+    // generic locale defaults.
+    const hasShareParam = new URLSearchParams(window.location.search).has('share');
+    if (!hasShareParam) {
+      document.title = t.metaTitle;
 
-    updateMetaTag('og:title', t.metaTitle);
-    updateMetaTag('og:description', t.hero.desc);
-    updateMetaTag('twitter:title', t.metaTitle);
-    updateMetaTag('twitter:description', t.hero.desc);
-    updateMetaTag('description', t.hero.desc);
+      const updateMetaTag = (property: string, content: string) => {
+        let meta = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+        if (!meta) {
+          meta = document.querySelector(`meta[name="${property}"]`) as HTMLMetaElement;
+        }
+        if (meta) {
+          meta.content = content;
+        }
+      };
+
+      updateMetaTag('og:title', t.metaTitle);
+      updateMetaTag('og:description', t.hero.desc);
+      updateMetaTag('twitter:title', t.metaTitle);
+      updateMetaTag('twitter:description', t.hero.desc);
+      updateMetaTag('description', t.hero.desc);
+    }
 
     const savedState = localStorage.getItem(STORAGE_KEY);
     if (savedState) {

@@ -1,8 +1,19 @@
 
-import { GeneratedPlan, Language } from '../types';
+import { GeneratedPlan, Language, TripInput, FlightOffer, HotelOffer, TravelSearchParams } from '../types';
 
 const SHARE_STORAGE_KEY = 'trip_os_shared_plans';
 const MAX_STORED_PLANS = 50;
+
+// Lean summary of TripInput stored with the share so previews can render
+// rich meta tags (title, description) without re-parsing markdown heavily.
+export interface SharedPlanSummary {
+  destination?: string;
+  dates?: string;
+  travelers?: string;
+  budget?: string;
+  pace?: string;
+  interests?: string;
+}
 
 export interface SharedPlan {
   id: string;
@@ -10,6 +21,17 @@ export interface SharedPlan {
   sources: Array<{ uri: string; title: string }>;
   lang: Language;
   createdAt: number;
+  summary?: SharedPlanSummary;
+  // Real-time travel data captured at generation time so shared views
+  // render identical flight & hotel cards, not stale LLM text.
+  flights?: FlightOffer[];
+  hotels?: HotelOffer[];
+  searchParams?: TravelSearchParams;
+  flightPriceInsights?: {
+    lowest?: number;
+    typical_range?: number[];
+    price_level?: string;
+  };
 }
 
 // Generate a short, URL-safe ID
@@ -83,14 +105,29 @@ async function getFromApi(id: string): Promise<SharedPlan | null> {
 
 // Save a plan and return its short ID.
 // Saves to both API (persistent, cross-device) and localStorage (cache).
-export async function saveSharedPlan(plan: GeneratedPlan, lang: Language): Promise<string> {
+export async function saveSharedPlan(plan: GeneratedPlan, lang: Language, tripInput?: TripInput): Promise<string> {
   const id = generateShortId();
+  const summary: SharedPlanSummary | undefined = tripInput
+    ? {
+        destination: tripInput.destination || undefined,
+        dates: tripInput.dates || undefined,
+        travelers: tripInput.travelers || undefined,
+        budget: tripInput.budget || undefined,
+        pace: tripInput.pace || undefined,
+        interests: tripInput.interests || undefined,
+      }
+    : undefined;
   const sharedPlan: SharedPlan = {
     id,
     markdown: plan.markdown,
     sources: plan.sources || [],
     lang,
     createdAt: Date.now(),
+    summary,
+    flights: plan.flights,
+    hotels: plan.hotels,
+    searchParams: plan.searchParams,
+    flightPriceInsights: plan.flightPriceInsights,
   };
 
   // Save to localStorage immediately (fast, works offline)

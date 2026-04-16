@@ -4,6 +4,14 @@ import { TripInput, GeneratedPlan, Language, PreAnalysisQuestion } from "../type
 // Export model name for UI display
 export const CURRENT_MODEL = process.env.OPENROUTER_MODEL || 'minimax/minimax-m2.7';
 
+// Lazy import to avoid a circular dep at module-eval time (travelData.ts imports CURRENT_MODEL).
+type TravelDataModule = typeof import('./travelData');
+let _travelDataPromise: Promise<TravelDataModule> | null = null;
+const getTravelData = (): Promise<TravelDataModule> => {
+  if (!_travelDataPromise) _travelDataPromise = import('./travelData');
+  return _travelDataPromise;
+};
+
 // Base instructions that apply to all languages
 const BASE_INSTRUCTION = `
 You are "Trip OS", a full-stack AI travel director capable of being a local guide, transport optimizer, budget controller, and risk manager.
@@ -31,26 +39,11 @@ Your goal is to produce a complete, actionable, bookable, and optimized itinerar
 4. **Plan B**: One alternative per day (Rain/Tired/Crowded).
 5. **Booking OS**: List of items needing reservation, best time to book, alternatives.
 6. **Budget Table**: Accommodation/Transport/Food/Tickets/Misc; Conservative/Standard/Luxury tiers.
-7. **Hotel Recommendations**:
-   - **FORMAT: MUST BE A MARKDOWN TABLE.**
-   - Suggest **3-5 specific hotels/hostels/accommodations** tailored to the traveler's budget tier and preferences.
-   - Columns: **Hotel Name** | **Area / Location** | **Price Range (per night)** | **Rating** | **Why This Pick**
-   - For each hotel, include a short insight (e.g., walkable to key attractions, best rooftop view, great breakfast, hidden gem locals love, best value-for-money).
-   - Group recommendations by budget tier: Budget, Mid-Range, Luxury (show tiers relevant to the traveler's stated budget).
-   - Include practical notes: distance to main attractions, nearest transit, check-in flexibility, cancellation policy tips.
-   - Use local currency + USD equivalent for prices.
-8. **Flight Ticket Recommendations**:
-   - **FORMAT: MUST BE A MARKDOWN TABLE.**
-   - Suggest **Top 5 best flight options** for the traveler's route and dates.
-   - Columns: **Rank** | **Airline** | **Route & Stops** | **Departure → Arrival** | **Duration** | **Estimated Price** | **Why This Pick**
-   - Consider: direct vs connecting flights, departure time convenience, airline reputation, baggage policy, layover duration.
-   - Label each pick with a tag: 🏆 Best Overall, 💰 Best Value, ⚡ Fastest, 🕐 Best Schedule, 🌟 Best Airline.
-   - Include booking tips: best platforms to book (Skyscanner, Google Flights, airline direct), ideal booking window, flexible date savings.
-   - Use local currency + USD equivalent for prices.
-   - If arrival/departure details are already provided with specific flights, skip this section and note the existing booking instead.
-9. **Transport Rules**: Commute limits, transfer logic, taxi vs train thresholds.
-10. **Risks**: Safety, scams, altitude, local rules.
-11. **Packing List**: Use Markdown Checkbox syntax (e.g. - [ ] Passport).
+7. **Transport Rules**: Commute limits, transfer logic, taxi vs train thresholds.
+8. **Risks**: Safety, scams, altitude, local rules.
+9. **Packing List**: Use Markdown Checkbox syntax (e.g. - [ ] Passport).
+
+> NOTE: Real-time **flight options** and **hotel options** are rendered by the app as interactive cards ABOVE your output — populated from Google Flights / Google Hotels live data. DO NOT generate those sections in markdown. Do not duplicate them.
 
 ## 2) Planning Algorithm
 
@@ -269,8 +262,30 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
     throw new Error("API Key is missing. Please set process.env.OPENROUTER_API_KEY.");
   }
 
-  const systemInstruction = LANGUAGE_INSTRUCTIONS[lang];
+  const baseSystemInstruction = LANGUAGE_INSTRUCTIONS[lang];
   const userPrompt = buildUserPrompt(input, lang, preAnalysisAnswers, preAnalysisQuestions);
+
+  // Fetch real-time flight + hotel data from SerpAPI before generating the itinerary.
+  // Failures are non-fatal: we degrade to the original generation flow.
+  let travelDataBlock = '';
+  let travelData: import('./travelData').TravelData | null = null;
+  try {
+    const { gatherTravelData, formatTravelDataForPrompt } = await getTravelData();
+    travelData = await gatherTravelData(input, lang);
+    travelDataBlock = formatTravelDataForPrompt(travelData);
+    console.log('[geminiService] travel data gathered', {
+      hasFlights: !!travelData?.flights?.length,
+      hasHotels: !!travelData?.hotels?.length,
+      params: travelData?.params,
+      errors: travelData?.errors,
+    });
+  } catch (err) {
+    console.warn('[geminiService] travel data fetch failed, continuing without real-time data', err);
+  }
+
+  const systemInstruction = travelDataBlock
+    ? `${baseSystemInstruction}\n\n---\n${travelDataBlock}`
+    : baseSystemInstruction;
 
   try {
     // Create AbortController for timeout (3 minutes for complex itineraries)
@@ -326,7 +341,11 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
 
     return {
       markdown: content,
-      sources: []
+      sources: [],
+      flights: travelData?.flights || undefined,
+      hotels: travelData?.hotels || undefined,
+      searchParams: travelData?.params || undefined,
+      flightPriceInsights: travelData?.flight_price_insights || undefined,
     };
   } catch (error: any) {
     if (error.name === 'AbortError') {

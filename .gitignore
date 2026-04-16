@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Local testing artifacts (Playwright MCP, ad-hoc screenshots)
+.playwright-mcp/
+*.png

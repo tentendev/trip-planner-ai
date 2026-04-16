@@ -27,7 +27,17 @@ export default async function handler(req: any, res: any) {
 
 async function handlePost(req: any, res: any) {
   try {
-    const { id, markdown, sources, lang } = req.body;
+    const {
+      id,
+      markdown,
+      sources,
+      lang,
+      summary,
+      flights,
+      hotels,
+      searchParams,
+      flightPriceInsights,
+    } = req.body;
 
     if (!id || !markdown) {
       return res.status(400).json({ error: 'Missing required fields: id, markdown' });
@@ -39,6 +49,11 @@ async function handlePost(req: any, res: any) {
       sources: sources || [],
       lang: lang || 'en',
       createdAt: Date.now(),
+      summary: summary || undefined,
+      flights: flights || undefined,
+      hotels: hotels || undefined,
+      searchParams: searchParams || undefined,
+      flightPriceInsights: flightPriceInsights || undefined,
     });
 
     const blob = await put(`shares/${id}.json`, planData, {

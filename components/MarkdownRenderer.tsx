@@ -1,172 +1,222 @@
 
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 
 interface MarkdownRendererProps {
   content: string;
 }
 
-// A simple markdown renderer that handles headers, lists, and tables specifically for the Trip OS output format.
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
-  const lines = content.split('\n');
-  const renderedElements: React.ReactNode[] = [];
-  
-  let inTable = false;
-  let tableHeader: string[] = [];
-  let tableRows: string[][] = [];
-  let tableAlignments: string[] = [];
-
-  // Helper to process text formatting (bold, code, custom brackets, line breaks)
-  const formatText = (text: string) => {
-    return text
-      .replace(/<br\s*\/?>/gi, '<br />') // Handle explicit HTML break tags
-      // Handle Bold (** or __) - Improved regex to be safer
-      .replace(/(\*\*|__)(.*?)\1/g, '<strong class="font-bold text-slate-900">$2</strong>')
-      // Handle Italic (* or _) - preventing interference with bold
-      .replace(/(\*|_)(.*?)\1/g, '<em class="italic text-slate-800">$2</em>')
-      // Code
-      .replace(/`([^`]+)`/g, '<code class="bg-slate-100 px-1 py-0.5 rounded text-sm text-pink-600 font-mono">$1</code>')
-      // Trip OS Brackets [Context]
-      .replace(/\[(.*?)\]/g, '<span class="text-amber-600 font-medium tracking-tight">[$1]</span>');
-  };
-
-  const renderTable = (header: string[], rows: string[][], key: string) => {
-    return (
-      <div key={key} className="overflow-x-auto my-6 border border-slate-200 rounded-xl shadow-sm bg-white">
-        <table className="w-full text-sm text-left text-slate-700">
-          <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
-            <tr>
-              {header.map((h, i) => (
-                <th key={i} className="px-5 py-4 font-bold tracking-wider whitespace-nowrap">
-                  <span dangerouslySetInnerHTML={{ __html: formatText(h.trim()) }} />
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {rows.map((row, rI) => (
-              <tr key={rI} className="hover:bg-slate-50/80 transition-colors">
-                {row.map((cell, cI) => (
-                  <td key={cI} className="px-5 py-4 align-top leading-relaxed">
-                    <span dangerouslySetInnerHTML={{ __html: formatText(cell.trim()) }} />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
-  const processTableLine = (line: string) => {
-    // Remove leading/trailing pipes and split by pipe
-    // We filter out empty strings that might result from leading/trailing pipes
-    const parts = line.split('|');
-    // If the line starts/ends with pipe, the split will create empty strings at start/end
-    if (line.trim().startsWith('|')) parts.shift();
-    if (line.trim().endsWith('|')) parts.pop();
-    return parts;
-  };
-
-  lines.forEach((line, index) => {
-    const trimmed = line.trim();
-
-    // Table Detection
-    if (trimmed.startsWith('|')) {
-      if (!inTable) {
-        inTable = true;
-        tableHeader = processTableLine(trimmed);
-        tableRows = [];
-      } else if (trimmed.includes('---')) {
-        // Separator line
-        tableAlignments = processTableLine(trimmed);
-      } else {
-        tableRows.push(processTableLine(trimmed));
-      }
-      // Check if table ends (next line is empty or not a pipe)
-      const nextLine = lines[index + 1]?.trim();
-      if (!nextLine || !nextLine.startsWith('|')) {
-        renderedElements.push(renderTable(tableHeader, tableRows, `table-${index}`));
-        inTable = false;
-      }
-      return;
-    }
-
-    // Headers
-    if (trimmed.startsWith('## ')) {
-      renderedElements.push(
-        <h2 key={index} className="text-2xl font-bold text-slate-900 mt-10 mb-5 pb-3 border-b border-slate-200 flex items-center gap-2">
-           <span dangerouslySetInnerHTML={{ __html: formatText(trimmed.replace('## ', '')) }} />
-        </h2>
-      );
-    } else if (trimmed.startsWith('### ')) {
-      renderedElements.push(
-        <h3 key={index} className="text-xl font-bold text-blue-700 mt-8 mb-4">
-           <span dangerouslySetInnerHTML={{ __html: formatText(trimmed.replace('### ', '')) }} />
-        </h3>
-      );
-    } else if (trimmed.startsWith('#### ')) {
-      renderedElements.push(
-        <h4 key={index} className="text-lg font-bold text-slate-800 mt-6 mb-3">
-           <span dangerouslySetInnerHTML={{ __html: formatText(trimmed.replace('#### ', '')) }} />
-        </h4>
-      );
-    }
-    // Lists
-    else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-      const content = trimmed.substring(2);
-      // Check for Checkboxes [ ] or [x]
-      if (content.startsWith('[ ]') || content.startsWith('[x]')) {
-         const isChecked = content.startsWith('[x]');
-         const text = content.substring(3).trim();
-         renderedElements.push(
-           <div key={index} className="flex items-start gap-3 my-2 ml-2">
-              <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 ${isChecked ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'}`}>
-                {isChecked && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-              </div>
-              <span className={`text-slate-700 ${isChecked ? 'line-through text-slate-400' : ''}`} dangerouslySetInnerHTML={{ __html: formatText(text) }} />
-           </div>
-         )
-      } else {
-        renderedElements.push(
-          <li key={index} className="ml-5 list-disc pl-2 text-slate-700 mb-2 leading-relaxed marker:text-slate-400">
-             <span dangerouslySetInnerHTML={{ 
-                __html: formatText(content)
-              }} />
-          </li>
+// Walk React children and wrap [Context] bracket patterns in highlighted spans.
+// Safe: only operates on string text, never renders raw HTML.
+const BRACKET_RE = /(\[[^\[\]\n]+?\])/g;
+const highlightBrackets = (node: React.ReactNode, keyPrefix = 'ctx'): React.ReactNode => {
+  if (node == null || typeof node === 'boolean') return node;
+  if (typeof node === 'number') return node;
+  if (typeof node === 'string') {
+    if (!BRACKET_RE.test(node)) return node;
+    const parts = node.split(BRACKET_RE);
+    return parts.map((part, i) => {
+      if (
+        part.length > 2 &&
+        part.startsWith('[') &&
+        part.endsWith(']') &&
+        part !== '[ ]' &&
+        part !== '[x]' &&
+        part !== '[X]'
+      ) {
+        return (
+          <span key={`${keyPrefix}-${i}`} className="trip-context">
+            {part}
+          </span>
         );
       }
-    } else if (trimmed.match(/^\d+\./)) {
-       renderedElements.push(
-        <div key={index} className="ml-4 flex gap-3 mb-3 text-slate-700 leading-relaxed">
-          <span className="font-bold text-slate-400 font-mono mt-0.5">{trimmed.split('.')[0]}.</span>
-          <span dangerouslySetInnerHTML={{ 
-              __html: formatText(trimmed.substring(trimmed.indexOf('.') + 1).trim())
-            }} />
-        </div>
-       );
-    }
-    // Blockquotes
-    else if (trimmed.startsWith('> ')) {
-       renderedElements.push(
-         <blockquote key={index} className="border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r-lg text-slate-700 italic my-4">
-            <span dangerouslySetInnerHTML={{ __html: formatText(trimmed.substring(2)) }} />
-         </blockquote>
-       )
-    }
-    // Standard Paragraphs (ignore empty lines)
-    else if (trimmed.length > 0) {
-      renderedElements.push(
-        <p key={index} className="text-slate-600 mb-4 leading-relaxed">
-           <span dangerouslySetInnerHTML={{ 
-              __html: formatText(trimmed)
-            }} />
-        </p>
-      );
-    }
-  });
+      return part;
+    });
+  }
+  if (Array.isArray(node)) {
+    return node.map((c, i) => highlightBrackets(c, `${keyPrefix}-${i}`));
+  }
+  return node;
+};
 
-  return <div className="markdown-container font-sans">{renderedElements}</div>;
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
+  return (
+    <div className="trip-markdown text-slate-700 leading-relaxed">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkBreaks]}
+        components={{
+          h1: ({ children }) => (
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mt-12 mb-6 first:mt-0 leading-tight">
+              {highlightBrackets(children)}
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="group text-2xl md:text-[1.75rem] font-bold text-slate-900 tracking-tight mt-14 mb-5 first:mt-0 leading-tight flex items-baseline gap-3 pb-3 border-b border-slate-200/70">
+              <span
+                className="block w-1 self-stretch bg-gradient-to-b from-blue-500 to-violet-500 rounded-full flex-shrink-0 mt-1"
+                aria-hidden
+              />
+              <span className="flex-1">{highlightBrackets(children)}</span>
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mt-10 mb-4 leading-snug">
+              {highlightBrackets(children)}
+            </h3>
+          ),
+          h4: ({ children }) => (
+            <h4 className="text-base md:text-lg font-bold text-slate-800 mt-6 mb-3 tracking-tight">
+              {highlightBrackets(children)}
+            </h4>
+          ),
+          h5: ({ children }) => (
+            <h5 className="text-sm md:text-base font-bold uppercase tracking-wider text-slate-500 mt-5 mb-2">
+              {highlightBrackets(children)}
+            </h5>
+          ),
+          p: ({ children }) => (
+            <p className="text-[15px] md:text-base text-slate-700 leading-[1.75] my-4">
+              {highlightBrackets(children)}
+            </p>
+          ),
+          strong: ({ children }) => (
+            <strong className="font-semibold text-slate-900">
+              {highlightBrackets(children)}
+            </strong>
+          ),
+          em: ({ children }) => (
+            <em className="italic text-slate-800">{highlightBrackets(children)}</em>
+          ),
+          del: ({ children }) => (
+            <del className="text-slate-400 line-through">{highlightBrackets(children)}</del>
+          ),
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline decoration-blue-300 decoration-1 underline-offset-[3px] hover:decoration-blue-600 hover:text-blue-700 transition-colors font-medium"
+            >
+              {highlightBrackets(children)}
+            </a>
+          ),
+          code: ({ className, children, ...props }) => {
+            const isInline = !/language-/.test(className || '');
+            if (isInline) {
+              return (
+                <code
+                  className="px-1.5 py-0.5 rounded-md bg-slate-100 text-[0.9em] font-mono text-pink-600 border border-slate-200/60"
+                  {...props}
+                >
+                  {children}
+                </code>
+              );
+            }
+            return (
+              <code className={`block ${className || ''}`} {...props}>
+                {children}
+              </code>
+            );
+          },
+          pre: ({ children }) => (
+            <pre className="bg-slate-900 text-slate-100 p-4 rounded-xl overflow-x-auto my-5 text-sm font-mono leading-relaxed shadow-inner">
+              {children}
+            </pre>
+          ),
+          blockquote: ({ children }) => (
+            <blockquote className="relative my-6 pl-5 pr-4 py-4 bg-gradient-to-r from-blue-50 to-indigo-50/60 border-l-[3px] border-blue-500 rounded-r-xl text-slate-700 [&_p]:my-1 [&_p]:text-[15px] [&_p]:leading-relaxed">
+              {children}
+            </blockquote>
+          ),
+          hr: () => (
+            <hr className="my-10 border-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+          ),
+          ul: ({ children }) => <ul className="my-4 ml-1 space-y-2">{children}</ul>,
+          ol: ({ children }) => (
+            <ol className="my-4 ml-5 space-y-2 list-decimal marker:text-slate-400 marker:font-semibold">
+              {children}
+            </ol>
+          ),
+          li: ({ children, className, ...props }) => {
+            const isTask = (className || '').includes('task-list-item');
+            if (isTask) {
+              return (
+                <li
+                  className="flex items-start gap-3 my-1.5 list-none text-[15px] text-slate-700 leading-relaxed"
+                  {...props}
+                >
+                  {highlightBrackets(children)}
+                </li>
+              );
+            }
+            return (
+              <li
+                className="relative pl-6 text-[15px] leading-relaxed text-slate-700 before:absolute before:left-1 before:top-[0.65em] before:w-1.5 before:h-1.5 before:rounded-full before:bg-gradient-to-br before:from-blue-500 before:to-violet-500 marker:text-transparent"
+                {...props}
+              >
+                {highlightBrackets(children)}
+              </li>
+            );
+          },
+          input: ({ type, checked }) => {
+            if (type !== 'checkbox') return null;
+            return (
+              <span
+                aria-hidden
+                className={`inline-flex items-center justify-center w-5 h-5 mt-[2px] rounded-md border flex-shrink-0 transition-colors ${
+                  checked
+                    ? 'bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-600/30'
+                    : 'bg-white border-slate-300'
+                }`}
+              >
+                {checked && (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                )}
+              </span>
+            );
+          },
+          table: ({ children }) => (
+            <div className="my-7 -mx-2 md:mx-0 overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-8px_rgba(15,23,42,0.08)]">
+              <table className="w-full text-sm text-left border-collapse">{children}</table>
+            </div>
+          ),
+          thead: ({ children }) => (
+            <thead className="bg-gradient-to-b from-slate-50 to-white border-b border-slate-200/80">
+              {children}
+            </thead>
+          ),
+          tbody: ({ children }) => <tbody className="divide-y divide-slate-100">{children}</tbody>,
+          tr: ({ children }) => (
+            <tr className="transition-colors hover:bg-blue-50/40">{children}</tr>
+          ),
+          th: ({ children }) => (
+            <th className="px-4 md:px-5 py-3.5 text-[11px] md:text-xs font-bold text-slate-500 uppercase tracking-[0.08em] whitespace-nowrap">
+              {highlightBrackets(children)}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="px-4 md:px-5 py-3.5 align-top text-[14px] md:text-[15px] text-slate-700 leading-[1.6]">
+              {highlightBrackets(children)}
+            </td>
+          ),
+          img: ({ src, alt }) => (
+            <img src={src} alt={alt} className="rounded-xl my-5 shadow-md max-w-full h-auto" />
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
 };
 
 export default MarkdownRenderer;
