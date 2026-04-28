@@ -1,3 +1,5 @@
+import { Readable } from 'node:stream';
+
 export const config = {
   runtime: 'nodejs',
   maxDuration: 300,
@@ -46,6 +48,8 @@ function resolveProvider(referer: string): Provider | null {
   return null;
 }
 
+const FETCH_TIMEOUT_MS = 270_000; // < function maxDuration so we surface a clean error
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -66,11 +70,6 @@ export default async function handler(req: any, res: any) {
   const t0 = Date.now();
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-
-    // Per-provider model resolution. The client sends a model name, but each provider has its own
-    // ID format (e.g. OpenRouter "minimax/minimax-m2.7" vs NVIDIA "minimaxai/minimax-m2.7").
-    // If the client-provided model doesn't match the provider's namespace, fall back to the
-    // provider's default model.
     const clientModel: string | undefined = body?.model;
     const model = pickModelForProvider(provider, clientModel);
     const payload = JSON.stringify({ ...body, model, stream: false });
@@ -83,11 +82,91 @@ export default async function handler(req: any, res: any) {
       payload_bytes: payload.length,
     });
 
-    let upstream: Response | null = null;
-    let lastBody = '';
-    const maxAttempts = 3;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      upstream = await fetch(provider.url, {
+    const result = await fetchWithRetry(provider, payload);
+    const elapsed = Date.now() - t0;
+
+    if (!result.ok) {
+      console.error('[api/chat] upstream error (final)', {
+        provider: provider.name,
+        status: result.status,
+        elapsed_ms: elapsed,
+        body: result.body.slice(0, 1000),
+      });
+      return res.status(result.status).json({
+        error: `${provider.name} upstream ${result.status}`,
+        provider: provider.name,
+        upstream_body: tryParse(result.body),
+        elapsed_ms: elapsed,
+      });
+    }
+
+    console.log('[api/chat] ← ok (streaming through)', {
+      provider: provider.name,
+      status: result.status,
+      headers_received_ms: result.headersReceivedAt - t0,
+      content_type: result.contentType,
+    });
+
+    res.status(result.status);
+    res.setHeader('Content-Type', result.contentType || 'application/json');
+    res.setHeader('X-LLM-Provider', provider.name);
+
+    // Stream the response body directly to the client. Avoids undici keep-alive issues
+    // where `await response.text()` hangs after the body is fully delivered.
+    if (result.bodyStream) {
+      result.bodyStream.pipe(res);
+      result.bodyStream.on('end', () => {
+        const total = Date.now() - t0;
+        console.log('[api/chat] ← stream complete', { provider: provider.name, total_ms: total });
+      });
+      result.bodyStream.on('error', (err) => {
+        console.error('[api/chat] stream error', err);
+        if (!res.writableEnded) res.end();
+      });
+    } else {
+      // Fallback: text was already buffered (path used when status was 4xx and we read body for logging)
+      res.send(result.body);
+    }
+    return;
+  } catch (err: any) {
+    const elapsed = Date.now() - t0;
+    console.error('[api/chat] proxy threw', {
+      provider: provider.name,
+      message: err?.message,
+      name: err?.name,
+      elapsed_ms: elapsed,
+    });
+    if (!res.headersSent) {
+      return res.status(502).json({
+        error: err?.message || 'Proxy error',
+        provider: provider.name,
+        name: err?.name,
+        elapsed_ms: elapsed,
+      });
+    }
+    return;
+  }
+}
+
+interface FetchResult {
+  ok: boolean;
+  status: number;
+  contentType: string | null;
+  headersReceivedAt: number;
+  bodyStream: NodeJS.ReadableStream | null; // populated on 2xx success
+  body: string; // populated on 4xx/5xx so we can log + return error
+}
+
+async function fetchWithRetry(provider: Provider, payload: string): Promise<FetchResult> {
+  const maxAttempts = 3;
+  let lastFailure: FetchResult | null = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const ac = new AbortController();
+    const timeoutId = setTimeout(() => ac.abort(), FETCH_TIMEOUT_MS);
+
+    try {
+      const upstream = await fetch(provider.url, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${provider.apiKey}`,
@@ -97,80 +176,91 @@ export default async function handler(req: any, res: any) {
           ...(provider.extraHeaders || {}),
         },
         body: payload,
+        signal: ac.signal,
       });
 
-      if (upstream.status < 500) break;
+      const headersReceivedAt = Date.now();
 
-      lastBody = await upstream.text();
+      if (upstream.ok) {
+        clearTimeout(timeoutId);
+        return {
+          ok: true,
+          status: upstream.status,
+          contentType: upstream.headers.get('content-type'),
+          headersReceivedAt,
+          bodyStream: upstream.body ? Readable.fromWeb(upstream.body as any) : null,
+          body: '',
+        };
+      }
+
+      // Non-OK: read body for logging/return.
+      const text = await upstream.text();
+      clearTimeout(timeoutId);
+      lastFailure = {
+        ok: false,
+        status: upstream.status,
+        contentType: upstream.headers.get('content-type'),
+        headersReceivedAt,
+        bodyStream: null,
+        body: text,
+      };
+
+      if (upstream.status < 500) {
+        // 4xx — don't retry
+        return lastFailure;
+      }
+
       console.warn('[api/chat] upstream 5xx, will retry', {
         provider: provider.name,
         attempt,
         status: upstream.status,
-        bytes: lastBody.length,
+        bytes: text.length,
       });
       if (attempt < maxAttempts) {
         await new Promise((r) => setTimeout(r, 500 * attempt));
       }
-    }
-
-    if (!upstream) throw new Error('No upstream response');
-
-    const elapsed = Date.now() - t0;
-
-    if (!upstream.ok) {
-      const text = lastBody || (await upstream.text());
-      console.error('[api/chat] upstream error (final)', {
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      console.warn('[api/chat] fetch attempt threw', {
         provider: provider.name,
-        status: upstream.status,
-        elapsed_ms: elapsed,
-        body: text.slice(0, 1000),
+        attempt,
+        name: err?.name,
+        message: err?.message,
       });
-      return res.status(upstream.status).json({
-        error: `${provider.name} upstream ${upstream.status}`,
-        provider: provider.name,
-        upstream_body: tryParse(text),
-        elapsed_ms: elapsed,
-      });
+      if (err?.name === 'AbortError') {
+        // Timeout — surface as 504-ish failure
+        return {
+          ok: false,
+          status: 504,
+          contentType: null,
+          headersReceivedAt: Date.now(),
+          bodyStream: null,
+          body: `Upstream fetch aborted after ${FETCH_TIMEOUT_MS}ms`,
+        };
+      }
+      if (attempt >= maxAttempts) throw err;
+      await new Promise((r) => setTimeout(r, 500 * attempt));
     }
-
-    const text = await upstream.text();
-    console.log('[api/chat] ← ok', {
-      provider: provider.name,
-      status: upstream.status,
-      elapsed_ms: elapsed,
-      bytes: text.length,
-    });
-    res.status(upstream.status);
-    res.setHeader('Content-Type', upstream.headers.get('content-type') || 'application/json');
-    res.setHeader('X-LLM-Provider', provider.name);
-    return res.send(text);
-  } catch (err: any) {
-    const elapsed = Date.now() - t0;
-    console.error('[api/chat] proxy threw', {
-      provider: provider.name,
-      message: err?.message,
-      name: err?.name,
-      elapsed_ms: elapsed,
-    });
-    return res.status(500).json({
-      error: err?.message || 'Proxy error',
-      provider: provider.name,
-      name: err?.name,
-      elapsed_ms: elapsed,
-    });
   }
+
+  return (
+    lastFailure || {
+      ok: false,
+      status: 502,
+      contentType: null,
+      headersReceivedAt: Date.now(),
+      bodyStream: null,
+      body: 'No response after retries',
+    }
+  );
 }
 
 function pickModelForProvider(provider: Provider, clientModel?: string): string {
   if (!clientModel) return provider.defaultModel;
-  // If client-provided model namespace matches the provider's expected namespace, pass through.
-  // Otherwise, use the provider's default. This lets the same client work against either provider.
   if (provider.name === 'openrouter' && clientModel.startsWith('minimaxai/')) {
-    // NVIDIA-format slug → use OpenRouter default
     return provider.defaultModel;
   }
   if (provider.name === 'nvidia' && clientModel.startsWith('minimax/') && !clientModel.startsWith('minimaxai/')) {
-    // OpenRouter-format slug → use NVIDIA default
     return provider.defaultModel;
   }
   return clientModel;
