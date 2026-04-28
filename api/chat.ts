@@ -285,12 +285,9 @@ async function accumulateSSE(stream: ReadableStream<Uint8Array>, onChunk?: () =>
 }
 
 function pickModelForProvider(provider: Provider, clientModel?: string): string {
-  if (!clientModel) return provider.defaultModel;
-
-  // "fast" is an alias the client can request for utility calls (param extraction,
-  // classification, etc) so a slow main model doesn't block them. The proxy maps it
-  // to a known-fast model per provider. Override via OPENROUTER_FAST_MODEL or
-  // NVIDIA_FAST_MODEL env vars.
+  // "fast" is the only client model value the proxy honors — it's an alias for utility
+  // calls (param extraction, classification) so a slow main model doesn't block them.
+  // Override via OPENROUTER_FAST_MODEL / NVIDIA_FAST_MODEL env vars.
   if (clientModel === 'fast') {
     if (provider.name === 'openrouter') {
       return process.env.OPENROUTER_FAST_MODEL?.trim() || 'openai/gpt-5-mini';
@@ -298,11 +295,11 @@ function pickModelForProvider(provider: Provider, clientModel?: string): string 
     return process.env.NVIDIA_FAST_MODEL?.trim() || 'meta/llama-3.3-70b-instruct';
   }
 
-  if (provider.name === 'openrouter' && clientModel.startsWith('minimaxai/')) return provider.defaultModel;
-  if (provider.name === 'nvidia' && clientModel.startsWith('minimax/') && !clientModel.startsWith('minimaxai/')) {
-    return provider.defaultModel;
-  }
-  return clientModel;
+  // For everything else, the provider's env var (OPENROUTER_MODEL or NVIDIA_MODEL) is the
+  // single source of truth. Ignore whatever model name the client baked in at build time —
+  // OpenRouter and NVIDIA use different namespaces (e.g. "minimax/m2.7" vs "minimaxai/m2.7",
+  // and OpenRouter has many models that don't exist on NVIDIA).
+  return provider.defaultModel;
 }
 
 function tryParse(s: string) {
