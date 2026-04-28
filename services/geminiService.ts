@@ -278,9 +278,9 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
     : baseSystemInstruction;
 
   try {
-    // Create AbortController for timeout (3 minutes for complex itineraries)
+    // Create AbortController for timeout — match the serverless function's 300s ceiling.
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 180000);
+    const timeoutId = setTimeout(() => controller.abort(), 295000);
 
     const response = await fetch(CHAT_API_URL, {
       method: "POST",
@@ -310,7 +310,15 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error("API Response Error:", response.status, errorData);
-      throw new Error(errorData.error?.message || errorData.detail || `NVIDIA API error: ${response.status}`);
+      const upstreamMsg =
+        errorData.upstream_body?.error?.message ||
+        errorData.upstream_body?.detail ||
+        errorData.upstream_body?.message ||
+        (typeof errorData.upstream_body === 'string' ? errorData.upstream_body : null) ||
+        errorData.error?.message ||
+        errorData.error ||
+        errorData.detail;
+      throw new Error(upstreamMsg ? `${response.status}: ${upstreamMsg}` : `API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -337,8 +345,8 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
     };
   } catch (error: any) {
     if (error.name === 'AbortError') {
-      console.error("Request timed out after 3 minutes");
-      throw new Error("Request timed out. Please try again.");
+      console.error("Request timed out after ~5 minutes");
+      throw new Error("Request timed out after ~5 minutes. The model may be overloaded — please try again.");
     }
     console.error("NVIDIA API Error:", error);
     throw error;

@@ -15,12 +15,16 @@ export default async function handler(req: any, res: any) {
 
   const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey) {
+    console.error('[api/chat] NVIDIA_API_KEY is not configured');
     return res.status(500).json({ error: 'NVIDIA_API_KEY is not configured on the server' });
   }
 
+  const t0 = Date.now();
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const model = body?.model || process.env.NVIDIA_MODEL || 'minimaxai/minimax-m2.7';
+
+    console.log('[api/chat] →', { model, msgs: body?.messages?.length, temp: body?.temperature });
 
     const upstream = await fetch(NVIDIA_API_URL, {
       method: 'POST',
@@ -33,11 +37,27 @@ export default async function handler(req: any, res: any) {
     });
 
     const text = await upstream.text();
+    const elapsed = Date.now() - t0;
+
+    if (!upstream.ok) {
+      console.error('[api/chat] upstream error', { status: upstream.status, elapsed_ms: elapsed, body: text.slice(0, 1000) });
+      return res.status(upstream.status).json({
+        error: `NVIDIA upstream ${upstream.status}`,
+        upstream_body: tryParse(text),
+      });
+    }
+
+    console.log('[api/chat] ← ok', { status: upstream.status, elapsed_ms: elapsed, bytes: text.length });
     res.status(upstream.status);
     res.setHeader('Content-Type', upstream.headers.get('content-type') || 'application/json');
     return res.send(text);
   } catch (err: any) {
-    console.error('[api/chat] proxy error', err);
-    return res.status(500).json({ error: err?.message || 'Proxy error' });
+    const elapsed = Date.now() - t0;
+    console.error('[api/chat] proxy threw', { message: err?.message, name: err?.name, elapsed_ms: elapsed });
+    return res.status(500).json({ error: err?.message || 'Proxy error', name: err?.name, elapsed_ms: elapsed });
   }
+}
+
+function tryParse(s: string) {
+  try { return JSON.parse(s); } catch { return s.slice(0, 500); }
 }

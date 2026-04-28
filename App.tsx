@@ -230,8 +230,10 @@ const App: React.FC = () => {
       setLoadingState(LoadingState.SUCCESS);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
+      console.error('[handleGenerate] generation failed', err);
       setLoadingState(LoadingState.ERROR);
-      setErrorMsg(t.error);
+      const detail = err?.message ? `${t.error} (${err.message})` : t.error;
+      setErrorMsg(detail);
       setPreAnalysisQuestions(null);
     }
   };
