@@ -279,7 +279,6 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
     : baseSystemInstruction;
 
   try {
-    // Create AbortController for timeout — match the serverless function's 300s ceiling.
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 295000);
 
@@ -287,21 +286,18 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Accept": "text/event-stream"
       },
       body: JSON.stringify({
         model: model,
         messages: [
-          {
-            role: "system",
-            content: systemInstruction
-          },
-          {
-            role: "user",
-            content: userPrompt
-          }
+          { role: "system", content: systemInstruction },
+          { role: "user", content: userPrompt }
         ],
-        temperature: 0.4
+        temperature: 0.4,
+        // Request SSE — long generations (>5min for big models) would otherwise hit
+        // the Vercel function 300s ceiling before any body bytes were written.
+        stream: true
       }),
       signal: controller.signal
     });
@@ -322,19 +318,13 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
       throw new Error(upstreamMsg ? `${response.status}: ${upstreamMsg}` : `API error: ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log("API Response received:", {
-      model: data.model,
-      hasChoices: !!data.choices?.length,
-      hasContent: !!data.choices?.[0]?.message?.content
-    });
+    if (!response.body) throw new Error("No response body");
 
-    const content = data.choices?.[0]?.message?.content;
+    const content = await readSSEContent(response.body);
 
-    if (!content) {
-      console.error("No content in response:", data);
-      throw new Error("No content in response");
-    }
+    console.log("API Response received:", { content_chars: content.length });
+
+    if (!content) throw new Error("No content in response");
 
     return {
       markdown: content,
@@ -347,9 +337,42 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
   } catch (error: any) {
     if (error.name === 'AbortError') {
       console.error("Request timed out after ~5 minutes");
-      throw new Error("Request timed out after ~5 minutes. The model may be overloaded — please try again.");
+      throw new Error("Request timed out after ~5 minutes. The model may be overloaded — please try again or switch to a faster model in OPENROUTER_MODEL.");
     }
-    console.error("NVIDIA API Error:", error);
+    console.error("LLM API Error:", error);
     throw error;
   }
 };
+
+/**
+ * Read an SSE stream of OpenAI-format chat completion chunks and return the
+ * concatenated assistant content. Tolerates malformed chunks and the [DONE] sentinel.
+ */
+async function readSSEContent(stream: ReadableStream<Uint8Array>): Promise<string> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let content = '';
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (!line.startsWith('data:')) continue;
+      const data = line.slice(5).trim();
+      if (!data || data === '[DONE]') continue;
+      try {
+        const chunk = JSON.parse(data);
+        const delta = chunk.choices?.[0]?.delta?.content;
+        if (delta) content += delta;
+      } catch {
+        // ignore malformed chunks
+      }
+    }
+  }
+  return content;
+}
