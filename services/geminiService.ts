@@ -4,8 +4,9 @@ import { TripInput, GeneratedPlan, Language, PreAnalysisQuestion } from "../type
 // Export model name for UI display
 export const CURRENT_MODEL = process.env.NVIDIA_MODEL || 'minimaxai/minimax-m2.7';
 
-// NVIDIA's OpenAI-compatible chat completions endpoint (build.nvidia.com).
-const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
+// Calls go through our Vercel serverless proxy (api/chat.ts) which holds the NVIDIA key
+// server-side and avoids browser CORS issues with integrate.api.nvidia.com.
+const CHAT_API_URL = '/api/chat';
 
 // Lazy import to avoid a circular dep at module-eval time (travelData.ts imports CURRENT_MODEL).
 type TravelDataModule = typeof import('./travelData');
@@ -194,23 +195,16 @@ Each object in the array must have:
 Make options SPECIFIC to the destination. For example, if going to Tokyo, don't say "Local food" — say "Tsukiji Outer Market sushi breakfast", "Shibuya izakaya hopping", etc.`;
 
 export const preAnalyzeTrip = async (input: TripInput, lang: Language): Promise<PreAnalysisQuestion[]> => {
-  const apiKey = process.env.NVIDIA_API_KEY;
   const model = CURRENT_MODEL;
-
-  if (!apiKey) {
-    throw new Error("API Key is missing.");
-  }
-
   const userPrompt = buildUserPrompt(input, lang);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 60000);
 
   try {
-    const response = await fetch(NVIDIA_API_URL, {
+    const response = await fetch(CHAT_API_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "Accept": "application/json"
       },
@@ -220,8 +214,7 @@ export const preAnalyzeTrip = async (input: TripInput, lang: Language): Promise<
           { role: "system", content: `${PRE_ANALYSIS_PROMPT}\n\nIMPORTANT: All questions and options MUST be in ${lang}. Respond ONLY with a JSON array.` },
           { role: "user", content: userPrompt }
         ],
-        temperature: 0.6,
-        stream: false
+        temperature: 0.6
       }),
       signal: controller.signal
     });
@@ -258,13 +251,7 @@ export const preAnalyzeTrip = async (input: TripInput, lang: Language): Promise<
 };
 
 export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW', preAnalysisAnswers?: Record<string, string[]>, preAnalysisQuestions?: PreAnalysisQuestion[]): Promise<GeneratedPlan> => {
-  const apiKey = process.env.NVIDIA_API_KEY;
   const model = CURRENT_MODEL;
-
-  if (!apiKey) {
-    throw new Error("API Key is missing. Please set process.env.NVIDIA_API_KEY.");
-  }
-
   const baseSystemInstruction = LANGUAGE_INSTRUCTIONS[lang];
   const userPrompt = buildUserPrompt(input, lang, preAnalysisAnswers, preAnalysisQuestions);
 
@@ -295,10 +282,9 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 180000);
 
-    const response = await fetch(NVIDIA_API_URL, {
+    const response = await fetch(CHAT_API_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "Accept": "application/json"
       },
@@ -314,8 +300,7 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
             content: userPrompt
           }
         ],
-        temperature: 0.4,
-        stream: false
+        temperature: 0.4
       }),
       signal: controller.signal
     });

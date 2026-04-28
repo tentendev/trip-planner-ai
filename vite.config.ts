@@ -6,13 +6,11 @@ export default defineConfig(({ mode }) => {
     // Load from .env files for local dev
     const env = loadEnv(mode, '.', '');
 
-    // Use process.env for Vercel builds (injected at build time), fallback to loadEnv for local
-    const apiKey = process.env.NVIDIA_API_KEY || env.NVIDIA_API_KEY || '';
+    // The NVIDIA API key is read server-side in api/chat.ts — never exposed to the client.
+    // Only the model name is baked into the client bundle (for display + request body).
     const model = process.env.NVIDIA_MODEL || env.NVIDIA_MODEL || 'minimaxai/minimax-m2.7';
 
-    // Debug: Log env vars during build (will show in Vercel build logs)
     console.log('[Vite Build] NVIDIA_MODEL:', model);
-    console.log('[Vite Build] NVIDIA_API_KEY set:', !!apiKey);
 
     return {
       server: {
@@ -21,7 +19,6 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       define: {
-        'process.env.NVIDIA_API_KEY': JSON.stringify(apiKey),
         'process.env.NVIDIA_MODEL': JSON.stringify(model)
       },
       resolve: {

@@ -56,9 +56,6 @@ function defaultCurrency(lang: Language): string {
  * Uses temperature 0, JSON-only output.
  */
 async function extractSearchParams(input: TripInput, lang: Language): Promise<TravelSearchParams | null> {
-  const apiKey = (process.env as any).NVIDIA_API_KEY;
-  if (!apiKey) return null;
-
   const today = new Date().toISOString().slice(0, 10);
 
   const system = `You are a structured data extractor for a travel planning app. Given free-text trip input, you extract fields needed to call the Google Flights and Google Hotels APIs.
@@ -96,10 +93,10 @@ ${JSON.stringify({
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    const resp = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const resp = await fetch(`${origin}/api/chat`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
@@ -110,7 +107,6 @@ ${JSON.stringify({
           { role: 'user', content: user },
         ],
         temperature: 0,
-        stream: false,
       }),
       signal: controller.signal,
     });
