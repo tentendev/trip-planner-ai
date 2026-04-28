@@ -286,6 +286,18 @@ async function accumulateSSE(stream: ReadableStream<Uint8Array>, onChunk?: () =>
 
 function pickModelForProvider(provider: Provider, clientModel?: string): string {
   if (!clientModel) return provider.defaultModel;
+
+  // "fast" is an alias the client can request for utility calls (param extraction,
+  // classification, etc) so a slow main model doesn't block them. The proxy maps it
+  // to a known-fast model per provider. Override via OPENROUTER_FAST_MODEL or
+  // NVIDIA_FAST_MODEL env vars.
+  if (clientModel === 'fast') {
+    if (provider.name === 'openrouter') {
+      return process.env.OPENROUTER_FAST_MODEL?.trim() || 'openai/gpt-5-mini';
+    }
+    return process.env.NVIDIA_FAST_MODEL?.trim() || 'meta/llama-3.3-70b-instruct';
+  }
+
   if (provider.name === 'openrouter' && clientModel.startsWith('minimaxai/')) return provider.defaultModel;
   if (provider.name === 'nvidia' && clientModel.startsWith('minimax/') && !clientModel.startsWith('minimaxai/')) {
     return provider.defaultModel;

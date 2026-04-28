@@ -1,5 +1,4 @@
 import { TripInput, Language, FlightOffer, HotelOffer, TravelSearchParams } from '../types';
-import { CURRENT_MODEL } from './geminiService';
 
 export interface TravelData {
   params: TravelSearchParams;
@@ -91,7 +90,8 @@ ${JSON.stringify({
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    // Tight 12s budget — this is a tiny structured-extraction task, not a 4-minute itinerary.
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
 
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const resp = await fetch(`${origin}/api/chat`, {
@@ -101,7 +101,9 @@ ${JSON.stringify({
         'Accept': 'application/json',
       },
       body: JSON.stringify({
-        model: CURRENT_MODEL,
+        // Special alias — the proxy maps "fast" to a small/fast model per provider so a
+        // slow OPENROUTER_MODEL doesn't make us wait 5 minutes just to parse IATA codes.
+        model: 'fast',
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: user },
@@ -178,7 +180,7 @@ async function fetchFlights(
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
+    const timeoutId = setTimeout(() => controller.abort(), 18000);
 
     const resp = await fetch(`${origin}/api/flights/search?${q.toString()}`, {
       signal: controller.signal,
@@ -222,7 +224,7 @@ async function fetchHotels(
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
+    const timeoutId = setTimeout(() => controller.abort(), 18000);
 
     const resp = await fetch(`${origin}/api/hotels/search?${q.toString()}`, {
       signal: controller.signal,
@@ -241,11 +243,29 @@ async function fetchHotels(
   }
 }
 
+// Overall hard deadline for SerpAPI gathering. If the LLM extraction or flight/hotel APIs
+// hang, we'd rather generate the itinerary without real-time data than burn the whole
+// 300s function budget here.
+const TRAVEL_DATA_BUDGET_MS = 25_000;
+
 /**
  * Orchestrate: extract params → call flights + hotels APIs in parallel → return aggregated data.
- * Never throws; returns partial data on any failure.
+ * Never throws; returns null/partial data on timeout or failure.
  */
 export async function gatherTravelData(input: TripInput, lang: Language): Promise<TravelData | null> {
+  const t0 = Date.now();
+  const result = await Promise.race([
+    doGatherTravelData(input, lang),
+    new Promise<null>((resolve) => setTimeout(() => {
+      console.warn(`[travelData] overall ${TRAVEL_DATA_BUDGET_MS / 1000}s budget exceeded, skipping real-time data`);
+      resolve(null);
+    }, TRAVEL_DATA_BUDGET_MS)),
+  ]);
+  console.log('[travelData] gather complete', { ms: Date.now() - t0, hasResult: !!result });
+  return result;
+}
+
+async function doGatherTravelData(input: TripInput, lang: Language): Promise<TravelData | null> {
   const params = await extractSearchParams(input, lang);
   if (!params) return null;
 
