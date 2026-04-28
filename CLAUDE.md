@@ -17,8 +17,11 @@ npm run preview      # Preview production build
 
 ## Environment Setup
 
-Set `NVIDIA_API_KEY` in `.env.local` for the NVIDIA API integration (build.nvidia.com).
-Optional: `NVIDIA_MODEL` to override the default model (`minimaxai/minimax-m2.7`).
+LLM provider is selected server-side in `api/chat.ts` with this priority:
+1. `OPENROUTER_API_KEY` (preferred). Optional: `OPENROUTER_MODEL` (default `minimax/minimax-m2.7`).
+2. `NVIDIA_API_KEY` (fallback, build.nvidia.com). Optional: `NVIDIA_MODEL` (default `minimaxai/minimax-m2.7`).
+If both are unset, `/api/chat` returns 500.
+
 Set `BLOB_READ_WRITE_TOKEN` in Vercel env vars for cross-device share link storage (Vercel Blob).
 
 ## Architecture
@@ -64,10 +67,14 @@ Set `BLOB_READ_WRITE_TOKEN` in Vercel env vars for cross-device share link stora
 - `LANGUAGE_NAMES` maps language codes to native display names
 - RTL support for Arabic (`dir="rtl"`)
 
-### NVIDIA API Integration
+### LLM Integration (`api/chat.ts` proxy)
 
-- Uses `minimaxai/minimax-m2.7` model via NVIDIA's OpenAI-compatible endpoint (`https://integrate.api.nvidia.com/v1/chat/completions`)
-- Model overridable via `NVIDIA_MODEL` env var
+- Browser → `/api/chat` (Vercel serverless function) → upstream LLM
+- Provider selection: OpenRouter first (`OPENROUTER_API_KEY`), NVIDIA as fallback (`NVIDIA_API_KEY`)
+- OpenRouter: `https://openrouter.ai/api/v1/chat/completions`, default model `minimax/minimax-m2.7`
+- NVIDIA: `https://integrate.api.nvidia.com/v1/chat/completions`, default model `minimaxai/minimax-m2.7`
+- Auto-retries upstream 5xx up to 3× with backoff
+- Response includes `X-LLM-Provider` header indicating which provider served the request
 - System instructions define strict output format:
   - Weather table (Date | Condition | Temp | Rain Probability | Strategic Advice)
   - Daily itinerary as markdown tables (Time Range | Activity | Logistics & Notes)

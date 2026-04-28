@@ -6,11 +6,16 @@ export default defineConfig(({ mode }) => {
     // Load from .env files for local dev
     const env = loadEnv(mode, '.', '');
 
-    // The NVIDIA API key is read server-side in api/chat.ts — never exposed to the client.
-    // Only the model name is baked into the client bundle (for display + request body).
-    const model = process.env.NVIDIA_MODEL || env.NVIDIA_MODEL || 'minimaxai/minimax-m2.7';
+    // API keys are read server-side in api/chat.ts — never exposed to the client.
+    // Only the display model name is baked into the client bundle.
+    // OpenRouter is the primary provider; NVIDIA is the fallback.
+    const orModel = process.env.OPENROUTER_MODEL || env.OPENROUTER_MODEL || '';
+    const nvModel = process.env.NVIDIA_MODEL || env.NVIDIA_MODEL || '';
+    const orKey = process.env.OPENROUTER_API_KEY || env.OPENROUTER_API_KEY || '';
+    const displayModel =
+      (orKey ? orModel : '') || (nvModel || '') || orModel || 'minimax/minimax-m2.7';
 
-    console.log('[Vite Build] NVIDIA_MODEL:', model);
+    console.log('[Vite Build] LLM display model:', displayModel);
 
     return {
       server: {
@@ -19,7 +24,7 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       define: {
-        'process.env.NVIDIA_MODEL': JSON.stringify(model)
+        'process.env.LLM_DISPLAY_MODEL': JSON.stringify(displayModel)
       },
       resolve: {
         alias: {

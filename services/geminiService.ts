@@ -1,11 +1,12 @@
 
 import { TripInput, GeneratedPlan, Language, PreAnalysisQuestion } from "../types";
 
-// Export model name for UI display
-export const CURRENT_MODEL = process.env.NVIDIA_MODEL || 'minimaxai/minimax-m2.7';
+// Export model name for UI display. The actual provider (OpenRouter vs NVIDIA)
+// is decided server-side in api/chat.ts based on which env var is set.
+export const CURRENT_MODEL = process.env.LLM_DISPLAY_MODEL || 'minimax/minimax-m2.7';
 
-// Calls go through our Vercel serverless proxy (api/chat.ts) which holds the NVIDIA key
-// server-side and avoids browser CORS issues with integrate.api.nvidia.com.
+// Calls go through our Vercel serverless proxy (api/chat.ts) which holds the LLM API key
+// server-side and avoids browser CORS issues with the upstream provider.
 const CHAT_API_URL = '/api/chat';
 
 // Lazy import to avoid a circular dep at module-eval time (travelData.ts imports CURRENT_MODEL).
