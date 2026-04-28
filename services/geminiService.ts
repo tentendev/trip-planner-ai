@@ -353,6 +353,7 @@ async function readSSEContent(stream: ReadableStream<Uint8Array>): Promise<strin
   const decoder = new TextDecoder();
   let buffer = '';
   let content = '';
+  let upstreamError: string | null = null;
 
   while (true) {
     const { value, done } = await reader.read();
@@ -367,6 +368,10 @@ async function readSSEContent(stream: ReadableStream<Uint8Array>): Promise<strin
       if (!data || data === '[DONE]') continue;
       try {
         const chunk = JSON.parse(data);
+        if (chunk.error) {
+          upstreamError = chunk.error.message || JSON.stringify(chunk.error);
+          continue;
+        }
         const delta = chunk.choices?.[0]?.delta?.content;
         if (delta) content += delta;
       } catch {
@@ -374,5 +379,6 @@ async function readSSEContent(stream: ReadableStream<Uint8Array>): Promise<strin
       }
     }
   }
+  if (!content && upstreamError) throw new Error(upstreamError);
   return content;
 }

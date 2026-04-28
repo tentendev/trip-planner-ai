@@ -1,5 +1,3 @@
-import { Readable } from 'node:stream';
-
 export const config = {
   runtime: 'nodejs',
   maxDuration: 300,
@@ -40,6 +38,11 @@ function resolveProvider(referer: string): Provider | null {
 }
 
 const HEADERS_TIMEOUT_MS = 60_000;
+// If upstream sends no SSE data for this long, treat the model as stalled and abort.
+// 90s is generous for thinking models but well below the 300s function ceiling so we
+// can return a clean error instead of dying.
+const STALL_TIMEOUT_MS = 90_000;
+const HEARTBEAT_MS = 15_000;
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -59,19 +62,15 @@ export default async function handler(req: any, res: any) {
   }
 
   const t0 = Date.now();
+  let provName = provider.name;
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const clientWantsStream = body?.stream === true;
     const model = pickModelForProvider(provider, body?.model);
-    // Always request streaming upstream — even if the client wants a single JSON response.
-    // This avoids the Node 24 undici keep-alive hang where `await response.text()` blocks
-    // for the full generation duration on chunked responses with stream:false. The proxy
-    // either pipes the SSE stream straight through (if clientWantsStream) or accumulates
-    // it server-side and returns one ChatCompletion JSON.
     const payload = JSON.stringify({ ...body, model, stream: true });
 
     console.log('[api/chat] →', {
-      provider: provider.name,
+      provider: provName,
       model,
       msgs: body?.messages?.length,
       temp: body?.temperature,
@@ -98,7 +97,7 @@ export default async function handler(req: any, res: any) {
 
     const headersAt = Date.now();
     console.log('[api/chat] upstream headers', {
-      provider: provider.name,
+      provider: provName,
       status: upstream.status,
       content_type: upstream.headers.get('content-type'),
       ms: headersAt - t0,
@@ -106,78 +105,134 @@ export default async function handler(req: any, res: any) {
 
     if (!upstream.ok) {
       const text = await upstream.text();
-      console.error('[api/chat] upstream error', {
-        provider: provider.name,
-        status: upstream.status,
-        body: text.slice(0, 1000),
-      });
+      console.error('[api/chat] upstream error', { provider: provName, status: upstream.status, body: text.slice(0, 1000) });
       return res.status(upstream.status).json({
-        error: `${provider.name} upstream ${upstream.status}`,
-        provider: provider.name,
+        error: `${provName} upstream ${upstream.status}`,
+        provider: provName,
         upstream_body: tryParse(text),
         elapsed_ms: Date.now() - t0,
       });
     }
-
-    if (!upstream.body) {
-      return res.status(502).json({ error: 'Upstream returned no body' });
-    }
+    if (!upstream.body) return res.status(502).json({ error: 'Upstream returned no body' });
 
     if (clientWantsStream) {
-      // Pass SSE through to the client. The browser parses delta tokens as they arrive,
-      // so even a 4-minute model gives the user progressive output.
+      // Manual stream forward with explicit flush + heartbeat + stall detection.
+      // Plain `body.pipe(res)` worked locally but Vercel's runtime sometimes buffers
+      // until enough bytes accumulate, and gives us no signal when the upstream model
+      // is thinking silently.
       res.status(200);
-      res.setHeader('Content-Type', upstream.headers.get('content-type') || 'text/event-stream');
+      res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
       res.setHeader('Cache-Control', 'no-cache, no-transform');
       res.setHeader('Connection', 'keep-alive');
-      res.setHeader('X-LLM-Provider', provider.name);
+      res.setHeader('X-LLM-Provider', provName);
       res.setHeader('X-Accel-Buffering', 'no');
-      const nodeStream = Readable.fromWeb(upstream.body as any);
-      nodeStream.pipe(res);
-      nodeStream.on('end', () => {
-        console.log('[api/chat] ← stream end', { provider: provider.name, total_ms: Date.now() - t0 });
-      });
-      nodeStream.on('error', (err) => {
-        console.error('[api/chat] stream error', err);
-        if (!res.writableEnded) res.end();
-      });
+      if (typeof res.flushHeaders === 'function') res.flushHeaders();
+
+      // Initial heartbeat so the client connection is established immediately and any
+      // intermediate proxy commits to streaming mode.
+      res.write(': connected\n\n');
+
+      const heartbeat = setInterval(() => {
+        if (!res.writableEnded) res.write(': keepalive\n\n');
+      }, HEARTBEAT_MS);
+
+      let firstByteAt: number | null = null;
+      let lastByteAt = Date.now();
+      const stallChecker = setInterval(() => {
+        if (Date.now() - lastByteAt > STALL_TIMEOUT_MS) {
+          console.error('[api/chat] upstream stalled — no data in', STALL_TIMEOUT_MS, 'ms');
+          ac.abort();
+        }
+      }, 5_000);
+
+      let totalBytes = 0;
+      const reader = (upstream.body as ReadableStream<Uint8Array>).getReader();
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          if (!firstByteAt) {
+            firstByteAt = Date.now();
+            console.log('[api/chat] upstream first byte', { provider: provName, ms: firstByteAt - t0 });
+          }
+          lastByteAt = Date.now();
+          totalBytes += value.byteLength;
+          res.write(Buffer.from(value));
+        }
+      } catch (err: any) {
+        if (err?.name === 'AbortError') {
+          console.error('[api/chat] stream aborted (stall)', { provider: provName, total_ms: Date.now() - t0 });
+          // Tell the client what happened via an SSE error event.
+          res.write(`data: ${JSON.stringify({ error: { message: `Upstream stalled after ${STALL_TIMEOUT_MS / 1000}s — model may be too slow or queued. Try a faster model.` } })}\n\n`);
+        } else {
+          console.error('[api/chat] stream read error', err);
+          res.write(`data: ${JSON.stringify({ error: { message: err?.message || 'stream read error' } })}\n\n`);
+        }
+      } finally {
+        clearInterval(heartbeat);
+        clearInterval(stallChecker);
+        if (!res.writableEnded) {
+          res.write('data: [DONE]\n\n');
+          res.end();
+        }
+        console.log('[api/chat] ← stream end', {
+          provider: provName,
+          total_ms: Date.now() - t0,
+          first_byte_ms: firstByteAt ? firstByteAt - t0 : null,
+          total_bytes: totalBytes,
+        });
+      }
       return;
     }
 
     // Non-streaming client: accumulate SSE → assemble a ChatCompletion-style JSON.
-    const accumulated = await accumulateSSE(upstream.body as any);
-    res.status(200);
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('X-LLM-Provider', provider.name);
-    console.log('[api/chat] ← accumulated', {
-      provider: provider.name,
-      total_ms: Date.now() - t0,
-      content_chars: accumulated.content.length,
-    });
-    return res.json({
-      id: accumulated.id,
-      object: 'chat.completion',
-      model: accumulated.model || model,
-      choices: [
-        {
-          index: 0,
-          message: { role: 'assistant', content: accumulated.content },
-          finish_reason: accumulated.finish_reason || 'stop',
-        },
-      ],
-    });
+    let firstByteAt: number | null = null;
+    let lastByteAt = Date.now();
+    const stallChecker = setInterval(() => {
+      if (Date.now() - lastByteAt > STALL_TIMEOUT_MS) {
+        console.error('[api/chat] upstream stalled (non-streaming) — aborting');
+        ac.abort();
+      }
+    }, 5_000);
+    try {
+      const accumulated = await accumulateSSE(upstream.body as any, () => {
+        if (!firstByteAt) firstByteAt = Date.now();
+        lastByteAt = Date.now();
+      });
+      console.log('[api/chat] ← accumulated', {
+        provider: provName,
+        total_ms: Date.now() - t0,
+        first_byte_ms: firstByteAt ? firstByteAt - t0 : null,
+        content_chars: accumulated.content.length,
+      });
+      res.status(200);
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('X-LLM-Provider', provName);
+      return res.json({
+        id: accumulated.id,
+        object: 'chat.completion',
+        model: accumulated.model || model,
+        choices: [
+          {
+            index: 0,
+            message: { role: 'assistant', content: accumulated.content },
+            finish_reason: accumulated.finish_reason || 'stop',
+          },
+        ],
+      });
+    } finally {
+      clearInterval(stallChecker);
+    }
   } catch (err: any) {
     const elapsed = Date.now() - t0;
-    console.error('[api/chat] proxy threw', {
-      provider: provider?.name,
-      message: err?.message,
-      name: err?.name,
-      elapsed_ms: elapsed,
-    });
+    console.error('[api/chat] proxy threw', { provider: provName, message: err?.message, name: err?.name, elapsed_ms: elapsed });
     if (!res.headersSent) {
-      return res.status(502).json({
-        error: err?.message || 'Proxy error',
-        provider: provider?.name,
+      const isStall = err?.name === 'AbortError';
+      return res.status(isStall ? 504 : 502).json({
+        error: isStall
+          ? `Upstream stalled after ${STALL_TIMEOUT_MS / 1000}s — the model may be too slow or queued. Try a faster model in OPENROUTER_MODEL.`
+          : err?.message || 'Proxy error',
+        provider: provName,
         name: err?.name,
         elapsed_ms: elapsed,
       });
@@ -193,7 +248,7 @@ interface SSEResult {
   finish_reason: string | null;
 }
 
-async function accumulateSSE(stream: ReadableStream): Promise<SSEResult> {
+async function accumulateSSE(stream: ReadableStream<Uint8Array>, onChunk?: () => void): Promise<SSEResult> {
   const reader = stream.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
@@ -205,6 +260,7 @@ async function accumulateSSE(stream: ReadableStream): Promise<SSEResult> {
   while (true) {
     const { value, done } = await reader.read();
     if (done) break;
+    if (onChunk) onChunk();
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split('\n');
     buffer = lines.pop() || '';
