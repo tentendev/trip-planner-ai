@@ -17,7 +17,8 @@ npm run preview      # Preview production build
 
 ## Environment Setup
 
-Set `OPENROUTER_API_KEY` in `.env.local` for the OpenRouter API integration.
+Set `NVIDIA_API_KEY` in `.env.local` for the NVIDIA API integration (build.nvidia.com).
+Optional: `NVIDIA_MODEL` to override the default model (`minimaxai/minimax-m2.7`).
 Set `BLOB_READ_WRITE_TOKEN` in Vercel env vars for cross-device share link storage (Vercel Blob).
 
 ## Architecture
@@ -27,7 +28,7 @@ Set `BLOB_READ_WRITE_TOKEN` in Vercel env vars for cross-device share link stora
 1. **App.tsx** - Main orchestrator: manages language state (11 languages), loading states, localStorage persistence, routes between InputForm/ItineraryDisplay, handles share links via `?share=` URL param
 2. **InputForm.tsx** - Multi-section form with custom date picker, multi-select chips for interests/constraints/transport/diet
 3. **ItineraryDisplay.tsx** - Renders generated plans with export options (copy, download markdown, print, share link, share card)
-4. **services/geminiService.ts** - Constructs prompts with language-specific instructions, calls OpenRouter API
+4. **services/geminiService.ts** - Constructs prompts with language-specific instructions, calls NVIDIA's OpenAI-compatible chat completions API
 
 ### Component Hierarchy
 
@@ -63,9 +64,10 @@ Set `BLOB_READ_WRITE_TOKEN` in Vercel env vars for cross-device share link stora
 - `LANGUAGE_NAMES` maps language codes to native display names
 - RTL support for Arabic (`dir="rtl"`)
 
-### OpenRouter Integration
+### NVIDIA API Integration
 
-- Uses `xiaomi/mimo-v2-flash:free` model via OpenRouter API
+- Uses `minimaxai/minimax-m2.7` model via NVIDIA's OpenAI-compatible endpoint (`https://integrate.api.nvidia.com/v1/chat/completions`)
+- Model overridable via `NVIDIA_MODEL` env var
 - System instructions define strict output format:
   - Weather table (Date | Condition | Temp | Rain Probability | Strategic Advice)
   - Daily itinerary as markdown tables (Time Range | Activity | Logistics & Notes)

@@ -56,7 +56,7 @@ function defaultCurrency(lang: Language): string {
  * Uses temperature 0, JSON-only output.
  */
 async function extractSearchParams(input: TripInput, lang: Language): Promise<TravelSearchParams | null> {
-  const apiKey = (process.env as any).OPENROUTER_API_KEY;
+  const apiKey = (process.env as any).NVIDIA_API_KEY;
   if (!apiKey) return null;
 
   const today = new Date().toISOString().slice(0, 10);
@@ -96,13 +96,12 @@ ${JSON.stringify({
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const resp = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '',
-        'X-Title': 'Trip OS - Param Extractor',
+        'Accept': 'application/json',
       },
       body: JSON.stringify({
         model: CURRENT_MODEL,
@@ -111,6 +110,7 @@ ${JSON.stringify({
           { role: 'user', content: user },
         ],
         temperature: 0,
+        stream: false,
       }),
       signal: controller.signal,
     });

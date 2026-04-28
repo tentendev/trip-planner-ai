@@ -7,12 +7,12 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
 
     // Use process.env for Vercel builds (injected at build time), fallback to loadEnv for local
-    const apiKey = process.env.OPENROUTER_API_KEY || env.OPENROUTER_API_KEY || '';
-    const model = process.env.OPENROUTER_MODEL || env.OPENROUTER_MODEL || 'minimax/minimax-m2.7';
+    const apiKey = process.env.NVIDIA_API_KEY || env.NVIDIA_API_KEY || '';
+    const model = process.env.NVIDIA_MODEL || env.NVIDIA_MODEL || 'minimaxai/minimax-m2.7';
 
     // Debug: Log env vars during build (will show in Vercel build logs)
-    console.log('[Vite Build] OPENROUTER_MODEL:', model);
-    console.log('[Vite Build] OPENROUTER_API_KEY set:', !!apiKey);
+    console.log('[Vite Build] NVIDIA_MODEL:', model);
+    console.log('[Vite Build] NVIDIA_API_KEY set:', !!apiKey);
 
     return {
       server: {
@@ -21,8 +21,8 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       define: {
-        'process.env.OPENROUTER_API_KEY': JSON.stringify(apiKey),
-        'process.env.OPENROUTER_MODEL': JSON.stringify(model)
+        'process.env.NVIDIA_API_KEY': JSON.stringify(apiKey),
+        'process.env.NVIDIA_MODEL': JSON.stringify(model)
       },
       resolve: {
         alias: {

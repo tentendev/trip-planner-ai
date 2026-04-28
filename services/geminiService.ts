@@ -2,7 +2,10 @@
 import { TripInput, GeneratedPlan, Language, PreAnalysisQuestion } from "../types";
 
 // Export model name for UI display
-export const CURRENT_MODEL = process.env.OPENROUTER_MODEL || 'minimax/minimax-m2.7';
+export const CURRENT_MODEL = process.env.NVIDIA_MODEL || 'minimaxai/minimax-m2.7';
+
+// NVIDIA's OpenAI-compatible chat completions endpoint (build.nvidia.com).
+const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 
 // Lazy import to avoid a circular dep at module-eval time (travelData.ts imports CURRENT_MODEL).
 type TravelDataModule = typeof import('./travelData');
@@ -191,7 +194,7 @@ Each object in the array must have:
 Make options SPECIFIC to the destination. For example, if going to Tokyo, don't say "Local food" — say "Tsukiji Outer Market sushi breakfast", "Shibuya izakaya hopping", etc.`;
 
 export const preAnalyzeTrip = async (input: TripInput, lang: Language): Promise<PreAnalysisQuestion[]> => {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.NVIDIA_API_KEY;
   const model = CURRENT_MODEL;
 
   if (!apiKey) {
@@ -204,13 +207,12 @@ export const preAnalyzeTrip = async (input: TripInput, lang: Language): Promise<
   const timeoutId = setTimeout(() => controller.abort(), 60000);
 
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch(NVIDIA_API_URL, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "Trip OS - AI Travel Planner"
+        "Accept": "application/json"
       },
       body: JSON.stringify({
         model,
@@ -218,7 +220,8 @@ export const preAnalyzeTrip = async (input: TripInput, lang: Language): Promise<
           { role: "system", content: `${PRE_ANALYSIS_PROMPT}\n\nIMPORTANT: All questions and options MUST be in ${lang}. Respond ONLY with a JSON array.` },
           { role: "user", content: userPrompt }
         ],
-        temperature: 0.6
+        temperature: 0.6,
+        stream: false
       }),
       signal: controller.signal
     });
@@ -227,7 +230,7 @@ export const preAnalyzeTrip = async (input: TripInput, lang: Language): Promise<
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || `API error: ${response.status}`);
+      throw new Error(errorData.error?.message || errorData.detail || `API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -255,11 +258,11 @@ export const preAnalyzeTrip = async (input: TripInput, lang: Language): Promise<
 };
 
 export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW', preAnalysisAnswers?: Record<string, string[]>, preAnalysisQuestions?: PreAnalysisQuestion[]): Promise<GeneratedPlan> => {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.NVIDIA_API_KEY;
   const model = CURRENT_MODEL;
 
   if (!apiKey) {
-    throw new Error("API Key is missing. Please set process.env.OPENROUTER_API_KEY.");
+    throw new Error("API Key is missing. Please set process.env.NVIDIA_API_KEY.");
   }
 
   const baseSystemInstruction = LANGUAGE_INSTRUCTIONS[lang];
@@ -292,13 +295,12 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 180000);
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch(NVIDIA_API_URL, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "Trip OS - AI Travel Planner"
+        "Accept": "application/json"
       },
       body: JSON.stringify({
         model: model,
@@ -312,7 +314,8 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
             content: userPrompt
           }
         ],
-        temperature: 0.4
+        temperature: 0.4,
+        stream: false
       }),
       signal: controller.signal
     });
@@ -322,7 +325,7 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error("API Response Error:", response.status, errorData);
-      throw new Error(errorData.error?.message || `OpenRouter API error: ${response.status}`);
+      throw new Error(errorData.error?.message || errorData.detail || `NVIDIA API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -352,7 +355,7 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
       console.error("Request timed out after 3 minutes");
       throw new Error("Request timed out. Please try again.");
     }
-    console.error("OpenRouter API Error:", error);
+    console.error("NVIDIA API Error:", error);
     throw error;
   }
 };
