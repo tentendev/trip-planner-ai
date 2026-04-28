@@ -23,30 +23,51 @@ export default async function handler(req: any, res: any) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const model = body?.model || process.env.NVIDIA_MODEL || 'minimaxai/minimax-m2.7';
+    const payload = JSON.stringify({ ...body, model, stream: false });
 
-    console.log('[api/chat] →', { model, msgs: body?.messages?.length, temp: body?.temperature });
+    console.log('[api/chat] →', { model, msgs: body?.messages?.length, temp: body?.temperature, payload_bytes: payload.length });
 
-    const upstream = await fetch(NVIDIA_API_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ ...body, model, stream: false }),
-    });
+    // NVIDIA's edge sometimes returns 502 transiently on cold backends.
+    // Retry up to 3 times with exponential backoff (only on 5xx).
+    let upstream: Response | null = null;
+    let lastBody = '';
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      upstream = await fetch(NVIDIA_API_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'User-Agent': 'TripOS/1.0 (+https://vercel.app)',
+        },
+        body: payload,
+      });
 
-    const text = await upstream.text();
+      if (upstream.status < 500) break; // success or 4xx — stop retrying
+
+      lastBody = await upstream.text();
+      console.warn('[api/chat] upstream 5xx, will retry', { attempt, status: upstream.status, bytes: lastBody.length });
+      if (attempt < maxAttempts) {
+        await new Promise((r) => setTimeout(r, 500 * attempt)); // 500ms, 1000ms
+      }
+    }
+
+    if (!upstream) throw new Error('No upstream response');
+
     const elapsed = Date.now() - t0;
 
     if (!upstream.ok) {
-      console.error('[api/chat] upstream error', { status: upstream.status, elapsed_ms: elapsed, body: text.slice(0, 1000) });
+      const text = lastBody || (await upstream.text());
+      console.error('[api/chat] upstream error (final)', { status: upstream.status, elapsed_ms: elapsed, body: text.slice(0, 1000) });
       return res.status(upstream.status).json({
         error: `NVIDIA upstream ${upstream.status}`,
         upstream_body: tryParse(text),
+        elapsed_ms: elapsed,
       });
     }
 
+    const text = await upstream.text();
     console.log('[api/chat] ← ok', { status: upstream.status, elapsed_ms: elapsed, bytes: text.length });
     res.status(upstream.status);
     res.setHeader('Content-Type', upstream.headers.get('content-type') || 'application/json');
