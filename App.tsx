@@ -72,6 +72,10 @@ const App: React.FC = () => {
     shareUrl: '',
     highlights: []
   });
+  // Summary captured from a shared plan, so visitors opening ?share= links can
+  // still open a meaningful Share Card (they have no lastInput of their own).
+  const [sharedSummary, setSharedSummary] = useState<import('./utils/shareStorage').SharedPlanSummary | undefined>(undefined);
+  const [shareNotFound, setShareNotFound] = useState(false);
 
   // Initialize language priority: URL -> Browser -> Default (zh-TW)
   const [language, setLanguage] = useState<Language>(() => {
@@ -118,6 +122,7 @@ const App: React.FC = () => {
 
       getSharedPlan(shareId).then(sharedPlan => {
         if (sharedPlan) {
+          setSharedSummary(sharedPlan.summary);
           setTripPlan({
             markdown: sharedPlan.markdown,
             sources: sharedPlan.sources || [],
@@ -134,10 +139,13 @@ const App: React.FC = () => {
             setLanguage(sharedPlan.lang as Language);
           }
         } else {
-          // Share not found — reset to idle
+          // Dead link — tell the visitor instead of silently dropping them on
+          // a bare form.
+          setShareNotFound(true);
           setLoadingState(LoadingState.IDLE);
         }
       }).catch(() => {
+        setShareNotFound(true);
         setLoadingState(LoadingState.IDLE);
       }).finally(() => {
         setIsFetchingShare(false);
@@ -242,6 +250,9 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // A plan loaded from someone else's share link must not evict the visitor's
+    // own saved trip from localStorage.
+    if (isSharedView) return;
     if (lastInput || tripPlan) {
       const stateToSave: AppState = {
         lastInput,
@@ -266,7 +277,7 @@ const App: React.FC = () => {
         }
       }
     }
-  }, [lastInput, tripPlan]);
+  }, [lastInput, tripPlan, isSharedView]);
 
   const handleFormSubmit = async (data: TripInput) => {
     setLastInput(data);
@@ -497,6 +508,13 @@ const App: React.FC = () => {
 
       <main className="max-w-5xl mx-auto px-4 md:px-8 pt-8 md:pt-12 flex-grow w-full relative z-10">
 
+        {shareNotFound && !tripPlan && !isFetchingShare && (
+          <div className="mb-8 p-4 bg-amber-50/80 backdrop-blur border border-amber-200 rounded-xl text-amber-800 flex items-center gap-3 shadow-lg" role="status">
+            <div className="w-6 h-6 flex items-center justify-center">🔗</div>
+            <p className="text-sm font-medium">{t.shareNotFound || 'This shared itinerary link is invalid or has expired.'}</p>
+          </div>
+        )}
+
         {isFetchingShare && (
           <div className="flex flex-col items-center justify-center py-24 animate-in fade-in duration-300" role="status" aria-live="polite">
             <div className="relative w-14 h-14 mb-5">
@@ -578,12 +596,12 @@ const App: React.FC = () => {
         onClose={() => setShowShareCard(false)}
         language={language}
         tripData={{
-          destination: lastInput?.destination || '',
-          dates: lastInput?.dates || '',
-          travelers: lastInput?.travelers || '',
-          budget: lastInput?.budget || '',
-          pace: lastInput?.pace || 'Moderate',
-          interests: lastInput?.interests || '',
+          destination: lastInput?.destination || sharedSummary?.destination || '',
+          dates: lastInput?.dates || sharedSummary?.dates || '',
+          travelers: lastInput?.travelers || sharedSummary?.travelers || '',
+          budget: lastInput?.budget || sharedSummary?.budget || '',
+          pace: lastInput?.pace || sharedSummary?.pace || 'Moderate',
+          interests: lastInput?.interests || sharedSummary?.interests || '',
           highlights: shareCardData.highlights,
         }}
         shareUrl={shareCardData.shareUrl}

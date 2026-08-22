@@ -24,6 +24,7 @@ const BASE_EN = {
     desc: 'Your AI-powered comprehensive travel planner. We craft actionable, optimized itineraries based on your pace, budget, and constraints.',
   },
   error: 'Generation failed. Please check your API Key or try again later.',
+  shareNotFound: 'This shared itinerary link is invalid or has expired.',
   loading: {
     title: 'Crafting Your Journey',
     subtitle: 'AI is planning your perfect trip',

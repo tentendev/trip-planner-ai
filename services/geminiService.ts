@@ -295,7 +295,7 @@ const LANGUAGE_INSTRUCTIONS: Record<Language, string> = {
   `
 };
 
-export const buildUserPrompt = (input: TripInput, lang: Language, preAnalysisAnswers?: Record<string, string[]>, preAnalysisQuestions?: PreAnalysisQuestion[]): string => {
+export const buildUserPrompt = (input: TripInput, lang: Language, preAnalysisAnswers?: Record<string, string[]>, preAnalysisQuestions?: PreAnalysisQuestion[], includeGenerateInstruction: boolean = true): string => {
   const fields: { label: string; value: string }[] = [
     { label: 'Destination', value: input.destination },
     { label: 'Arrival', value: input.arrivalDetail },
@@ -335,7 +335,10 @@ export const buildUserPrompt = (input: TripInput, lang: Language, preAnalysisAns
     }
   }
 
-  prompt += `\n\nPlease generate the Trip OS plan following the system instructions.\nLanguage Requirement: ${lang}`;
+  if (includeGenerateInstruction) {
+    prompt += `\n\nPlease generate the Trip OS plan following the system instructions.`;
+  }
+  prompt += `\nLanguage Requirement: ${lang}`;
   return prompt;
 };
 
@@ -364,7 +367,9 @@ Make options SPECIFIC to the destination. For example, if going to Tokyo, don't 
 
 export const preAnalyzeTrip = async (input: TripInput, lang: Language): Promise<PreAnalysisQuestion[]> => {
   const model = CURRENT_MODEL;
-  const userPrompt = buildUserPrompt(input, lang);
+  // Omit the "Please generate..." instruction — this request only extracts
+  // clarifying questions; asking it to also generate contradicts the system role.
+  const userPrompt = buildUserPrompt(input, lang, undefined, undefined, false);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -519,10 +524,12 @@ export const generateTripPlan = async (
       signal: controller.signal
     });
 
-    clearTimeout(timeoutId);
-    detachSignal();
+    // NOTE: timeoutId intentionally NOT cleared yet — it must bound the whole
+    // request (body streaming included), not just time-to-headers.
 
     if (!response.ok) {
+      clearTimeout(timeoutId);
+      detachSignal();
       const errorData = await response.json().catch(() => ({}));
       throw friendlyFromResponse(response.status, errorData, lang);
     }
@@ -530,6 +537,7 @@ export const generateTripPlan = async (
     if (!response.body) throw new Error("No response body");
 
     const content = await readSSEContent(response.body, opts?.onDelta, controller.signal);
+    clearTimeout(timeoutId);
     detachSignal();
 
     console.log("API Response received:", { content_chars: content.length });
