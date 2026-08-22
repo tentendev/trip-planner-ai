@@ -3,7 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Globe, Plane, CircleStop } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../utils/i18n';
-import MarkdownRenderer from './MarkdownRenderer';
+// Deferred chunk: the react-markdown stack is heavy and only needed once a
+// plan exists — lazy-loading it keeps the initial bundle lean.
+const MarkdownRenderer = React.lazy(() => import('./MarkdownRenderer'));
 
 interface LoadingOverlayProps {
   language: Language;
@@ -147,7 +149,7 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ language, partialMarkdo
               className="max-h-[40vh] overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/70 p-4 md:p-5"
               aria-live="polite"
             >
-              <MarkdownRenderer content={partialMarkdown!} />
+              <React.Suspense fallback={null}><MarkdownRenderer content={partialMarkdown!} /></React.Suspense>
             </div>
           </div>
 

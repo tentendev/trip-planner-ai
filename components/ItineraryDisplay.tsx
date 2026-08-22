@@ -1,6 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import MarkdownRenderer from './MarkdownRenderer';
+// Deferred chunk: the react-markdown stack is heavy and only needed once a
+// plan exists — lazy-loading it keeps the initial bundle lean.
+const MarkdownRenderer = React.lazy(() => import('./MarkdownRenderer'));
 import FlightOffersSection from './FlightOffersSection';
 import HotelOffersSection from './HotelOffersSection';
 import WeatherStrip from './WeatherStrip';
@@ -382,7 +384,9 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
 
       {/* Content */}
       <div className="px-5 md:px-12 py-8 md:py-12 relative z-10">
-        <MarkdownRenderer content={plan.markdown} />
+        <React.Suspense fallback={<div className="h-40 animate-pulse bg-slate-50 rounded-xl" />}>
+          <MarkdownRenderer content={plan.markdown} />
+        </React.Suspense>
 
         {plan.sources && plan.sources.length > 0 && (
           <div className="mt-16 pt-8 border-t border-slate-100 no-print">
