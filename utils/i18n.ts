@@ -47,6 +47,8 @@ const BASE_EN = {
     print: 'Print Itinerary',
     clear: 'Clear History',
     share: 'Share Link',
+    ready: 'Ready',
+    errorTitle: 'Error',
     shareCard: 'Share Card',
     viewPrompt: 'View Raw Prompt',
     hidePrompt: 'Hide Prompt',
@@ -186,7 +188,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       estimated_time: '通常需要 30-60 秒'
     },
     error: '生成失败，请检查 API Key 或稍后再试。',
-    actions: { ...BASE_EN.actions, submit: '生成行程计划', refine: '调整行程', export: '导出行程', copy: '复制 Markdown', copied: '已复制', download: '导出 Markdown 文件', print: '打印行程', clear: '清除历史', share: '分享链接', shareCard: '分享卡片', viewPrompt: '查看原始提示词', hidePrompt: '隐藏提示词', copyPrompt: '复制提示词', promptCopied: '提示词已复制！' },
+    actions: { ...BASE_EN.actions, submit: '生成行程计划', refine: '调整行程', export: '导出行程', copy: '复制 Markdown', copied: '已复制', download: '导出 Markdown 文件', print: '打印行程', clear: '清除历史', share: '分享链接', ready: '已就绪', errorTitle: '出错了', shareCard: '分享卡片', viewPrompt: '查看原始提示词', hidePrompt: '隐藏提示词', copyPrompt: '复制提示词', promptCopied: '提示词已复制！' },
     form: {
       ...BASE_EN.form,
       section_basics: '基本信息',
@@ -317,6 +319,8 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       print: '列印 / 存為 PDF',
       clear: '清除暫存資料',
       share: '分享連結',
+      ready: '已就緒',
+      errorTitle: '發生錯誤',
       shareCard: '分享卡片',
       viewPrompt: '查看原始提示詞',
       hidePrompt: '隱藏提示詞',
@@ -441,7 +445,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       estimated_time: '通常30〜60秒かかります'
     },
     error: '生成に失敗しました。後でもう一度お試しください。',
-    actions: { ...BASE_EN.actions, submit: '旅程を作成する', refine: '条件を修正', export: 'エクスポート', copy: 'コピー', copied: 'コピー完了', download: 'Markdownをエクスポート', print: '印刷 / PDF', clear: '履歴削除', share: '共有リンク', shareCard: 'シェアカード', viewPrompt: 'プロンプトを表示', hidePrompt: 'プロンプトを隠す', copyPrompt: 'プロンプトをコピー', promptCopied: 'コピーしました！' },
+    actions: { ...BASE_EN.actions, submit: '旅程を作成する', refine: '条件を修正', export: 'エクスポート', copy: 'コピー', copied: 'コピー完了', download: 'Markdownをエクスポート', print: '印刷 / PDF', clear: '履歴削除', share: '共有リンク', ready: '準備完了', errorTitle: 'エラー', shareCard: 'シェアカード', viewPrompt: 'プロンプトを表示', hidePrompt: 'プロンプトを隠す', copyPrompt: 'プロンプトをコピー', promptCopied: 'コピーしました！' },
     form: {
       ...BASE_EN.form,
       section_basics: '基本情報',

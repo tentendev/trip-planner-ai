@@ -31,6 +31,28 @@ interface ItineraryDisplayProps {
   onOpenShareCard?: (shareUrl: string, highlights: string[]) => void;
 }
 
+/**
+ * Clipboard with a legacy fallback — navigator.clipboard is unavailable on
+ * non-secure origins (plain http), which would silently break Copy/Share.
+ */
+async function copyToClipboard(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+  } finally {
+    document.body.removeChild(ta);
+  }
+}
+
 const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
   plan,
   onReset,
@@ -42,6 +64,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,7 +79,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
 
   const handleCopyMarkdown = async () => {
     try {
-      await navigator.clipboard.writeText(plan.markdown);
+      await copyToClipboard(plan.markdown);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
@@ -83,23 +106,31 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
   };
 
   const handleCopyShareLink = async () => {
+    if (isSharing) return;
+    setIsSharing(true);
     try {
-      const shareId = await saveSharedPlan(plan, language, tripInput);
+      const { id: shareId } = await saveSharedPlan(plan, language, tripInput);
       const fullUrl = generateShareUrl(shareId, language);
-      await navigator.clipboard.writeText(fullUrl);
+      await copyToClipboard(fullUrl);
       setShareSuccess(true);
-      setTimeout(() => setShareSuccess(false), 2000);
+      setTimeout(() => setShareSuccess(false), 2500);
       setShowDropdown(false);
     } catch (err) {
-      console.error('Failed to copy share link', err);
+      console.error('Failed to create share link', err);
+    } finally {
+      setIsSharing(false);
     }
   };
 
   const handleOpenShareCard = async () => {
-    const shareId = await saveSharedPlan(plan, language, tripInput);
-    const fullUrl = generateShareUrl(shareId, language);
-    const highlights = extractHighlights();
-    if (onOpenShareCard) onOpenShareCard(fullUrl, highlights);
+    try {
+      const { id: shareId } = await saveSharedPlan(plan, language, tripInput);
+      const fullUrl = generateShareUrl(shareId, language);
+      const highlights = extractHighlights();
+      if (onOpenShareCard) onOpenShareCard(fullUrl, highlights);
+    } catch (err) {
+      console.error('Failed to prepare share card', err);
+    }
   };
 
   const extractHighlights = (): string[] => {
@@ -201,13 +232,21 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
 
               <button
                 onClick={handleCopyShareLink}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-colors ${
+                disabled={isSharing}
+                aria-busy={isSharing}
+                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-colors disabled:opacity-70 ${
                   shareSuccess
                     ? 'bg-emerald-600 text-white'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                 }`}
               >
-                {shareSuccess ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                {isSharing ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-slate-400 border-t-slate-700 animate-spin" />
+                ) : shareSuccess ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <Share2 className="w-4 h-4" />
+                )}
                 <span className="hidden sm:inline">
                   {shareSuccess ? t.actions.copied : t.actions.share}
                 </span>

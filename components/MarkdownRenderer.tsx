@@ -15,7 +15,9 @@ const highlightBrackets = (node: React.ReactNode, keyPrefix = 'ctx'): React.Reac
   if (node == null || typeof node === 'boolean') return node;
   if (typeof node === 'number') return node;
   if (typeof node === 'string') {
-    if (!BRACKET_RE.test(node)) return node;
+    // NOTE: no .test() guard here — BRACKET_RE is a module-level /g regex and .test()
+    // advances lastIndex, which made every other text node skip highlighting.
+    // String.split with a /g regex always starts from index 0, so split unconditionally.
     const parts = node.split(BRACKET_RE);
     return parts.map((part, i) => {
       if (

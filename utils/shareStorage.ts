@@ -105,7 +105,7 @@ async function getFromApi(id: string): Promise<SharedPlan | null> {
 
 // Save a plan and return its short ID.
 // Saves to both API (persistent, cross-device) and localStorage (cache).
-export async function saveSharedPlan(plan: GeneratedPlan, lang: Language, tripInput?: TripInput): Promise<string> {
+export async function saveSharedPlan(plan: GeneratedPlan, lang: Language, tripInput?: TripInput): Promise<{ id: string; synced: boolean }> {
   const id = generateShortId();
   const summary: SharedPlanSummary | undefined = tripInput
     ? {
@@ -133,12 +133,21 @@ export async function saveSharedPlan(plan: GeneratedPlan, lang: Language, tripIn
   // Save to localStorage immediately (fast, works offline)
   saveToLocalStorage(sharedPlan);
 
-  // Also persist to API (async, for cross-device sharing)
-  saveToApi(sharedPlan).catch(() => {
-    // API save failed silently — localStorage still has it
-  });
+  // Persist to the API and WAIT — the share URL is copied to the clipboard right
+  // after this returns, and a not-yet-uploaded id produces a dead link for anyone
+  // on another device. Falls back to local-only sharing if upload fails.
+  let synced = false;
+  try {
+    await Promise.race([
+      saveToApi(sharedPlan),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('share upload timeout')), 12_000)),
+    ]);
+    synced = true;
+  } catch {
+    console.warn('[shareStorage] cloud save failed — share link will only work on this device');
+  }
 
-  return id;
+  return { id, synced };
 }
 
 // Retrieve a shared plan by ID.

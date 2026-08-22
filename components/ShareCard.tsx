@@ -253,10 +253,21 @@ const PACE_CONFIG: Record<string, { emoji: string; color: string }> = {
 
 // Extract trip duration from dates string
 function extractDuration(dates: string): string {
-  const match = dates.match(/(\d+)\s*(天|日|days?|días?|jours?|дн|أيام|दिन|일)/i);
-  if (match) return match[0];
+  // Prefer an explicit parenthesized day count — "3月3日 - 3月10日（8 天）" must yield
+  // "8 天", not "3日" from inside the start date (the old left-to-right scan matched
+  // the first digits+unit pair anywhere in the string).
+  const parenMatch = dates.match(/[(（]\s*(\d+)\s*(天|日|days?|días?|jours?|дн\.?|أيام|दिन|일|dias?)\s*[)）]/i);
+  if (parenMatch) return `${parenMatch[1]} ${parenMatch[2]}`;
 
-  // Try to extract from date range
+  // Next: a unit-suffixed number appearing AFTER the range separator
+  const rangeParts = dates.split(/\s*[-–—]\s*/);
+  if (rangeParts.length > 1) {
+    const tail = rangeParts.slice(1).join(' - ');
+    const match = tail.match(/(\d+)\s*(天|日|days?|días?|jours?|дн\.?|أيام|दिन|일|dias?)/i);
+    if (match) return match[0];
+  }
+
+  // Fall back to computing from an ISO date range (InputForm appends "· YYYY-MM-DD/YYYY-MM-DD")
   const dateMatch = dates.match(/\d{4}[-/]\d{1,2}[-/]\d{1,2}/g);
   if (dateMatch && dateMatch.length >= 2) {
     const start = new Date(dateMatch[0]);

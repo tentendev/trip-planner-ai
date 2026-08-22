@@ -113,8 +113,29 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-  const [viewDate, setViewDate] = useState(new Date()); 
+  const [viewDate, setViewDate] = useState(new Date());
   const datePickerRef = useRef<HTMLDivElement>(null);
+
+  // Restore calendar selection from persisted form values ("refine" flow used to
+  // come back with empty date fields even though formData.dates survived).
+  useEffect(() => {
+    if (!initialValues?.dates) return;
+    if (startDate || endDate) return; // don't clobber live edits
+    const isoMatch = initialValues.dates.match(/(\d{4}-\d{2}-\d{2})(?:\/(\d{4}-\d{2}-\d{2}))?/);
+    if (!isoMatch) return;
+    const parse = (s: string) => {
+      const [y, m, d] = s.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      return isNaN(dt.getTime()) ? null : dt;
+    };
+    const s = parse(isoMatch[1]);
+    if (!s) return;
+    const e = isoMatch[2] ? parse(isoMatch[2]) : null;
+    setStartDate(s);
+    if (e) setEndDate(e);
+    setViewDate(s);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValues]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -126,22 +147,30 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Serialize a Date as local YYYY-MM-DD (not toISOString, which shifts by timezone)
+  const toISOLocal = (d: Date): string =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
   useEffect(() => {
     if (startDate && endDate) {
-      const startStr = startDate.toLocaleDateString(language, { month: 'long', day: 'numeric' });
-      const endStr = endDate.toLocaleDateString(language, { month: 'long', day: 'numeric' });
+      // Include the YEAR and an ISO tail: the previous year-less display string forced
+      // both the LLM and SerpAPI param extraction to guess which year was meant.
+      // Format: "<pretty range> (<N> days) · YYYY-MM-DD/YYYY-MM-DD"
+      const opts: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric', year: 'numeric' };
+      const startStr = startDate.toLocaleDateString(language, opts);
+      const endStr = endDate.toLocaleDateString(language, opts);
       const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      
+
       setFormData(prev => ({
         ...prev,
-        dates: `${startStr} - ${endStr} (${diffDays} ${t.form.dates_days})`
+        dates: `${startStr} - ${endStr} (${diffDays} ${t.form.dates_days}) · ${toISOLocal(startDate)}/${toISOLocal(endDate)}`
       }));
     } else if (startDate) {
-      const startStr = startDate.toLocaleDateString(language, { month: 'long', day: 'numeric' });
+      const startStr = startDate.toLocaleDateString(language, { month: 'long', day: 'numeric', year: 'numeric' });
       setFormData(prev => ({
         ...prev,
-        dates: `${startStr}`
+        dates: `${startStr} · ${toISOLocal(startDate)}`
       }));
     }
   }, [startDate, endDate, language]);
@@ -182,18 +211,105 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
   };
 
   const handleChipClick = (field: keyof TripInput, value: string) => {
-    const currentVal = formData[field] as string;
-    if (!currentVal) {
-      setFormData(prev => ({ ...prev, [field]: value }));
-      return;
-    }
-    if (currentVal.includes(value)) return; 
-    setFormData(prev => ({ ...prev, [field]: `${currentVal}, ${value}` }));
+    const current = (formData[field] as string)
+      ? (formData[field] as string).split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+    // Toggle on exact match — the substring includes() check previously made
+    // "Food" and "Seafood" collide and left no way to remove a chip-added value.
+    const updated = current.includes(value)
+      ? current.filter(v => v !== value)
+      : [...current, value];
+    setFormData(prev => ({ ...prev, [field]: updated.join(', ') }));
   };
+
+  // Localized validation messages (kept local to avoid i18n.ts churn in this pass)
+  const VALIDATION_MSGS: Record<Language, { destination: string; dates: string; past: string }> = {
+    'en': {
+      destination: 'Please enter a destination.',
+      dates: 'Please select your travel dates.',
+      past: 'The start date is in the past — please pick an upcoming date.',
+    },
+    'zh-TW': {
+      destination: '請輸入目的地。',
+      dates: '請選擇旅行日期。',
+      past: '出發日期已過期，請選擇未來的日期。',
+    },
+    'zh-CN': {
+      destination: '请输入目的地。',
+      dates: '请选择旅行日期。',
+      past: '出发日期已过期，请选择未来的日期。',
+    },
+    'ja': {
+      destination: '旅行先を入力してください。',
+      dates: '旅行日を選択してください。',
+      past: '出発日が過去です。今後の日付を選んでください。',
+    },
+    'ko': {
+      destination: '여행지를 입력해 주세요.',
+      dates: '여행 날짜를 선택해 주세요.',
+      past: '출발일이 과거입니다. 이후 날짜를 선택해 주세요.',
+    },
+    'hi': {
+      destination: 'कृपया गंतव्य दर्ज करें।',
+      dates: 'कृपया अपनी यात्रा की तारीखें चुनें।',
+      past: 'प्रारंभ तिथि बीत चुकी है — कृपया आने वाली तारीख चुनें।',
+    },
+    'es': {
+      destination: 'Introduce un destino.',
+      dates: 'Selecciona las fechas del viaje.',
+      past: 'La fecha de inicio ya pasó — elige una fecha futura.',
+    },
+    'fr': {
+      destination: 'Veuillez saisir une destination.',
+      dates: 'Veuillez sélectionner vos dates de voyage.',
+      past: "La date de début est passée — choisissez une date à venir.",
+    },
+    'ar': {
+      destination: 'يرجى إدخال الوجهة.',
+      dates: 'يرجى تحديد تواريخ السفر.',
+      past: 'تاريخ البدء في الماضي — يرجى اختيار تاريخ قادم.',
+    },
+    'pt': {
+      destination: 'Informe um destino.',
+      dates: 'Selecione as datas da viagem.',
+      past: 'A data de início já passou — escolha uma data futura.',
+    },
+    'ru': {
+      destination: 'Введите направление.',
+      dates: 'Выберите даты поездки.',
+      past: 'Дата начала уже прошла — выберите будущую дату.',
+    },
+  };
+
+  const [validationError, setValidationError] = useState<{ field: 'destination' | 'dates'; msg: string } | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    const msgs = VALIDATION_MSGS[language] || VALIDATION_MSGS.en;
+
+    // Whitespace-only destination previously slipped past the `required` attribute
+    // and produced prompts with no destination at all.
+    if (!formData.destination.trim()) {
+      setValidationError({ field: 'destination', msg: msgs.destination });
+      return;
+    }
+    if (!startDate) {
+      setValidationError({ field: 'dates', msg: msgs.dates });
+      return;
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDay = new Date(startDate);
+    startDay.setHours(0, 0, 0, 0);
+    if (startDay < today) {
+      setValidationError({ field: 'dates', msg: msgs.past });
+      setShowDatePicker(true);
+      return;
+    }
+
+    setValidationError(null);
+    // Trim the destination so prompts never carry stray whitespace.
+    onSubmit({ ...formData, destination: formData.destination.trim() });
   };
 
   // Calculate form completion progress
@@ -370,10 +486,11 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
 
   const renderSmartChips = (label: string, field: keyof TripInput, suggestions: string[], icon: React.ReactNode, colorClass: string, placeholder: string) => (
     <div className="space-y-3">
-      <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+      <label htmlFor={`trip-${field}`} className="text-sm font-medium text-slate-700 flex items-center gap-2">
         {icon} {label}
       </label>
-      <input 
+      <input
+        id={`trip-${field}`}
         name={field}
         value={formData[field] as string}
         onChange={handleChange}
@@ -381,16 +498,26 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
         className={`w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:${colorClass} focus:border-transparent outline-none transition shadow-sm`}
       />
       <div className="flex flex-wrap gap-2 mt-2">
-        {suggestions.map(s => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => handleChipClick(field, s)}
-            className="flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100/80 text-slate-600 text-xs hover:bg-slate-200 transition border border-slate-200"
-          >
-            <Plus className="w-3 h-3" /> {s}
-          </button>
-        ))}
+        {suggestions.map(s => {
+          // Exact-match against the comma-split list; the old substring check made
+          // "Food" and "Seafood" collide.
+          const active = (formData[field] as string).split(',').map(x => x.trim()).includes(s);
+          return (
+            <button
+              key={s}
+              type="button"
+              aria-pressed={active}
+              onClick={() => handleChipClick(field, s)}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs transition border ${
+                active
+                  ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
+                  : 'bg-slate-100/80 text-slate-600 hover:bg-slate-200 border-slate-200'
+              }`}
+            >
+              {active ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />} {s}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -498,7 +625,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
               {formProgress}%
             </span>
             {formProgress >= 90 && (
-              <span className="text-xs text-green-600 hidden md:inline animate-in fade-in">Ready!</span>
+              <span className="text-xs text-green-600 hidden md:inline animate-in fade-in">✓</span>
             )}
           </div>
         </div>
@@ -520,22 +647,29 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-3">
-            <label className="text-sm font-medium text-slate-700">{t.form.destination}</label>
-            <input 
+            <label htmlFor="trip-destination" className="text-sm font-medium text-slate-700">{t.form.destination}</label>
+            <input
               required
+              id="trip-destination"
               name="destination"
               value={formData.destination}
               onChange={handleChange}
               placeholder={t.form.destination_placeholder}
-              className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition shadow-sm"
+              aria-invalid={validationError?.field === 'destination' || undefined}
+              aria-describedby={validationError?.field === 'destination' ? 'trip-destination-error' : undefined}
+              className={`w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition shadow-sm ${validationError?.field === 'destination' ? 'border-red-400 ring-1 ring-red-300' : 'border-slate-200/60'}`}
             />
+            {validationError?.field === 'destination' && (
+              <p id="trip-destination-error" role="alert" className="text-sm text-red-600 font-medium">{validationError.msg}</p>
+            )}
           </div>
 
           <div className="space-y-3">
-            <label className="text-sm font-medium text-slate-700">{t.form.travelers}</label>
+            <label htmlFor="trip-travelers" className="text-sm font-medium text-slate-700">{t.form.travelers}</label>
             <div className="relative">
               <Users className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
-              <input 
+              <input
+                id="trip-travelers"
                 name="travelers"
                 value={formData.travelers}
                 onChange={handleChange}
@@ -547,9 +681,15 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
 
           <div className="space-y-3 relative md:col-span-2" ref={datePickerRef}>
             <label className="text-sm font-medium text-slate-700">{t.form.dates}</label>
-            <div 
-              className="flex bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition group"
-              onClick={() => setShowDatePicker(true)}
+            {/* Keyboard-accessible trigger: was an onClick div invisible to keyboards/screen readers */}
+            <button
+              type="button"
+              onClick={() => setShowDatePicker(v => !v)}
+              onKeyDown={(e) => { if (e.key === 'Escape') setShowDatePicker(false); }}
+              aria-expanded={showDatePicker}
+              aria-haspopup="dialog"
+              aria-invalid={validationError?.field === 'dates' || undefined}
+              className={`w-full flex bg-white/70 backdrop-blur-sm border rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition group text-left ${validationError?.field === 'dates' ? 'border-red-400 ring-1 ring-red-300' : 'border-slate-200/60'}`}
             >
               <div className={`flex-1 p-4 border-r border-slate-200/60 group-hover:bg-white/50 transition ${!startDate ? 'text-slate-400' : 'text-slate-900'}`}>
                 <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">{t.form.dates_start}</div>
@@ -565,44 +705,52 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
                   <span className="font-medium text-lg">{formatDateDisplay(endDate)}</span>
                 </div>
               </div>
-            </div>
+            </button>
+            {validationError?.field === 'dates' && (
+              <p role="alert" className="text-sm text-red-600 font-medium">{validationError.msg}</p>
+            )}
             {showDatePicker && (
-              <div className="absolute top-full left-0 mt-4 bg-white rounded-2xl shadow-2xl border border-slate-100 p-6 z-50 w-full md:w-[360px] animate-in fade-in zoom-in-95 duration-200 ring-4 ring-slate-100/50">
+              <div
+                role="dialog"
+                aria-label={t.form.dates}
+                onKeyDown={(e) => { if (e.key === 'Escape') setShowDatePicker(false); }}
+                className="absolute top-full left-0 mt-4 bg-white rounded-2xl shadow-2xl border border-slate-100 p-6 z-50 w-full md:w-[360px] animate-in fade-in zoom-in-95 duration-200 ring-4 ring-slate-100/50"
+              >
                 <div className="flex items-center justify-between mb-6">
-                  <button type="button" onClick={handlePrevMonth} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition"><ChevronLeft className="w-5 h-5" /></button>
-                  <span className="font-bold text-slate-800 text-lg">{viewDate.getFullYear()} / {viewDate.getMonth() + 1}</span>
-                  <button type="button" onClick={handleNextMonth} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition"><ChevronRight className="w-5 h-5" /></button>
+                  <button type="button" aria-label={`${viewDate.getFullYear()} / ${viewDate.getMonth()}`} onClick={handlePrevMonth} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition"><ChevronLeft className="w-5 h-5" /></button>
+                  <span className="font-bold text-slate-800 text-lg" aria-live="polite">{viewDate.getFullYear()} / {viewDate.getMonth() + 1}</span>
+                  <button type="button" aria-label={`${viewDate.getFullYear()} / ${viewDate.getMonth() + 2}`} onClick={handleNextMonth} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition"><ChevronRight className="w-5 h-5" /></button>
                 </div>
-                
+
                 <div className="grid grid-cols-7 mb-2 border-b border-slate-100 pb-2">
                     {renderWeekDays()}
                 </div>
                 <div className="grid grid-cols-7 gap-y-2">{renderCalendar()}</div>
-                
+
                 <div className="mt-6 flex justify-between items-center border-t border-slate-100 pt-4">
-                   <div className="text-xs text-slate-500 font-mono">
-                      {startDate && endDate ? 
-                        `${Math.ceil(Math.abs(endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1} DAYS SELECTED` 
-                        : "PLEASE SELECT RANGE"}
+                   <div className="text-xs text-slate-500 font-mono" aria-live="polite">
+                      {startDate && endDate ?
+                        `${Math.ceil(Math.abs(endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1} ${t.form.dates_days.toUpperCase()} ✓`
+                        : "→ → →"}
                    </div>
-                   <button type="button" onClick={() => setShowDatePicker(false)} className="text-sm font-bold bg-slate-900 text-white hover:bg-slate-800 px-5 py-2 rounded-lg transition shadow-lg shadow-slate-200">OK</button>
+                   <button type="button" onClick={() => setShowDatePicker(false)} className="text-sm font-bold bg-slate-900 text-white hover:bg-slate-800 px-5 py-2 rounded-lg transition shadow-lg shadow-slate-200">✓ OK</button>
                 </div>
               </div>
             )}
           </div>
           
           <div className="space-y-3">
-            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+            <label htmlFor="trip-arrivalDetail" className="text-sm font-medium text-slate-700 flex items-center gap-2">
                <PlaneLanding className="w-4 h-4 text-slate-500" /> {t.form.arrival}
             </label>
-            <input name="arrivalDetail" value={formData.arrivalDetail} onChange={handleChange} placeholder={t.form.arrival_placeholder} className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition shadow-sm"/>
+            <input id="trip-arrivalDetail" name="arrivalDetail" value={formData.arrivalDetail} onChange={handleChange} placeholder={t.form.arrival_placeholder} className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition shadow-sm"/>
           </div>
 
           <div className="space-y-3">
-            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+            <label htmlFor="trip-departureDetail" className="text-sm font-medium text-slate-700 flex items-center gap-2">
                <PlaneTakeoff className="w-4 h-4 text-slate-500" /> {t.form.departure}
             </label>
-            <input name="departureDetail" value={formData.departureDetail} onChange={handleChange} placeholder={t.form.departure_placeholder} className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition shadow-sm"/>
+            <input id="trip-departureDetail" name="departureDetail" value={formData.departureDetail} onChange={handleChange} placeholder={t.form.departure_placeholder} className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition shadow-sm"/>
           </div>
         </div>
       </div>
@@ -615,10 +763,10 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
            <div className="space-y-3">
-            <label className="text-sm font-medium text-slate-700">{t.form.budget}</label>
+            <label htmlFor="trip-budget" className="text-sm font-medium text-slate-700">{t.form.budget}</label>
             <div className="relative">
               <DollarSign className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
-              <input name="budget" value={formData.budget} onChange={handleChange} placeholder={t.form.budget_placeholder} className="w-full pl-12 p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition shadow-sm"/>
+              <input id="trip-budget" name="budget" value={formData.budget} onChange={handleChange} placeholder={t.form.budget_placeholder} className="w-full pl-12 p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition shadow-sm"/>
             </div>
           </div>
            {renderPaceSelector()}
@@ -636,10 +784,10 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
              {renderSmartChips(t.form.interests, "interests", t.chips.interests, <Zap className="w-4 h-4 text-pink-500" />, "ring-pink-500", t.form.interests_placeholder)}
              
              <div className="space-y-3">
-              <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <label htmlFor="trip-mustDos" className="text-sm font-medium text-slate-700 flex items-center gap-2">
                 <Heart className="w-4 h-4 text-pink-500" /> {t.form.mustDos}
               </label>
-              <input name="mustDos" value={formData.mustDos} onChange={handleChange} placeholder={t.form.mustDos_placeholder} className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition shadow-sm"/>
+              <input id="trip-mustDos" name="mustDos" value={formData.mustDos} onChange={handleChange} placeholder={t.form.mustDos_placeholder} className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition shadow-sm"/>
             </div>
           </div>
           
@@ -654,10 +802,10 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
              {renderMultiSelect(t.form.diet, "diet", t.chips.diet, <Utensils className="w-4 h-4 text-emerald-600" />, t.chips.diet[0])}
              
              <div className="space-y-3">
-              <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <label htmlFor="trip-work" className="text-sm font-medium text-slate-700 flex items-center gap-2">
                 <Coffee className="w-4 h-4 text-slate-600" /> {t.form.work}
               </label>
-              <input name="work" value={formData.work} onChange={handleChange} placeholder={t.form.work_placeholder} className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent outline-none transition shadow-sm"/>
+              <input id="trip-work" name="work" value={formData.work} onChange={handleChange} placeholder={t.form.work_placeholder} className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent outline-none transition shadow-sm"/>
             </div>
           </div>
         </div>
@@ -674,8 +822,8 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
             ${isLoading ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800'}`}
         >
           {isLoading ? (
-             <span className="flex items-center justify-center gap-3 font-mono">
-               <span className="animate-pulse">PROCESSING_REQUEST...</span>
+             <span className="flex items-center justify-center gap-3">
+               <span className="animate-pulse">{t.actions.submit}…</span>
              </span>
           ) : (
             <span className="flex items-center justify-center gap-2">

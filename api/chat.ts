@@ -44,38 +44,162 @@ const HEADERS_TIMEOUT_MS = 60_000;
 const STALL_TIMEOUT_MS = 90_000;
 const HEARTBEAT_MS = 15_000;
 
+// --- Abuse guards -----------------------------------------------------------
+// This endpoint proxies a PAID LLM key, so it must not be an open utility.
+// 1) Same-origin enforcement: browsers always send Origin on cross-origin POSTs.
+//    Requests with a foreign Origin are rejected unless it matches the deployment
+//    host or ALLOWED_ORIGINS (comma-separated, set for preview domains / local dev).
+// 2) Field whitelist + clamps below bound what we send upstream (cost ceiling).
+// 3) Per-instance IP rate limit. Serverless instances are ephemeral so this is a
+//    speed bump rather than a hard quota — pair with Vercel Firewall for real DDoS
+//    protection; it still stops naive scripting from a single connection pool.
+const MAX_PAYLOAD_BYTES = 256 * 1024;
+const MAX_MESSAGES = 10;
+const MAX_MESSAGE_CHARS = 32_000;
+const MAX_TOKENS_CAP = 16_000;
+
+function getAllowedOrigins(reqOriginHost: string | null): string[] {
+  const list: string[] = [];
+  if (reqOriginHost) list.push(reqOriginHost);
+  const extra = process.env.ALLOWED_ORIGINS?.trim();
+  if (extra) list.push(...extra.split(',').map(s => s.trim()).filter(Boolean));
+  return list;
+}
+
+function isAllowedOrigin(originHeader: string | undefined, reqHost: string | null): boolean {
+  if (!originHeader) return true; // same-origin/server-to-server fetches may omit it
+  let originHost: string | null = null;
+  try {
+    originHost = new URL(originHeader).host;
+  } catch {
+    return false;
+  }
+  if (!originHost) return false;
+  if (reqHost && originHost === reqHost) return true;
+  return getAllowedOrigins(reqHost).includes(originHeader);
+}
+
+// --- Naive sliding-window rate limiter --------------------------------------
+interface RateEntry { timestamps: number[] }
+const rateBuckets = new Map<string, RateEntry>();
+const RATE_WINDOW_MS = 60_000;
+const CHAT_RPM_LIMIT = Number(process.env.RATE_LIMIT_CHAT_RPM || 6);
+const FAST_RPM_LIMIT = Number(process.env.RATE_LIMIT_FAST_RPM || 20);
+
+function checkRateLimit(ip: string, limit: number): boolean {
+  const now = Date.now();
+  const entry = rateBuckets.get(ip) || { timestamps: [] };
+  entry.timestamps = entry.timestamps.filter(t => now - t < RATE_WINDOW_MS);
+  if (entry.timestamps.length >= limit) {
+    rateBuckets.set(ip, entry);
+    return false;
+  }
+  entry.timestamps.push(now);
+  rateBuckets.set(ip, entry);
+  // Opportunistic cleanup so the Map cannot grow unbounded across a warm instance's life.
+  if (rateBuckets.size > 5_000) {
+    for (const [k, v] of rateBuckets) {
+      if (v.timestamps.every(t => now - t >= RATE_WINDOW_MS)) rateBuckets.delete(k);
+    }
+  }
+  return true;
+}
+
+function clientIp(req: any): string {
+  const fwd = req.headers?.['x-forwarded-for'];
+  if (typeof fwd === 'string' && fwd.length) return fwd.split(',')[0].trim();
+  return req.headers?.['x-real-ip'] || 'unknown';
+}
+
+/**
+ * Whitelist + clamp the upstream request body. Only what we intend to support passes.
+ */
+function sanitizeBody(body: any): { error: string | null; value: Record<string, unknown> | null } {
+  if (!body || typeof body !== 'object') return { error: 'Invalid body', value: null };
+  const msgs = body.messages;
+  if (!Array.isArray(msgs) || msgs.length === 0 || msgs.length > MAX_MESSAGES) {
+    return { error: `messages must be an array of 1-${MAX_MESSAGES} items`, value: null };
+  }
+  for (const m of msgs) {
+    if (!m || typeof m.content !== 'string' || m.content.length > MAX_MESSAGE_CHARS) {
+      return { error: 'invalid or oversized message content', value: null };
+    }
+    if (m.role !== 'system' && m.role !== 'user' && m.role !== 'assistant') {
+      return { error: 'invalid message role', value: null };
+    }
+  }
+  const temp = typeof body.temperature === 'number' ? Math.min(Math.max(body.temperature, 0), 1.2) : undefined;
+  // Client may only choose '' (default model) or 'fast' (small extraction model).
+  const requestedModel = typeof body.model === 'string' && body.model.trim() ? body.model : '';
+  const cleaned: Record<string, unknown> = {
+    messages: msgs.map((m: any) => ({ role: m.role, content: m.content })),
+    stream: true,
+  };
+  if (temp !== undefined) cleaned.temperature = temp;
+  cleaned.max_tokens = typeof body.max_tokens === 'number' && body.max_tokens > 0
+    ? Math.min(body.max_tokens, MAX_TOKENS_CAP)
+    : MAX_TOKENS_CAP;
+  if (requestedModel === 'fast') cleaned.model = 'fast';
+  return { error: null, value: cleaned };
+}
+
 export default async function handler(req: any, res: any) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', req.headers?.origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' });
 
   const referer = req.headers?.origin || req.headers?.referer || 'https://trip-os.local';
   const provider = resolveProvider(referer);
   if (!provider) {
     console.error('[api/chat] no provider configured');
-    return res.status(500).json({
-      error: 'No LLM provider configured. Set OPENROUTER_API_KEY (preferred) or NVIDIA_API_KEY in Vercel env vars.',
+    return res.status(503).json({
+      error: 'Trip planner backend is not configured yet.',
+      code: 'CONFIG_ERROR',
     });
+  }
+
+  // Same-origin gate (after provider check so misconfiguration is reported first).
+  const reqHost: string | null = req.headers?.host || null;
+  if (!isAllowedOrigin(req.headers?.origin, reqHost)) {
+    console.warn('[api/chat] rejected foreign origin', { origin: req.headers?.origin });
+    return res.status(403).json({ error: 'Forbidden origin', code: 'FORBIDDEN_ORIGIN' });
+  }
+
+  // Rate limit: stricter for main generations, looser for the small "fast" calls.
+  const ip = clientIp(req);
+  const rawBody: any = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body); } catch { return {}; } })() : req.body;
+  const limit = rawBody?.model === 'fast' ? FAST_RPM_LIMIT : CHAT_RPM_LIMIT;
+  if (!checkRateLimit(ip, limit)) {
+    return res.status(429).json({
+      error: 'Too many requests — please wait a moment before planning again.',
+      code: 'RATE_LIMITED',
+      retry_after_seconds: 60,
+    });
+  }
+
+  const sanitized = sanitizeBody(rawBody);
+  if (sanitized.error || !sanitized.value) {
+    return res.status(400).json({ error: sanitized.error, code: 'BAD_REQUEST' });
   }
 
   const t0 = Date.now();
   let provName = provider.name;
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const clientWantsStream = body?.stream === true;
-    const model = pickModelForProvider(provider, body?.model);
-    const payload = JSON.stringify({ ...body, model, stream: true });
+    const clientWantsStream = rawBody?.stream === true;
+    const model = pickModelForProvider(provider, sanitized.value.model as string | undefined);
+    const payload = JSON.stringify({ ...sanitized.value, model });
 
     console.log('[api/chat] →', {
       provider: provName,
       model,
-      msgs: body?.messages?.length,
-      temp: body?.temperature,
+      msgs: Array.isArray(sanitized.value.messages) ? (sanitized.value.messages as any[]).length : 0,
+      temp: sanitized.value.temperature,
       payload_bytes: payload.length,
       client_wants_stream: clientWantsStream,
+      ip,
     });
 
     const ac = new AbortController();
@@ -106,14 +230,17 @@ export default async function handler(req: any, res: any) {
     if (!upstream.ok) {
       const text = await upstream.text();
       console.error('[api/chat] upstream error', { provider: provName, status: upstream.status, body: text.slice(0, 1000) });
-      return res.status(upstream.status).json({
-        error: `${provName} upstream ${upstream.status}`,
-        provider: provName,
+      const code = upstream.status === 429 ? 'RATE_LIMITED' : upstream.status >= 500 ? 'UPSTREAM_BUSY' : 'UPSTREAM_ERROR';
+      return res.status(upstream.status === 429 ? 429 : 502).json({
+        error: code === 'RATE_LIMITED'
+          ? 'The AI planner is very busy right now — please try again in a minute.'
+          : 'The AI planner could not complete this request.',
+        code,
         upstream_body: tryParse(text),
         elapsed_ms: Date.now() - t0,
       });
     }
-    if (!upstream.body) return res.status(502).json({ error: 'Upstream returned no body' });
+    if (!upstream.body) return res.status(502).json({ error: 'Upstream returned no body', code: 'UPSTREAM_ERROR' });
 
     if (clientWantsStream) {
       // Manual stream forward with explicit flush + heartbeat + stall detection.
@@ -163,10 +290,10 @@ export default async function handler(req: any, res: any) {
         if (err?.name === 'AbortError') {
           console.error('[api/chat] stream aborted (stall)', { provider: provName, total_ms: Date.now() - t0 });
           // Tell the client what happened via an SSE error event.
-          res.write(`data: ${JSON.stringify({ error: { message: `Upstream stalled after ${STALL_TIMEOUT_MS / 1000}s — model may be too slow or queued. Try a faster model.` } })}\n\n`);
+          res.write(`data: ${JSON.stringify({ error: { message: `Upstream stalled after ${STALL_TIMEOUT_MS / 1000}s — model may be too slow or queued. Try again shortly.`, code: 'TIMEOUT' } })}\n\n`);
         } else {
           console.error('[api/chat] stream read error', err);
-          res.write(`data: ${JSON.stringify({ error: { message: err?.message || 'stream read error' } })}\n\n`);
+          res.write(`data: ${JSON.stringify({ error: { message: err?.message || 'stream read error', code: 'UPSTREAM_ERROR' } })}\n\n`);
         }
       } finally {
         clearInterval(heartbeat);
@@ -230,9 +357,9 @@ export default async function handler(req: any, res: any) {
       const isStall = err?.name === 'AbortError';
       return res.status(isStall ? 504 : 502).json({
         error: isStall
-          ? `Upstream stalled after ${STALL_TIMEOUT_MS / 1000}s — the model may be too slow or queued. Try a faster model in OPENROUTER_MODEL.`
-          : err?.message || 'Proxy error',
-        provider: provName,
+          ? 'The planner took too long to respond — please try again.'
+          : 'The planner could not complete this request.',
+        code: isStall ? 'TIMEOUT' : 'PROXY_ERROR',
         name: err?.name,
         elapsed_ms: elapsed,
       });

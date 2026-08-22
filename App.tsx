@@ -19,17 +19,38 @@ interface AppState {
   tripPlan?: GeneratedPlan | null;
 }
 
+/**
+ * Hero titles in i18n contain a literal <br/> to control line wrapping. Rendering them
+ * via dangerouslySetInnerHTML would execute any HTML that ever lands in translations —
+ * splitting on the token and rendering real <br> elements gets the same layout safely.
+ */
+const renderHeroTitle = (title: string): React.ReactNode =>
+  title.split(/<br\s*\/?>/i).map((part, i, arr) =>
+    i < arr.length - 1 ? (
+      <React.Fragment key={i}>
+        {part}
+        <br />
+      </React.Fragment>
+    ) : (
+      part
+    )
+  );
+
 const App: React.FC = () => {
   const [loadingState, setLoadingState] = useState<LoadingState>(LoadingState.IDLE);
   const [tripPlan, setTripPlan] = useState<GeneratedPlan | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [lastInput, setLastInput] = useState<TripInput | undefined>(undefined);
   const [isSharedView, setIsSharedView] = useState(false);
+  const [isFetchingShare, setIsFetchingShare] = useState(false);
   const [preAnalysisQuestions, setPreAnalysisQuestions] = useState<PreAnalysisQuestion[] | null>(null);
 
   // Language Dropdown State
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
+
+  // One-shot flag so localStorage restore runs on mount only
+  const hasRestoredRef = useRef(false);
 
   // ShareCard State (placed at root level for proper mobile positioning)
   const [showShareCard, setShowShareCard] = useState(false);
@@ -77,8 +98,9 @@ const App: React.FC = () => {
     // New short ID based sharing (preferred)
     const shareId = params.get('share');
     if (shareId) {
-      // Show a loading state while fetching shared plan
-      setLoadingState(LoadingState.GENERATING);
+      // Lightweight fetch indicator — NOT the generation overlay, which would
+      // falsely imply an itinerary is being created.
+      setIsFetchingShare(true);
 
       getSharedPlan(shareId).then(sharedPlan => {
         if (sharedPlan) {
@@ -102,6 +124,8 @@ const App: React.FC = () => {
         }
       }).catch(() => {
         setLoadingState(LoadingState.IDLE);
+      }).finally(() => {
+        setIsFetchingShare(false);
       });
       return;
     }
@@ -169,14 +193,24 @@ const App: React.FC = () => {
       updateMetaTag('description', t.hero.desc);
     }
 
-    const savedState = localStorage.getItem(STORAGE_KEY);
-    if (savedState) {
+    // Restore persisted state exactly once per page load — re-running this on
+    // every language switch used to clobber fresh in-memory state.
+    if (!hasRestoredRef.current) {
+      hasRestoredRef.current = true;
+      let savedState: string | null = null;
       try {
-        const parsed: AppState = JSON.parse(savedState);
-        if (parsed.lastInput) setLastInput(parsed.lastInput);
-        if (parsed.tripPlan) setTripPlan(parsed.tripPlan);
+        savedState = localStorage.getItem(STORAGE_KEY);
       } catch (e) {
-        console.error("Failed to restore state", e);
+        console.warn('[App] localStorage unavailable, skipping restore', e);
+      }
+      if (savedState) {
+        try {
+          const parsed: AppState = JSON.parse(savedState);
+          if (parsed.lastInput) setLastInput(parsed.lastInput);
+          if (parsed.tripPlan) setTripPlan(parsed.tripPlan);
+        } catch (e) {
+          console.error("Failed to restore state", e);
+        }
       }
     }
   }, [language, t.metaTitle, t.hero.desc]);
@@ -198,7 +232,24 @@ const App: React.FC = () => {
         lastInput,
         tripPlan: tripPlan || undefined
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+      } catch (err) {
+        // Quota exceeded (plans with flights[]/hotels[] can be hundreds of KB) or
+        // storage blocked. Retry with a slimmed payload that keeps the markdown.
+        console.warn('[App] localStorage save failed, retrying slim payload', err);
+        try {
+          const slim: AppState = {
+            lastInput,
+            tripPlan: tripPlan
+              ? { ...tripPlan, flights: undefined, hotels: undefined }
+              : undefined
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
+        } catch (err2) {
+          console.warn('[App] localStorage unavailable — state will not persist', err2);
+        }
+      }
     }
   }, [lastInput, tripPlan]);
 
@@ -232,7 +283,11 @@ const App: React.FC = () => {
     } catch (err: any) {
       console.error('[handleGenerate] generation failed', err);
       setLoadingState(LoadingState.ERROR);
-      const detail = err?.message ? `${t.error} (${err.message})` : t.error;
+      // FriendlyError messages are already localized and user-appropriate — show them
+      // as-is. Anything else gets the generic localized error plus the technical detail.
+      const detail = err?.name === 'FriendlyError'
+        ? err.message
+        : err?.message ? `${t.error} (${err.message})` : t.error;
       setErrorMsg(detail);
       setPreAnalysisQuestions(null);
     }
@@ -275,12 +330,24 @@ const App: React.FC = () => {
   };
 
   const handleClearHistory = () => {
-    const confirmMsg = language === 'zh-TW'
-      ? "確定要清除歷史紀錄嗎？"
-      : "Are you sure you want to clear history?";
+    const CONFIRM_CLEAR: Partial<Record<Language, string>> = {
+      'en': 'Are you sure you want to clear your saved trip data?',
+      'zh-TW': '確定要清除已儲存的行程資料嗎？',
+      'zh-CN': '确定要清除已保存的行程数据吗？',
+      'ja': '保存した旅行データを消去しますか？',
+      'ko': '저장된 여행 데이터를 지우시겠습니까?',
+      'es': '¿Seguro que quieres borrar los datos guardados del viaje?',
+      'fr': 'Voulez-vous vraiment effacer les données du voyage enregistré ?',
+      'pt': 'Tem certeza de que deseja limpar os dados da viagem salvos?',
+      'ru': 'Вы уверены, что хотите удалить сохранённые данные поездки?',
+      'ar': 'هل أنت متأكد أنك تريد مسح بيانات الرحلة المحفوظة؟',
+      'hi': 'क्या आप वाकई सहेजे गए यात्रा डेटा को मिटाना चाहते हैं?',
+    };
 
-    if(window.confirm(confirmMsg)) {
-        localStorage.removeItem(STORAGE_KEY);
+    if(window.confirm(CONFIRM_CLEAR[language] || CONFIRM_CLEAR['en']!)) {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch { /* storage unavailable */ }
         setLastInput(undefined);
         setTripPlan(null);
         setLoadingState(LoadingState.IDLE);
@@ -355,11 +422,21 @@ const App: React.FC = () => {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 md:px-8 pt-8 md:pt-12 flex-grow w-full relative z-10">
-        
-        {loadingState === LoadingState.IDLE && !tripPlan && !preAnalysisQuestions && (
+
+        {isFetchingShare && (
+          <div className="flex flex-col items-center justify-center py-24 animate-in fade-in duration-300" role="status" aria-live="polite">
+            <div className="relative w-14 h-14 mb-5">
+              <div className="absolute inset-0 rounded-full border-4 border-slate-200"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 animate-spin"></div>
+            </div>
+            <p className="text-sm text-slate-500 font-medium">{t.loading.subtitle}</p>
+          </div>
+        )}
+
+        {!isFetchingShare && loadingState === LoadingState.IDLE && !tripPlan && !preAnalysisQuestions && (
           <div className="mb-12 text-center max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
             <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 tracking-tight">
-               <span dangerouslySetInnerHTML={{ __html: t.hero.title }} />
+               {renderHeroTitle(t.hero.title)}
             </h2>
             <p className="text-lg md:text-xl text-slate-600 leading-relaxed font-light mb-8">
               {t.hero.desc}
@@ -371,10 +448,10 @@ const App: React.FC = () => {
         )}
 
         {loadingState === LoadingState.ERROR && (
-          <div className="mb-8 p-4 bg-red-50/80 backdrop-blur border border-red-200 rounded-xl text-red-700 flex items-center gap-3 shadow-lg shadow-red-100/50">
+          <div className="mb-8 p-4 bg-red-50/80 backdrop-blur border border-red-200 rounded-xl text-red-700 flex items-center gap-3 shadow-lg shadow-red-100/50" role="alert">
              <div className="w-6 h-6 flex items-center justify-center">⚠️</div>
              <div>
-               <p className="font-bold font-mono text-xs uppercase tracking-wider">System Error</p>
+               <p className="font-bold font-mono text-xs uppercase tracking-wider">{t.actions.errorTitle || 'Error'}</p>
                <p className="text-sm">{errorMsg}</p>
              </div>
           </div>
@@ -401,7 +478,7 @@ const App: React.FC = () => {
             onConfirm={handlePreAnalysisConfirm}
             onSkip={handlePreAnalysisSkip}
           />
-        ) : loadingState !== LoadingState.PRE_ANALYZING ? (
+        ) : !isFetchingShare && loadingState !== LoadingState.PRE_ANALYZING ? (
           <InputForm
             onSubmit={handleFormSubmit}
             isLoading={loadingState === LoadingState.GENERATING}
