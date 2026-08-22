@@ -56,6 +56,7 @@ async function handlePost(req: any, res: any) {
       flights,
       hotels,
       searchParams,
+      weather,
       flightPriceInsights,
     } = body;
 
@@ -81,6 +82,7 @@ async function handlePost(req: any, res: any) {
       flights: flights || undefined,
       hotels: hotels || undefined,
       searchParams: searchParams || undefined,
+      weather: weather || undefined,
       flightPriceInsights: flightPriceInsights || undefined,
     });
 

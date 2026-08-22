@@ -1,227 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import Lottie from 'lottie-react';
+import { Globe, Plane } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../utils/i18n';
-
-// Travel-themed Lottie animation data (airplane flying around globe)
-const travelAnimation = {
-  "v": "5.7.4",
-  "fr": 30,
-  "ip": 0,
-  "op": 120,
-  "w": 200,
-  "h": 200,
-  "nm": "Travel Loading",
-  "ddd": 0,
-  "assets": [],
-  "layers": [
-    {
-      "ddd": 0,
-      "ind": 1,
-      "ty": 4,
-      "nm": "Plane",
-      "sr": 1,
-      "ks": {
-        "o": { "a": 0, "k": 100 },
-        "r": {
-          "a": 1,
-          "k": [
-            { "i": { "x": [0.667], "y": [1] }, "o": { "x": [0.333], "y": [0] }, "t": 0, "s": [0] },
-            { "t": 120, "s": [360] }
-          ]
-        },
-        "p": { "a": 0, "k": [100, 100, 0] },
-        "a": { "a": 0, "k": [0, 0, 0] },
-        "s": { "a": 0, "k": [100, 100, 100] }
-      },
-      "ao": 0,
-      "shapes": [
-        {
-          "ty": "gr",
-          "it": [
-            {
-              "ty": "el",
-              "s": { "a": 0, "k": [120, 120] },
-              "p": { "a": 0, "k": [0, 0] },
-              "nm": "Orbit"
-            },
-            {
-              "ty": "st",
-              "c": { "a": 0, "k": [0.2, 0.4, 0.8, 1] },
-              "o": { "a": 0, "k": 30 },
-              "w": { "a": 0, "k": 3 },
-              "lc": 2,
-              "lj": 1,
-              "ml": 4,
-              "d": [{ "n": "d", "nm": "dash", "v": { "a": 0, "k": 8 } }, { "n": "g", "nm": "gap", "v": { "a": 0, "k": 8 } }],
-              "nm": "Stroke"
-            },
-            {
-              "ty": "tr",
-              "p": { "a": 0, "k": [0, 0] },
-              "a": { "a": 0, "k": [0, 0] },
-              "s": { "a": 0, "k": [100, 100] },
-              "r": { "a": 0, "k": 0 },
-              "o": { "a": 0, "k": 100 }
-            }
-          ],
-          "nm": "Orbit Group"
-        },
-        {
-          "ty": "gr",
-          "it": [
-            {
-              "ind": 0,
-              "ty": "sh",
-              "ks": {
-                "a": 0,
-                "k": {
-                  "i": [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                  "o": [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                  "v": [[60, 0], [70, -5], [75, 0], [70, 5], [60, 0]],
-                  "c": true
-                }
-              },
-              "nm": "Plane Shape"
-            },
-            {
-              "ty": "fl",
-              "c": { "a": 0, "k": [0.2, 0.4, 0.9, 1] },
-              "o": { "a": 0, "k": 100 },
-              "r": 1,
-              "nm": "Fill"
-            },
-            {
-              "ty": "tr",
-              "p": { "a": 0, "k": [0, 0] },
-              "a": { "a": 0, "k": [0, 0] },
-              "s": { "a": 0, "k": [100, 100] },
-              "r": { "a": 0, "k": 0 },
-              "o": { "a": 0, "k": 100 }
-            }
-          ],
-          "nm": "Plane Group"
-        }
-      ],
-      "ip": 0,
-      "op": 120,
-      "st": 0
-    },
-    {
-      "ddd": 0,
-      "ind": 2,
-      "ty": 4,
-      "nm": "Globe",
-      "sr": 1,
-      "ks": {
-        "o": { "a": 0, "k": 100 },
-        "r": { "a": 0, "k": 0 },
-        "p": { "a": 0, "k": [100, 100, 0] },
-        "a": { "a": 0, "k": [0, 0, 0] },
-        "s": {
-          "a": 1,
-          "k": [
-            { "i": { "x": [0.667, 0.667, 0.667], "y": [1, 1, 1] }, "o": { "x": [0.333, 0.333, 0.333], "y": [0, 0, 0] }, "t": 0, "s": [100, 100, 100] },
-            { "i": { "x": [0.667, 0.667, 0.667], "y": [1, 1, 1] }, "o": { "x": [0.333, 0.333, 0.333], "y": [0, 0, 0] }, "t": 60, "s": [105, 105, 100] },
-            { "t": 120, "s": [100, 100, 100] }
-          ]
-        }
-      },
-      "ao": 0,
-      "shapes": [
-        {
-          "ty": "gr",
-          "it": [
-            {
-              "ty": "el",
-              "s": { "a": 0, "k": [80, 80] },
-              "p": { "a": 0, "k": [0, 0] },
-              "nm": "Globe Circle"
-            },
-            {
-              "ty": "fl",
-              "c": { "a": 0, "k": [0.3, 0.5, 0.9, 1] },
-              "o": { "a": 0, "k": 100 },
-              "r": 1,
-              "nm": "Fill"
-            },
-            {
-              "ty": "tr",
-              "p": { "a": 0, "k": [0, 0] },
-              "a": { "a": 0, "k": [0, 0] },
-              "s": { "a": 0, "k": [100, 100] },
-              "r": { "a": 0, "k": 0 },
-              "o": { "a": 0, "k": 100 }
-            }
-          ],
-          "nm": "Globe Group"
-        },
-        {
-          "ty": "gr",
-          "it": [
-            {
-              "ty": "el",
-              "s": { "a": 0, "k": [80, 40] },
-              "p": { "a": 0, "k": [0, 0] },
-              "nm": "Latitude"
-            },
-            {
-              "ty": "st",
-              "c": { "a": 0, "k": [1, 1, 1, 0.3] },
-              "o": { "a": 0, "k": 100 },
-              "w": { "a": 0, "k": 2 },
-              "lc": 2,
-              "lj": 1,
-              "nm": "Stroke"
-            },
-            {
-              "ty": "tr",
-              "p": { "a": 0, "k": [0, 0] },
-              "a": { "a": 0, "k": [0, 0] },
-              "s": { "a": 0, "k": [100, 100] },
-              "r": { "a": 0, "k": 0 },
-              "o": { "a": 0, "k": 100 }
-            }
-          ],
-          "nm": "Latitude Group"
-        },
-        {
-          "ty": "gr",
-          "it": [
-            {
-              "ty": "el",
-              "s": { "a": 0, "k": [40, 80] },
-              "p": { "a": 0, "k": [0, 0] },
-              "nm": "Longitude"
-            },
-            {
-              "ty": "st",
-              "c": { "a": 0, "k": [1, 1, 1, 0.3] },
-              "o": { "a": 0, "k": 100 },
-              "w": { "a": 0, "k": 2 },
-              "lc": 2,
-              "lj": 1,
-              "nm": "Stroke"
-            },
-            {
-              "ty": "tr",
-              "p": { "a": 0, "k": [0, 0] },
-              "a": { "a": 0, "k": [0, 0] },
-              "s": { "a": 0, "k": [100, 100] },
-              "r": { "a": 0, "k": 0 },
-              "o": { "a": 0, "k": 100 }
-            }
-          ],
-          "nm": "Longitude Group"
-        }
-      ],
-      "ip": 0,
-      "op": 120,
-      "st": 0
-    }
-  ]
-};
 
 interface LoadingOverlayProps {
   language: Language;
@@ -253,13 +34,29 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ language }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md">
       <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 md:p-12 max-w-md mx-4 text-center border border-white/20">
-        {/* Lottie Animation */}
-        <div className="w-40 h-40 mx-auto mb-6">
-          <Lottie
-            animationData={travelAnimation}
-            loop={true}
-            autoplay={true}
-          />
+        {/* Compass loader — plane circling a breathing globe (pure CSS, see index.css) */}
+        <div className="relative w-40 h-40 mx-auto mb-6" aria-hidden="true">
+          {/* Soft ambient glow behind the whole instrument */}
+          <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-blue-200/60 via-purple-100/50 to-pink-200/50 blur-2xl" />
+
+          {/* Dashed outer ring drifting counter-clockwise */}
+          <div className="loader-ring absolute inset-0">
+            <div className="absolute inset-0 rounded-full border-2 border-dashed border-slate-300/70" />
+          </div>
+
+          {/* Orbit carrying the plane clockwise around the globe */}
+          <div className="loader-orbit absolute inset-0">
+            <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white p-1.5 shadow-md shadow-blue-200/80 ring-1 ring-slate-100">
+              <Plane className="w-5 h-5 text-blue-600 rotate-45" strokeWidth={2.25} />
+            </div>
+          </div>
+
+          {/* Globe gently breathing at the center */}
+          <div className="loader-badge absolute inset-0 flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30 ring-4 ring-white/60">
+              <Globe className="w-9 h-9 text-white/90" strokeWidth={1.75} />
+            </div>
+          </div>
         </div>
 
         {/* Main Loading Text */}
@@ -292,27 +89,6 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ language }) => {
           {t.loading.estimated_time}
         </p>
       </div>
-
-      {/* CSS for loading bar animation */}
-      <style>{`
-        @keyframes loading-bar {
-          0% {
-            width: 0%;
-            margin-left: 0%;
-          }
-          50% {
-            width: 60%;
-            margin-left: 20%;
-          }
-          100% {
-            width: 0%;
-            margin-left: 100%;
-          }
-        }
-        .animate-loading-bar {
-          animation: loading-bar 2s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 };

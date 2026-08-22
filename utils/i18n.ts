@@ -29,11 +29,11 @@ const BASE_EN = {
     subtitle: 'AI is planning your perfect trip',
     tip_label: 'Did you know?',
     tips: [
-      'Our AI analyzes weather forecasts to optimize your outdoor activities.',
+      'Itineraries cluster each day geographically so you walk less and see more.',
       'We geo-cluster attractions to minimize your travel time between spots.',
       'Trip OS considers local events and peak hours for each destination.',
       'Your pace preference helps us balance relaxation with exploration.',
-      'We check real-time data to suggest the best dining options.',
+      'Flight and hotel cards come from live Google Flights & Hotels data.',
     ],
     estimated_time: 'Usually takes 30-60 seconds'
   },
@@ -179,11 +179,11 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       subtitle: 'AI 正在为您打造完美行程',
       tip_label: '小知识',
       tips: [
-        '我们的 AI 会分析天气预报，优化您的户外活动安排。',
+        '行程会按地理位置聚类每天的安排，让您走得更少、看得更多。',
         '我们会将相邻景点分组，减少您在景点间的移动时间。',
         'Trip OS 会考虑当地活动和高峰时段。',
         '您的节奏偏好帮助我们平衡休闲与探索。',
-        '我们会查询实时数据，为您推荐最佳餐饮选择。',
+        '机票和酒店卡片来自 Google Flights 和 Google Hotels 的实时数据。',
       ],
       estimated_time: '通常需要 30-60 秒'
     },
@@ -300,11 +300,11 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       subtitle: 'AI 正在為您打造完美行程',
       tip_label: '小知識',
       tips: [
-        '我們的 AI 會分析天氣預報，優化您的戶外活動安排。',
+        '行程會依地理位置將每天的安排聚集在一起，讓您走得更少、看得更多。',
         '我們會將相鄰景點分組，減少您在景點間的移動時間。',
         'Trip OS 會考慮當地活動和尖峰時段。',
         '您的節奏偏好幫助我們平衡休閒與探索。',
-        '我們會查詢即時數據，為您推薦最佳餐飲選擇。',
+        '機票與飯店卡片來自 Google Flights 與 Google Hotels 的即時資料。',
       ],
       estimated_time: '通常需要 30-60 秒'
     },
@@ -436,11 +436,11 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       subtitle: 'AIが最適な旅程を作成しています',
       tip_label: '豆知識',
       tips: [
-        'AIが天気予報を分析し、屋外活動を最適化します。',
+        '旅程は1日ごとに地理的にまとめられているため、歩く距離が減り、多くの見どころを巡れます。',
         '近隣の観光地をグループ化し、移動時間を短縮します。',
         'Trip OSは地域のイベントや混雑時間を考慮します。',
         'お好みのペースに合わせて、リラックスと探索のバランスを取ります。',
-        'リアルタイムデータを確認し、最適なお食事をご提案します。',
+        '航空券・ホテルのカードには Google Flights と Google Hotels のリアルタイムデータを使用しています。',
       ],
       estimated_time: '通常30〜60秒かかります'
     },
@@ -555,7 +555,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       subtitle: 'AI가 완벽한 여정을 만들고 있습니다',
       tip_label: '알고 계셨나요?',
       tips: [
-        'AI가 날씨 예보를 분석하여 야외 활동을 최적화합니다.',
+        '일정은 하루씩 지리적으로 묶여 있어 이동 거리는 줄고 볼거리는 늘어납니다.',
         '인근 명소를 그룹화하여 이동 시간을 단축합니다.',
         'Trip OS는 현지 이벤트와 혼잡 시간을 고려합니다.',
         '선호하는 페이스에 맞춰 휴식과 탐험의 균형을 맞춥니다.',
@@ -563,7 +563,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       ],
       estimated_time: '보통 30-60초 소요됩니다'
     },
-    actions: { ...BASE_EN.actions, submit: '일정 생성하기', refine: '일정 수정', export: '내보내기', copy: '복사', copied: '복사됨', download: 'Markdown 파일 내보내기', print: '인쇄 / PDF', clear: '기록 삭제', share: '링크 공유', shareCard: '공유 카드', viewPrompt: '프롬프트 보기', hidePrompt: '프롬프트 숨기기', copyPrompt: '프롬프트 복사', promptCopied: '복사 완료!' },
+    actions: { ...BASE_EN.actions, submit: '일정 생성하기', refine: '일정 수정', export: '내보내기', copy: '복사', copied: '복사됨', download: 'Markdown 파일 내보내기', print: '인쇄 / PDF', clear: '기록 삭제', share: '링크 공유', ready: '준비됨', errorTitle: '오류', shareCard: '공유 카드', viewPrompt: '프롬프트 보기', hidePrompt: '프롬프트 숨기기', copyPrompt: '프롬프트 복사', promptCopied: '복사 완료!' },
     form: {
       ...BASE_EN.form,
       section_basics: '기본 정보',
@@ -593,7 +593,8 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       interests: ['사진', '미식', '역사', '쇼핑', '자연', '애니메이션', '카페', '박물관', '온천', '테마파크'],
       constraints: ['매운것 못먹음', '줄서기 싫음', '걷기 싫음', '아침형 인간', '저예산', '인파 회피', '직통', '엘리베이터'],
       transport: ['대중교통', '렌터카', '택시', '대절', '도보'],
-      accommodation: ['럭셔리 호텔', '비즈니스 호텔', '에어비앤비', '호스텔', '료칸', '역 근처', '조식 포함', '가족 친화적', '욕조', '예산 중시']
+      accommodation: ['럭셔리 호텔', '비즈니스 호텔', '에어비앤비', '호스텔', '료칸', '역 근처', '조식 포함', '가족 친화적', '욕조', '예산 중시'],
+      diet: ['제한 없음', '채식주의', '비건', '소고기 안 먹음', '돼지고기 안 먹음', '해산물 알레르기', '견과류 알레르기', '할랄', '페스코베지테리언']
     },
     itinerary: {
       ...BASE_EN.itinerary,
@@ -603,6 +604,34 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       weather_desc: '일기 예보(강수 확률 등)를 기반으로 일정이 최적화되었습니다.',
       sources: '출처 및 날씨 데이터',
       footer_disclaimer: 'Trip OS AI가 생성했습니다. 운영 시간 및 예약 정보는 현지에서 확인하세요.'
+    },
+    flightOffers: {
+      title: '항공권 옵션',
+      subtitle: 'Google Flights 실시간 가격',
+      badgeBest: '추천',
+      badgeCheapest: '최저가',
+      badgeFastest: '최단 시간',
+      direct: '직항',
+      stop: '회 경유',
+      stops: '회 경유',
+      layover: '경유',
+      overnight: '야간 경유',
+      totalPrice: '총 가격',
+      bookNow: '예약',
+      seeMore: 'Google Flights에서 보기',
+      typicalRange: '일반적인 가격대',
+    },
+    hotelOffers: {
+      title: '호텔 추천',
+      subtitle: 'Google Hotels 실시간 요금',
+      tierBudget: '저가',
+      tierMid: '중급',
+      tierLuxury: '럭셔리',
+      perNight: '1박당',
+      total: '합계',
+      walk: '도보',
+      bookNow: '예약',
+      seeMore: 'Google Hotels에서 보기',
     }
   },
   'es': {
@@ -629,15 +658,15 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       subtitle: 'La IA está creando tu itinerario perfecto',
       tip_label: '¿Sabías que?',
       tips: [
-        'Nuestra IA analiza pronósticos del tiempo para optimizar actividades al aire libre.',
+        'Los itinerarios agrupan cada día geográficamente para que camines menos y veas más.',
         'Agrupamos atracciones cercanas para minimizar tu tiempo de desplazamiento.',
         'Trip OS considera eventos locales y horas pico de cada destino.',
         'Tu preferencia de ritmo nos ayuda a equilibrar descanso y exploración.',
-        'Consultamos datos en tiempo real para sugerirte las mejores opciones gastronómicas.',
+        'Las tarjetas de vuelos y hoteles provienen de datos en vivo de Google Flights y Google Hotels.',
       ],
       estimated_time: 'Generalmente toma 30-60 segundos'
     },
-    actions: { ...BASE_EN.actions, submit: 'Generar Plan', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Markdown', print: 'Imprimir', clear: 'Borrar', share: 'Compartir Enlace', shareCard: 'Tarjeta' },
+    actions: { ...BASE_EN.actions, submit: 'Generar Plan', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Markdown', print: 'Imprimir', clear: 'Borrar', share: 'Compartir Enlace', ready: 'Listo', errorTitle: 'Error', shareCard: 'Tarjeta' },
     form: {
       ...BASE_EN.form,
       section_basics: 'Datos Básicos',
@@ -663,8 +692,10 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
     chips: {
       ...BASE_EN.chips,
       interests: ['Fotografía', 'Comida', 'Historia', 'Compras', 'Naturaleza', 'Anime', 'Cafés', 'Museos', 'Aguas Termales', 'Parques Temáticos'],
+      constraints: ['Sin Picante', 'Sin Filas', 'Menos Caminar', 'Madrugador', 'Presupuesto Ajustado', 'Evitar Multitudes', 'Trenes Directos', 'Necesito Ascensor'],
       transport: ['Transporte Público', 'Coche de Alquiler', 'Taxi', 'Chárter', 'A Pie'],
-      accommodation: ['Hotel de Lujo', 'Hotel de Negocios', 'Airbnb', 'Hostal', 'Ryokan', 'Cerca Estación', 'Desayuno Incluido', 'Familiar', 'Bañera', 'Económico']
+      accommodation: ['Hotel de Lujo', 'Hotel de Negocios', 'Airbnb', 'Hostal', 'Ryokan', 'Cerca Estación', 'Desayuno Incluido', 'Familiar', 'Bañera', 'Económico'],
+      diet: ['Sin Restricciones', 'Vegetariano', 'Vegano', 'Sin Carne de Res', 'Sin Carne de Cerdo', 'Alergia a Mariscos', 'Alergia a Frutos Secos', 'Halal', 'Pescetariano']
     },
     itinerary: {
       ...BASE_EN.itinerary,
@@ -674,6 +705,34 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       weather_desc: 'Itinerario optimizado según el pronóstico del tiempo.',
       sources: 'Fuentes y Datos Climáticos',
       footer_disclaimer: 'Generado por Trip OS AI. Verifica horarios y reservas localmente.'
+    },
+    flightOffers: {
+      title: 'Opciones de Vuelo',
+      subtitle: 'Precios en tiempo real de Google Flights',
+      badgeBest: 'Mejor',
+      badgeCheapest: 'Más Barato',
+      badgeFastest: 'Más Rápido',
+      direct: 'Directo',
+      stop: 'escala',
+      stops: 'escalas',
+      layover: 'Escala',
+      overnight: 'nocturna',
+      totalPrice: 'Precio total',
+      bookNow: 'Reservar',
+      seeMore: 'Más en Google Flights',
+      typicalRange: 'Rango de precios típico',
+    },
+    hotelOffers: {
+      title: 'Hoteles Recomendados',
+      subtitle: 'Tarifas en vivo de Google Hotels',
+      tierBudget: 'Económico',
+      tierMid: 'Gama Media',
+      tierLuxury: 'Lujo',
+      perNight: 'por noche',
+      total: 'Total',
+      walk: 'a pie',
+      bookNow: 'Reservar',
+      seeMore: 'Más en Google Hotels',
     }
   },
   'fr': {
@@ -700,15 +759,15 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       subtitle: "L'IA crée votre itinéraire parfait",
       tip_label: 'Le saviez-vous ?',
       tips: [
-        'Notre IA analyse les prévisions météo pour optimiser vos activités en plein air.',
+        'Les itinéraires regroupent chaque journée par zone géographique pour marcher moins et voir plus.',
         'Nous regroupons les attractions proches pour minimiser vos temps de trajet.',
         'Trip OS prend en compte les événements locaux et les heures de pointe.',
         'Votre préférence de rythme nous aide à équilibrer détente et exploration.',
-        'Nous consultons les données en temps réel pour vous suggérer les meilleures options de restauration.',
+        'Les cartes de vols et d\'hôtels proviennent des données en direct de Google Flights et Google Hotels.',
       ],
       estimated_time: 'Généralement 30 à 60 secondes'
     },
-    actions: { ...BASE_EN.actions, submit: 'Générer le Plan', refine: 'Modifier', export: 'Exporter', copy: 'Copier', copied: 'Copié', download: 'Exporter Markdown', print: 'Imprimer', clear: 'Effacer', share: 'Partager le Lien', shareCard: 'Carte' },
+    actions: { ...BASE_EN.actions, submit: 'Générer le Plan', refine: 'Modifier', export: 'Exporter', copy: 'Copier', copied: 'Copié', download: 'Exporter Markdown', print: 'Imprimer', clear: 'Effacer', share: 'Partager le Lien', ready: 'Prêt', errorTitle: 'Erreur', shareCard: 'Carte' },
     form: {
       ...BASE_EN.form,
       section_basics: 'Infos de Base',
@@ -734,8 +793,10 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
     chips: {
       ...BASE_EN.chips,
       interests: ['Photographie', 'Gastronomie', 'Histoire', 'Shopping', 'Nature', 'Animé', 'Cafés', 'Musées', 'Sources Chaudes', 'Parcs à Thème'],
+      constraints: ['Sans Épicé', 'Pas de File d\'Attente', 'Moins de Marche', 'Lève-Tôt', 'Budget Serré', 'Éviter la Foule', 'Trains Directs', 'Ascenseur Requis'],
       transport: ['Transport Public', 'Location Voiture', 'Taxi', 'Privé', 'Marche'],
-      accommodation: ['Hôtel de Luxe', 'Hôtel d\'Affaires', 'Airbnb', 'Auberge', 'Ryokan', 'Près Gare', 'Petit-déj Inclus', 'Famille', 'Baignoire', 'Économique']
+      accommodation: ['Hôtel de Luxe', 'Hôtel d\'Affaires', 'Airbnb', 'Auberge', 'Ryokan', 'Près Gare', 'Petit-déj Inclus', 'Famille', 'Baignoire', 'Économique'],
+      diet: ['Sans Restrictions', 'Végétarien', 'Végan', 'Sans Bœuf', 'Sans Porc', 'Allergie Fruits de Mer', 'Allergie Fruits à Coque', 'Halal', 'Pescétarien']
     },
     itinerary: {
       ...BASE_EN.itinerary,
@@ -745,6 +806,34 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       weather_desc: 'Itinéraire optimisé en fonction des prévisions météorologiques.',
       sources: 'Sources & Météo',
       footer_disclaimer: 'Généré par Trip OS AI. Vérifiez les horaires localement.'
+    },
+    flightOffers: {
+      title: 'Options de Vol',
+      subtitle: 'Prix en temps réel depuis Google Flights',
+      badgeBest: 'Meilleur',
+      badgeCheapest: 'Moins Cher',
+      badgeFastest: 'Plus Rapide',
+      direct: 'Direct',
+      stop: 'escale',
+      stops: 'escales',
+      layover: 'Escale',
+      overnight: 'de nuit',
+      totalPrice: 'Prix total',
+      bookNow: 'Réserver',
+      seeMore: 'Plus sur Google Flights',
+      typicalRange: 'Fourchette de prix habituelle',
+    },
+    hotelOffers: {
+      title: 'Hôtels Recommandés',
+      subtitle: 'Tarifs en direct de Google Hotels',
+      tierBudget: 'Économique',
+      tierMid: 'Milieu de Gamme',
+      tierLuxury: 'Luxe',
+      perNight: 'par nuit',
+      total: 'Total',
+      walk: 'à pied',
+      bookNow: 'Réserver',
+      seeMore: 'Plus sur Google Hotels',
     }
   },
   'hi': {
@@ -771,15 +860,15 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       subtitle: 'AI आपके लिए सही यात्रा कार्यक्रम बना रहा है',
       tip_label: 'क्या आप जानते हैं?',
       tips: [
-        'हमारा AI मौसम पूर्वानुमान का विश्लेषण करता है ताकि बाहरी गतिविधियों को अनुकूलित किया जा सके।',
+        'यात्रा कार्यक्रम हर दिन को भौगोलिक रूप से समूहित करते हैं ताकि आप कम चलें और अधिक देखें।',
         'हम आकर्षण को समूहित करते हैं ताकि यात्रा का समय कम हो।',
         'Trip OS स्थानीय कार्यक्रमों और व्यस्त समय को ध्यान में रखता है।',
         'आपकी गति वरीयता हमें आराम और अन्वेषण में संतुलन बनाने में मदद करती है।',
-        'हम रीयल-टाइम डेटा की जांच करते हैं ताकि सर्वोत्तम भोजन विकल्प सुझाए जा सकें।',
+        'उड़ान और होटल कार्ड Google Flights और Google Hotels के लाइव डेटा से आते हैं।',
       ],
       estimated_time: 'आमतौर पर 30-60 सेकंड लगते हैं'
     },
-    actions: { ...BASE_EN.actions, submit: 'यात्रा योजना बनाएं', refine: 'सुधारें', export: 'एक्सपोर्ट', copy: 'कॉपी', copied: 'कॉपी किया', download: 'मार्कडाउन फ़ाइल निर्यात करें', print: 'प्रिंट', clear: 'इतिहास मिटाएं', share: 'लिंक साझा करें', shareCard: 'शेयर कार्ड' },
+    actions: { ...BASE_EN.actions, submit: 'यात्रा योजना बनाएं', refine: 'सुधारें', export: 'एक्सपोर्ट', copy: 'कॉपी', copied: 'कॉपी किया', download: 'मार्कडाउन फ़ाइल निर्यात करें', print: 'प्रिंट', clear: 'इतिहास मिटाएं', share: 'लिंक साझा करें', ready: 'तैयार', errorTitle: 'त्रुटि', shareCard: 'शेयर कार्ड' },
     form: {
       ...BASE_EN.form,
       section_basics: 'यात्रा की जानकारी',
@@ -796,12 +885,47 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       accommodation: 'आवास',
       transport: 'परिवहन',
     },
+    chips: {
+      interests: ['फ़ोटोग्राफ़ी', 'खाना', 'इतिहास', 'शॉपिंग', 'प्रकृति', 'एनीमे', 'कैफ़े', 'संग्रहालय', 'हॉट स्प्रिंग्स', 'थीम पार्क'],
+      constraints: ['तीखा नहीं', 'कतार नहीं', 'कम चलना', 'जल्दी उठने वाले', 'सख़्त बजट', 'भीड़ से बचें', 'डायरेक्ट ट्रेन', 'लिफ़्ट ज़रूरी'],
+      transport: ['सार्वजनिक परिवहन', 'किराए की कार', 'टैक्सी', 'चार्टर', 'पैदल'],
+      accommodation: ['लक्ज़री होटल', 'बिज़नेस होटल', 'एयरबीएनबी', 'हॉस्टल', 'र्योकान', 'स्टेशन के पास', 'नाश्ता शामिल', 'परिवार के अनुकूल', 'बाथटब', 'बजट पहले'],
+      diet: ['कोई प्रतिबंध नहीं', 'शाकाहारी', 'वीगन', 'गोमांस नहीं', 'सूअर का मांस नहीं', 'सीफ़ूड एलर्जी', 'मेवों से एलर्जी', 'हलाल', 'पेस्केटेरियन']
+    },
     itinerary: {
       ...BASE_EN.itinerary,
       title: 'आपका अनुकूलित यात्रा कार्यक्रम',
       verified: 'Trip OS सत्यापित',
       weather_title: 'लाइव मौसम एकीकृत',
       footer_disclaimer: 'Trip OS AI द्वारा निर्मित। कृपया स्थानीय रूप से समय और आरक्षण की पुष्टि करें।'
+    },
+    flightOffers: {
+      title: 'उड़ान विकल्प',
+      subtitle: 'Google Flights से रीयल-टाइम कीमतें',
+      badgeBest: 'सर्वश्रेष्ठ',
+      badgeCheapest: 'सबसे सस्ता',
+      badgeFastest: 'सबसे तेज़',
+      direct: 'डायरेक्ट',
+      stop: 'स्टॉप',
+      stops: 'स्टॉप',
+      layover: 'स्टॉपओवर',
+      overnight: 'रातभर',
+      totalPrice: 'कुल कीमत',
+      bookNow: 'बुक करें',
+      seeMore: 'Google Flights पर और देखें',
+      typicalRange: 'आम कीमत सीमा',
+    },
+    hotelOffers: {
+      title: 'होटल सुझाव',
+      subtitle: 'Google Hotels से लाइव कीमतें',
+      tierBudget: 'बजट',
+      tierMid: 'मध्यम',
+      tierLuxury: 'लक्ज़री',
+      perNight: 'प्रति रात',
+      total: 'कुल',
+      walk: 'पैदल',
+      bookNow: 'बुक करें',
+      seeMore: 'Google Hotels पर और देखें',
     }
   },
   'ar': {
@@ -828,15 +952,15 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       subtitle: 'الذكاء الاصطناعي يُعد لك الرحلة المثالية',
       tip_label: 'هل تعلم؟',
       tips: [
-        'يحلل الذكاء الاصطناعي توقعات الطقس لتحسين الأنشطة الخارجية.',
+        'مسار الرحلة يجمع كل يوم جغرافياً حتى تسير أقل وترى أكثر.',
         'نجمع المعالم القريبة لتقليل وقت التنقل.',
         'يأخذ Trip OS في الاعتبار الفعاليات المحلية وأوقات الذروة.',
         'تفضيلات وتيرتك تساعدنا في تحقيق التوازن بين الاسترخاء والاستكشاف.',
-        'نتحقق من البيانات الفورية لاقتراح أفضل خيارات الطعام.',
+        'بطاقات الطيران والفنادق مصدرها البيانات المباشرة من Google Flights و Google Hotels.',
       ],
       estimated_time: 'عادة ما يستغرق 30-60 ثانية'
     },
-    actions: { ...BASE_EN.actions, submit: 'إنشاء خطة السفر', refine: 'تعديل', export: 'تصدير', copy: 'نسخ', copied: 'تم النسخ', download: 'تصدير ملف Markdown', print: 'طباعة', clear: 'مسح التاريخ', share: 'مشاركة الرابط', shareCard: 'بطاقة' },
+    actions: { ...BASE_EN.actions, submit: 'إنشاء خطة السفر', refine: 'تعديل', export: 'تصدير', copy: 'نسخ', copied: 'تم النسخ', download: 'تصدير ملف Markdown', print: 'طباعة', clear: 'مسح التاريخ', share: 'مشاركة الرابط', ready: 'جاهز', errorTitle: 'خطأ', shareCard: 'بطاقة' },
     form: {
       ...BASE_EN.form,
       section_basics: 'أساسيات الرحلة',
@@ -853,12 +977,47 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       accommodation: 'الإقامة',
       transport: 'المواصلات',
     },
+    chips: {
+      interests: ['التصوير', 'الطعام', 'التاريخ', 'التسوق', 'الطبيعة', 'الأنمي', 'المقاهي', 'المتاحف', 'الينابيع الساخنة', 'المتنزهات الترفيهية'],
+      constraints: ['بدون طعام حار', 'بدون طوابير', 'مشي أقل', 'استيقاظ مبكر', 'ميزانية محدودة', 'تجنب الزحام', 'قطارات مباشرة', 'يلزم مصعد'],
+      transport: ['مواصلات عامة', 'سيارة مستأجرة', 'تاكسي', 'سيارة خاصة', 'سيراً على الأقدام'],
+      accommodation: ['فندق فاخر', 'فندق أعمال', 'إير بي إن بي', 'نزل شبابي', 'ريوكان', 'قريب من المحطة', 'الإفطار مشمول', 'مناسب للعائلات', 'حوض استحمام', 'الأولوية للميزانية'],
+      diet: ['بدون قيود', 'نباتي', 'نباتي صرف', 'بدون لحم بقري', 'بدون لحم خنزيري', 'حساسية المأكولات البحرية', 'حساسية المكسرات', 'حلال', 'بيسكيتاريان']
+    },
     itinerary: {
       ...BASE_EN.itinerary,
       title: 'مسار رحلتك المحسن',
       verified: 'مؤكد من Trip OS',
       weather_title: 'الطقس المباشر مدمج',
       footer_disclaimer: 'تم إنشاؤه بواسطة Trip OS AI. يرجى التحقق من ساعات العمل والحجوزات محليًا.'
+    },
+    flightOffers: {
+      title: 'خيارات الرحلات الجوية',
+      subtitle: 'أسعار فورية من Google Flights',
+      badgeBest: 'الأفضل',
+      badgeCheapest: 'الأرخص',
+      badgeFastest: 'الأسرع',
+      direct: 'مباشر',
+      stop: 'توقف',
+      stops: 'توقفات',
+      layover: 'توقف في',
+      overnight: 'ليلاً',
+      totalPrice: 'السعر الإجمالي',
+      bookNow: 'احجز',
+      seeMore: 'المزيد على Google Flights',
+      typicalRange: 'نطاق الأسعار المعتاد',
+    },
+    hotelOffers: {
+      title: 'فنادق موصى بها',
+      subtitle: 'أسعار مباشرة من Google Hotels',
+      tierBudget: 'اقتصادي',
+      tierMid: 'متوسط',
+      tierLuxury: 'فاخر',
+      perNight: 'لليلة الواحدة',
+      total: 'الإجمالي',
+      walk: 'سيراً',
+      bookNow: 'احجز',
+      seeMore: 'المزيد على Google Hotels',
     }
   },
   'pt': {
@@ -885,15 +1044,15 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       subtitle: 'A IA está criando seu roteiro perfeito',
       tip_label: 'Você sabia?',
       tips: [
-        'Nossa IA analisa previsões do tempo para otimizar atividades ao ar livre.',
+        'Os itinerários agrupam cada dia geograficamente para você caminhar menos e ver mais.',
         'Agrupamos atrações próximas para minimizar seu tempo de deslocamento.',
         'O Trip OS considera eventos locais e horários de pico.',
         'Sua preferência de ritmo nos ajuda a equilibrar descanso e exploração.',
-        'Verificamos dados em tempo real para sugerir as melhores opções gastronômicas.',
+        'Os cartões de voos e hotéis vêm de dados ao vivo do Google Flights e do Google Hotels.',
       ],
       estimated_time: 'Geralmente leva 30-60 segundos'
     },
-    actions: { ...BASE_EN.actions, submit: 'Gerar Plano', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Arquivo Markdown', print: 'Imprimir', clear: 'Limpar', share: 'Compartilhar Link', shareCard: 'Cartão' },
+    actions: { ...BASE_EN.actions, submit: 'Gerar Plano', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Arquivo Markdown', print: 'Imprimir', clear: 'Limpar', share: 'Compartilhar Link', ready: 'Pronto', errorTitle: 'Erro', shareCard: 'Cartão' },
     form: {
       ...BASE_EN.form,
       section_basics: 'Básico',
@@ -910,12 +1069,47 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       accommodation: 'Acomodação',
       transport: 'Transporte',
     },
+    chips: {
+      interests: ['Fotografia', 'Gastronomia', 'História', 'Compras', 'Natureza', 'Anime', 'Cafeterias', 'Museus', 'Águas Termais', 'Parques Temáticos'],
+      constraints: ['Sem Comida Picante', 'Evitar Filas', 'Andar Menos', 'Acorda Cedo', 'Orçamento Apertado', 'Evitar Multidões', 'Trens Diretos', 'Precisa de Elevador'],
+      transport: ['Transporte Público', 'Carro Alugado', 'Táxi', 'Privativo', 'A Pé'],
+      accommodation: ['Hotel de Luxo', 'Hotel Executivo', 'Airbnb', 'Hostel', 'Ryokan', 'Perto da Estação', 'Café da Manhã Incluído', 'Ideal para Famílias', 'Banheira', 'Melhor Preço'],
+      diet: ['Sem Restrições', 'Vegetariano', 'Vegano', 'Sem Carne Bovina', 'Sem Carne Suína', 'Alergia a Frutos do Mar', 'Alergia a Nozes', 'Halal', 'Pescetariano']
+    },
     itinerary: {
       ...BASE_EN.itinerary,
       title: 'Seu Itinerário Otimizado',
       verified: 'Verificado Trip OS',
       weather_title: 'Clima Integrado',
       footer_disclaimer: 'Gerado por Trip OS AI. Verifique horários localmente.'
+    },
+    flightOffers: {
+      title: 'Opções de Voo',
+      subtitle: 'Preços em tempo real do Google Flights',
+      badgeBest: 'Melhor',
+      badgeCheapest: 'Mais Barato',
+      badgeFastest: 'Mais Rápido',
+      direct: 'Direto',
+      stop: 'parada',
+      stops: 'paradas',
+      layover: 'Conexão',
+      overnight: 'noturna',
+      totalPrice: 'Preço total',
+      bookNow: 'Reservar',
+      seeMore: 'Mais no Google Flights',
+      typicalRange: 'Faixa de preço típica',
+    },
+    hotelOffers: {
+      title: 'Hotéis Recomendados',
+      subtitle: 'Tarifas ao vivo do Google Hotels',
+      tierBudget: 'Econômico',
+      tierMid: 'Intermediário',
+      tierLuxury: 'Luxo',
+      perNight: 'por noite',
+      total: 'Total',
+      walk: 'a pé',
+      bookNow: 'Reservar',
+      seeMore: 'Mais no Google Hotels',
     }
   },
   'ru': {
@@ -942,15 +1136,15 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       subtitle: 'ИИ создаёт ваш идеальный маршрут',
       tip_label: 'Знаете ли вы?',
       tips: [
-        'Наш ИИ анализирует прогноз погоды для оптимизации активностей на открытом воздухе.',
+        'Маршрут группирует каждый день географически: меньше ходьбы — больше впечатлений.',
         'Мы группируем близлежащие достопримечательности, чтобы сократить время в пути.',
         'Trip OS учитывает местные события и часы пик.',
         'Ваши предпочтения темпа помогают нам балансировать отдых и исследования.',
-        'Мы проверяем данные в реальном времени, чтобы предложить лучшие варианты питания.',
+        'Карточки авиабилетов и отелей используют актуальные данные Google Flights и Google Hotels.',
       ],
       estimated_time: 'Обычно занимает 30-60 секунд'
     },
-    actions: { ...BASE_EN.actions, submit: 'Создать план', refine: 'Уточнить', export: 'Экспорт', copy: 'Копировать', copied: 'Скопировано', download: 'Экспорт файла Markdown', print: 'Печать', clear: 'Очистить', share: 'Поделиться ссылкой', shareCard: 'Карточка' },
+    actions: { ...BASE_EN.actions, submit: 'Создать план', refine: 'Уточнить', export: 'Экспорт', copy: 'Копировать', copied: 'Скопировано', download: 'Экспорт файла Markdown', print: 'Печать', clear: 'Очистить', share: 'Поделиться ссылкой', ready: 'Готово', errorTitle: 'Ошибка', shareCard: 'Карточка' },
     form: {
       ...BASE_EN.form,
       section_basics: 'Основное',
@@ -967,12 +1161,47 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
       accommodation: 'Проживание',
       transport: 'Транспорт',
     },
+    chips: {
+      interests: ['Фотография', 'Еда', 'История', 'Шопинг', 'Природа', 'Аниме', 'Кафе', 'Музеи', 'Горячие источники', 'Парки развлечений'],
+      constraints: ['Без острого', 'Без очередей', 'Меньше ходьбы', 'Ранняя пташка', 'Ограниченный бюджет', 'Избегать толпы', 'Прямые поезда', 'Нужен лифт'],
+      transport: ['Общественный транспорт', 'Аренда авто', 'Такси', 'Чартер', 'Пешком'],
+      accommodation: ['Роскошный отель', 'Бизнес-отель', 'Airbnb', 'Хостел', 'Рёкан', 'У станции', 'Завтрак включён', 'Для семей с детьми', 'Ванна в номере', 'Сначала бюджет'],
+      diet: ['Без ограничений', 'Вегетарианец', 'Веган', 'Без говядины', 'Без свинины', 'Аллергия на морепродукты', 'Аллергия на орехи', 'Халяль', 'Пескетарианец']
+    },
     itinerary: {
       ...BASE_EN.itinerary,
       title: 'Ваш оптимизированный маршрут',
       verified: 'Trip OS Подтверждено',
       weather_title: 'Погода учтена',
       footer_disclaimer: 'Создано Trip OS AI. Пожалуйста, проверяйте часы работы на месте.'
+    },
+    flightOffers: {
+      title: 'Варианты перелёта',
+      subtitle: 'Актуальные цены из Google Flights',
+      badgeBest: 'Лучший',
+      badgeCheapest: 'Самый дешёвый',
+      badgeFastest: 'Самый быстрый',
+      direct: 'Прямой',
+      stop: 'пересадка',
+      stops: 'пересадки',
+      layover: 'Пересадка',
+      overnight: 'ночная',
+      totalPrice: 'Итоговая цена',
+      bookNow: 'Забронировать',
+      seeMore: 'Ещё на Google Flights',
+      typicalRange: 'Обычный диапазон цен',
+    },
+    hotelOffers: {
+      title: 'Рекомендуемые отели',
+      subtitle: 'Актуальные цены из Google Hotels',
+      tierBudget: 'Эконом',
+      tierMid: 'Средний класс',
+      tierLuxury: 'Люкс',
+      perNight: 'за ночь',
+      total: 'Итого',
+      walk: 'пешком',
+      bookNow: 'Забронировать',
+      seeMore: 'Ещё на Google Hotels',
     }
   }
 };

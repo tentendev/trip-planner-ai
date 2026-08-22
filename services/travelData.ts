@@ -1,10 +1,11 @@
-import { TripInput, Language, FlightOffer, HotelOffer, TravelSearchParams } from '../types';
+import { TripInput, Language, FlightOffer, HotelOffer, TravelSearchParams, TripWeather } from '../types';
 
 export interface TravelData {
   params: TravelSearchParams;
   flights: FlightOffer[] | null;
   hotels: HotelOffer[] | null;
   flight_price_insights?: { lowest?: number; typical_range?: number[]; price_level?: string };
+  weather?: TripWeather;
   currency: string;
   errors: string[];
 }
@@ -243,6 +244,47 @@ async function fetchHotels(
   }
 }
 
+/**
+ * Fetch the real weather forecast via /api/weather (Open-Meteo under the hood).
+ * Only needs the destination name — origin IATA and exact dates are optional
+ * (the endpoint defaults to a 14-day window starting today).
+ */
+async function fetchWeather(
+  params: TravelSearchParams,
+  lang: Language,
+  origin: string
+): Promise<TripWeather | null> {
+  if (!params.dest_name) return null;
+
+  const q = new URLSearchParams({
+    q: params.dest_name,
+    hl: hlForLang(lang),
+  });
+  if (params.check_in && isValidDate(params.check_in)) q.set('start', params.check_in);
+  if (params.check_out && isValidDate(params.check_out)) q.set('end', params.check_out);
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+    const resp = await fetch(`${origin}/api/weather?${q.toString()}`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!resp.ok) {
+      console.warn('[travelData] /api/weather status', resp.status);
+      return null;
+    }
+    const data = await resp.json();
+    if (!data?.location || !Array.isArray(data.days)) return null;
+    return data as TripWeather;
+  } catch (err) {
+    console.warn('[travelData] weather fetch failed', err);
+    return null;
+  }
+}
+
 // Overall hard deadline for SerpAPI gathering. If the LLM extraction or flight/hotel APIs
 // hang, we'd rather generate the itinerary without real-time data than burn the whole
 // 300s function budget here.
@@ -273,7 +315,7 @@ async function doGatherTravelData(input: TripInput, lang: Language): Promise<Tra
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const errors: string[] = [];
 
-  const [flightRes, hotelRes] = await Promise.all([
+  const [flightRes, hotelRes, weatherRes] = await Promise.all([
     fetchFlights(params, lang, currency, origin).catch((e) => {
       errors.push(`flights: ${e?.message || e}`);
       return null;
@@ -282,12 +324,17 @@ async function doGatherTravelData(input: TripInput, lang: Language): Promise<Tra
       errors.push(`hotels: ${e?.message || e}`);
       return null;
     }),
+    fetchWeather(params, lang, origin).catch((e) => {
+      errors.push(`weather: ${e?.message || e}`);
+      return null;
+    }),
   ]);
 
   return {
     params,
     flights: flightRes?.flights || null,
     hotels: hotelRes || null,
+    weather: weatherRes || undefined,
     flight_price_insights: flightRes?.price_insights,
     currency,
     errors,
@@ -312,6 +359,37 @@ export function formatTravelDataForPrompt(data: TravelData | null): string {
   if (!data) return '';
 
   const sections: string[] = [];
+
+  // Real forecast data replaces the old instruction to invent weather numbers.
+  const w = data.weather;
+  if (w && w.days.length > 0) {
+    const rows = w.days
+      .map((d) => {
+        const rain = d.precip_prob_pct === null ? 'n/a' : `${d.precip_prob_pct}%`;
+        const hi = d.temp_max_c === null ? '—' : `${Math.round(d.temp_max_c)}°C`;
+        const lo = d.temp_min_c === null ? '—' : `${Math.round(d.temp_min_c)}°C`;
+        return `- ${d.date}: ${d.condition}, High ${hi} / Low ${lo}, Rain ${rain}`;
+      })
+      .join('\n');
+    sections.push(`[REAL WEATHER FORECAST — Open-Meteo, location "${w.location.name}"]`);
+    sections.push(rows);
+    if (w.coverage === 'full') {
+      sections.push(`Use THESE exact values in the required Weather table. Do not alter the numbers.`);
+    } else {
+      sections.push(
+        `Days listed above are REAL forecasts — use their exact values. For any trip date NOT listed (beyond the ${w.days.length}-day forecast horizon), label that row clearly as a typical-climate estimate and avoid invented precision (no fake percentages; use qualitative terms).`
+      );
+    }
+    sections.push(
+      `Let the forecast drive the plan: shift outdoor anchors away from high-rain days, mention the rain strategy in each day's "Why here" where relevant.`
+    );
+    sections.push('');
+  } else {
+    sections.push(
+      `[WEATHER DATA UNAVAILABLE] No live forecast could be retrieved. In the Weather table, label every row explicitly as a typical-climate estimate for the season (Condition column: "Typical"). Use qualitative advice ("showers possible") rather than precise probabilities.`
+    );
+    sections.push('');
+  }
 
   const top = data.flights?.[0];
   if (top && top.segments.length > 0) {

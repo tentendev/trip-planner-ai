@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import MarkdownRenderer from './MarkdownRenderer';
 import FlightOffersSection from './FlightOffersSection';
 import HotelOffersSection from './HotelOffersSection';
+import WeatherStrip from './WeatherStrip';
 import {
   Download,
   Compass,
@@ -342,6 +343,11 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
           searchParams={plan.searchParams}
           language={language}
         />
+      )}
+
+      {/* Real weather forecast (Open-Meteo) */}
+      {plan.weather && plan.weather.days.length > 0 && (
+        <WeatherStrip weather={plan.weather} language={language} />
       )}
 
       {/* Content */}

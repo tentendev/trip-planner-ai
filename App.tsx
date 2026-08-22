@@ -110,6 +110,7 @@ const App: React.FC = () => {
             flights: sharedPlan.flights,
             hotels: sharedPlan.hotels,
             searchParams: sharedPlan.searchParams,
+            weather: sharedPlan.weather,
             flightPriceInsights: sharedPlan.flightPriceInsights,
           });
           setIsSharedView(true);

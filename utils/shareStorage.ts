@@ -1,5 +1,5 @@
 
-import { GeneratedPlan, Language, TripInput, FlightOffer, HotelOffer, TravelSearchParams } from '../types';
+import { GeneratedPlan, Language, TripInput, FlightOffer, HotelOffer, TravelSearchParams, TripWeather } from '../types';
 
 const SHARE_STORAGE_KEY = 'trip_os_shared_plans';
 const MAX_STORED_PLANS = 50;
@@ -27,6 +27,7 @@ export interface SharedPlan {
   flights?: FlightOffer[];
   hotels?: HotelOffer[];
   searchParams?: TravelSearchParams;
+  weather?: TripWeather;
   flightPriceInsights?: {
     lowest?: number;
     typical_range?: number[];
@@ -127,6 +128,7 @@ export async function saveSharedPlan(plan: GeneratedPlan, lang: Language, tripIn
     flights: plan.flights,
     hotels: plan.hotels,
     searchParams: plan.searchParams,
+    weather: plan.weather,
     flightPriceInsights: plan.flightPriceInsights,
   };
 

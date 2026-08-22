@@ -503,6 +503,7 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
       sources: [],
       flights: travelData?.flights || undefined,
       hotels: travelData?.hotels || undefined,
+      weather: travelData?.weather || undefined,
       searchParams: travelData?.params || undefined,
       flightPriceInsights: travelData?.flight_price_insights || undefined,
     };

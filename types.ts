@@ -120,12 +120,30 @@ export interface TravelSearchParams {
   adults: number;
 }
 
+// --- Real weather forecast structures (from Open-Meteo) ---
+
+export interface WeatherDay {
+  date: string;                    // YYYY-MM-DD (destination-local calendar day)
+  code: number;                    // WMO weather interpretation code (-1 = unavailable)
+  condition: string;               // concise human-readable condition ("Partly cloudy")
+  temp_max_c: number | null;
+  temp_min_c: number | null;
+  precip_prob_pct: number | null;  // 0-100 daily max precipitation probability
+}
+
+export interface TripWeather {
+  location: { name: string; latitude: number; longitude: number };
+  days: WeatherDay[];
+  coverage: 'full' | 'partial' | 'none'; // relative to the requested trip window
+}
+
 export interface GeneratedPlan {
   markdown: string;
   sources: { title: string; uri: string }[];
   flights?: FlightOffer[];
   hotels?: HotelOffer[];
   searchParams?: TravelSearchParams;
+  weather?: TripWeather;
   flightPriceInsights?: {
     lowest?: number;
     typical_range?: number[];
