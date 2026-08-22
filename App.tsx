@@ -6,13 +6,29 @@ import LoadingOverlay from './components/LoadingOverlay';
 import PreAnalysisView from './components/PreAnalysisView';
 import SocialProof from './components/SocialProof';
 import ShareCard from './components/ShareCard';
-import { generateTripPlan, preAnalyzeTrip, CURRENT_MODEL } from './services/geminiService';
+import { generateTripPlan, preAnalyzeTrip } from './services/geminiService';
 import { TripInput, LoadingState, GeneratedPlan, Language, PreAnalysisQuestion } from './types';
-import { Globe, Terminal, ChevronDown, Check } from 'lucide-react';
+import { Globe, Compass, ChevronDown, Check } from 'lucide-react';
 import { TRANSLATIONS, LANGUAGE_NAMES } from './utils/i18n';
 import { getSharedPlan } from './utils/shareStorage';
 
 const STORAGE_KEY = 'trip_os_v1_state';
+
+// Localized label for the generation-error Retry action. Kept inline so this pass
+// doesn't churn i18n.ts for a single string (same pattern as CONFIRM_CLEAR below).
+const RETRY_LABELS: Record<Language, string> = {
+  'en': 'Try again',
+  'zh-TW': '重試',
+  'zh-CN': '重试',
+  'ja': '再試行',
+  'ko': '다시 시도',
+  'es': 'Intentar de nuevo',
+  'fr': 'Réessayer',
+  'pt': 'Tentar novamente',
+  'ru': 'Повторить попытку',
+  'ar': 'حاول مجددًا',
+  'hi': 'फिर से कोशिश करें',
+};
 
 // Persisted shape. Partial streaming markdown is intentionally kept OUT of here:
 // it changes many times per second and would spam localStorage writes (and restore
@@ -58,6 +74,21 @@ const App: React.FC = () => {
   // chatty the upstream stream is.
   const pendingPartialRef = useRef<string>('');
   const rafIdRef = useRef<number | null>(null);
+
+  // --- Browser Back integration ----------------------------------------------
+  // When a plan finishes generating we push ONE synthetic history entry tagged
+  // { tripView: true }, so pressing Back pops to the pre-generation entry while
+  // our popstate handler swaps the itinerary back to the planner form instead of
+  // leaving the site. ownsTripViewEntryRef tracks whether that synthetic entry is
+  // still the live top of the stack:
+  //   - popstate consumes it at most once (double-handling guard) and refines,
+  //   - manual "Refine Trip" releases it, so a later Back just navigates through
+  //     the stale tagged entry without re-triggering refine.
+  // Seeding from history.state covers a reload on a tagged entry (history state
+  // survives reloads and localStorage puts the plan back on screen).
+  const ownsTripViewEntryRef = useRef<boolean>(
+    typeof window !== 'undefined' && window.history.state?.tripView === true
+  );
 
   // Language Dropdown State
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -249,6 +280,28 @@ const App: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // popstate → back out of an itinerary into the form. The listener binds once;
+  // popStateHandlerRef always points at the latest render's closure so it never
+  // acts on a stale tripPlan. Flow: generate succeeds → push { tripView: true }
+  // entry; Back pops to the previous entry → handler sees we owned the popped
+  // entry and tripPlan is on screen → handleRefineTrip() shows the form. If the
+  // user already refined manually (tripPlan null) they are just walking back
+  // through tagged entries — navigation alone is correct, so we do nothing.
+  const popStateHandlerRef = useRef<() => void>(() => {});
+  popStateHandlerRef.current = () => {
+    const ownedEntry = ownsTripViewEntryRef.current;
+    ownsTripViewEntryRef.current = false;
+    if (ownedEntry && tripPlan) {
+      handleRefineTrip();
+    }
+  };
+
+  useEffect(() => {
+    const onPopState = () => popStateHandlerRef.current();
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   useEffect(() => {
     // A plan loaded from someone else's share link must not evict the visitor's
     // own saved trip from localStorage.
@@ -340,6 +393,14 @@ const App: React.FC = () => {
       setPreAnalysisQuestions(null);
       setLoadingState(LoadingState.SUCCESS);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Tag the history stack once per itinerary view so Back returns to the form
+      // (see ownsTripViewEntryRef). An already-tagged top entry — left there by a
+      // manual "Refine Trip", or by a reload onto a tagged entry — is reclaimed
+      // for this view instead of stacking duplicates.
+      if (!window.history.state?.tripView && !ownsTripViewEntryRef.current) {
+        window.history.pushState({ tripView: true }, '');
+      }
+      ownsTripViewEntryRef.current = true;
     } catch (err: any) {
       if (err?.name === 'AbortError') {
         // Graceful cancel via Stop: no error banner, and any previously generated
@@ -390,6 +451,11 @@ const App: React.FC = () => {
     setPreAnalysisQuestions(null);
     setLoadingState(LoadingState.IDLE);
     setIsSharedView(false);
+
+    // Release our claim on the tagged history entry (if any): the stale entry
+    // stays on the stack and Back simply navigates past it without re-running
+    // this handler's refine path.
+    ownsTripViewEntryRef.current = false;
 
     // Clear share params from URL if present
     const url = new URL(window.location.href);
@@ -458,7 +524,7 @@ const App: React.FC = () => {
         <div className="max-w-5xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.location.href = `/?lang=${language}`}>
             <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:shadow-blue-500/30 transition-all duration-300">
-              <Terminal className="w-5 h-5" />
+              <Compass className="w-5 h-5" />
             </div>
             <div>
               <h1 className="font-bold text-xl tracking-tight text-slate-900 leading-none flex items-center gap-2">
@@ -526,26 +592,40 @@ const App: React.FC = () => {
         )}
 
         {!isFetchingShare && loadingState === LoadingState.IDLE && !tripPlan && !preAnalysisQuestions && (
-          <div className="mb-12 text-center max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 tracking-tight">
+          <div className="mb-10 text-center max-w-2xl mx-auto">
+            {/* Staggered entrance: short ease-out steps (150-300ms) beat the old
+                single 700ms sweep, and fill-mode-both keeps delayed rows hidden
+                until their turn. */}
+            <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-4 md:mb-5 tracking-tight animate-in fade-in slide-in-from-bottom-3 duration-300 ease-out">
                {renderHeroTitle(t.hero.title)}
             </h2>
-            <p className="text-lg md:text-xl text-slate-600 leading-relaxed font-light mb-8">
+            <p className="text-lg md:text-xl text-slate-600 leading-relaxed font-light mb-6 animate-in fade-in slide-in-from-bottom-3 duration-300 ease-out delay-100 fill-mode-both">
               {t.hero.desc}
             </p>
 
             {/* Social Proof Section */}
-            <SocialProof language={language} />
+            <div className="animate-in fade-in duration-300 ease-out delay-200 fill-mode-both">
+              <SocialProof language={language} />
+            </div>
           </div>
         )}
 
         {loadingState === LoadingState.ERROR && (
-          <div className="mb-8 p-4 bg-red-50/80 backdrop-blur border border-red-200 rounded-xl text-red-700 flex items-center gap-3 shadow-lg shadow-red-100/50" role="alert">
-             <div className="w-6 h-6 flex items-center justify-center">⚠️</div>
-             <div>
+          <div className="mb-8 p-4 bg-red-50/80 backdrop-blur border border-red-200 rounded-xl text-red-700 flex items-center gap-3 shadow-lg shadow-red-100/50 animate-in fade-in duration-200" role="alert">
+             <div className="w-8 h-8 shrink-0 flex items-center justify-center" aria-hidden="true">⚠️</div>
+             <div className="flex-1 min-w-0">
                <p className="font-bold font-mono text-xs uppercase tracking-wider">{t.actions.errorTitle || 'Error'}</p>
-               <p className="text-sm">{errorMsg}</p>
+               <p className="text-sm break-words">{errorMsg}</p>
              </div>
+             {lastInput && (
+               <button
+                 type="button"
+                 onClick={() => handleGenerate(lastInput)}
+                 className="shrink-0 px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition shadow-sm focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
+               >
+                 {RETRY_LABELS[language] || RETRY_LABELS.en}
+               </button>
+             )}
           </div>
         )}
 
@@ -580,13 +660,12 @@ const App: React.FC = () => {
         ) : null}
       </main>
 
-      <footer className="py-8 text-center text-slate-400 text-sm no-print relative z-10">
-         <p>
-           © Built with Love ❤️ by <a href="https://tenten.co/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Tenten AI</a> | The Leading AI-First Agency in Asia
-        </p>
-        <p className="mt-2 text-xs text-slate-400/70 font-mono flex items-center justify-center gap-1.5">
-          <span className="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
-          Powered by <span className="text-slate-500">{CURRENT_MODEL}</span>
+      {/* Single quiet credit line. The "Powered by <model>" line is gone — model
+          names are internal details, not end-user information — and the pulsing
+          dot implied a live-status signal we don't actually provide. */}
+      <footer className="py-8 text-center no-print relative z-10">
+         <p className="text-xs text-slate-400/80">
+           © Built with Love ❤️ by <a href="https://tenten.co/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-600 underline-offset-2 hover:underline transition-colors">Tenten AI</a> | The Leading AI-First Agency in Asia
         </p>
       </footer>
 

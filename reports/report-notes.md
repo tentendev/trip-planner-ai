@@ -11,7 +11,8 @@
 2. 6585094 Harden remaining serverless endpoints (lib/apiGuard.ts)
 3. 3edacb9 Foundation wave: Tailwind v4 build, i18n completion, Open-Meteo weather
 4. b9a9078 Quick wins from medium-severity audit findings
-5. (pending) Experience wave: streaming UX + cancel + demo mode; day nav + .ics + maps links
+5. a1-experience: streaming UX + cancel + demo mode; day nav + .ics + maps links
+6. post-exp fixes: share-view integrity, timeout coverage, prompt hygiene
 6. (pending) Post-WF3 fixes: shared-view persistence clobber, visitor share summary, silent share failure, timeout coverage, pre-analysis prompt cleanup
 7. (pending) UI/UX wave
 
@@ -27,7 +28,8 @@
 ## Screenshots
 - reports/baseline/01-landing-en.png (before)
 - reports/baseline/03-after-tailwind-v4.png (after foundation)
-- (take) after streaming demo shot, after UI/UX final shots
+- reports/baseline/05-streaming-demo.png (live stream w/ Stop button)
+- reports/baseline/06-demo-final.png (full rendered demo plan - excellent)
 
 ## Followups for report
 - og:image points at nonexistent asset - needs a designed OG image at deploy time

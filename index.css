@@ -53,6 +53,12 @@ body {
   border-radius: 6px;
 }
 
+/* Brand-tinted selection — blue thread carried through every interaction */
+::selection {
+  background-color: #dbeafe;
+  color: #1e3a8a;
+}
+
 /* Table column wrapping — allow cells to wrap gracefully on mobile */
 .trip-markdown table td { word-break: break-word; }
 .trip-markdown table th:first-child,
@@ -65,7 +71,11 @@ body {
 }
 .trip-fade-up { animation: tripFadeUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar — slim pill; Firefox gets the standard property pair */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -75,7 +85,7 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
@@ -140,42 +150,69 @@ body {
   .loader-badge {
     animation-play-state: paused;
   }
+
+  /* tw-animate-css ships no reduced-motion handling of its own. Enter
+     animations start from opacity/scale offsets, so pausing would leave
+     modals half-invisible — jump them to their end state instead. */
+  .animate-in {
+    animation-duration: 0.01ms !important;
+    animation-fill-mode: forwards !important;
+  }
 }
 
 /* ------------------------------------------------------------------ */
 /* Print Optimization Styles                                           */
+/* Everything below is scoped to @media print — screen styles above     */
+/* are untouched.                                                       */
 /* ------------------------------------------------------------------ */
 
 @media print {
   @page {
-    margin: 10mm 15mm;
+    margin: 14mm;
     size: auto;
   }
 
-  body {
-    background-color: white !important;
+  html, body {
+    background: #ffffff !important;
     background-image: none !important;
-    color: black !important;
-    font-size: 11pt;
-    line-height: 1.4;
+    color: #000000 !important;
+  }
+
+  body {
+    font-size: 12pt;
+    line-height: 1.45;
   }
 
   .aurora-bg { display: none !important; }
 
-  /* Specific Hide Classes */
-  .no-print, header, footer, button {
+  /* Interactive chrome never prints. DayNav pills carry .no-print inside
+     DayNav.tsx AND sit in a [data-daynav] wrapper in ItineraryDisplay.tsx,
+     so either hook still hides them if the other regresses. */
+  .no-print,
+  [data-daynav],
+  header,
+  footer,
+  button {
     display: none !important;
   }
 
-  /* Force Background Colors */
+  /* Keep meaningful ink (chips, checked boxes, the header badge) while
+     stripping shadows; also freeze entrance animations that could
+     otherwise print mid-fade at opacity 0. */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     box-shadow: none !important;
     text-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
   }
 
-  /* Container Overrides to use full width */
+  /* Decorative gradients off — the h2 gradient bar collapses to nothing,
+     which is what we want on paper. */
+  * { background-image: none !important; }
+
+  /* Full paper width */
   .max-w-5xl, .max-w-none {
     max-width: 100% !important;
     width: 100% !important;
@@ -183,58 +220,99 @@ body {
     margin: 0 !important;
   }
 
-  /* Card Reset */
-  .bg-white\/80, .backdrop-blur-xl, .shadow-2xl, .border {
-    background: white !important;
-    backdrop-filter: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
+  /* Typography — calm grayscale hierarchy, no screen accent colors */
+  h1 { font-size: 22pt !important; color: #000 !important; margin-bottom: 0.5em !important; }
+  h2 { font-size: 16pt !important; color: #000 !important; margin-top: 1.25em !important; border-bottom: 1px solid #d1d5db !important; padding-bottom: 0.2em !important; }
+  h3 { font-size: 13pt !important; color: #111827 !important; margin-top: 1em !important; }
+  h4 { font-size: 11pt !important; color: #1f2937 !important; }
+  p, li { font-size: 11pt !important; color: #1f2937 !important; }
+  strong { color: #000 !important; }
+
+  /* Amber context brackets read as plain emphasis on paper */
+  .trip-context {
+    color: #000 !important;
+    font-weight: 600 !important;
   }
 
-  /* Typography tweaks for print */
-  h1 { font-size: 24pt !important; color: #000 !important; margin-bottom: 0.5em !important; }
-  h2 { font-size: 16pt !important; color: #000 !important; margin-top: 1.5em !important; border-bottom: 2px solid #eee !important; padding-bottom: 0.2em !important; page-break-after: avoid; }
-  h3 { font-size: 13pt !important; color: #1e40af !important; margin-top: 1em !important; page-break-after: avoid; }
-  h4 { font-size: 11pt !important; color: #334155 !important; page-break-after: avoid; }
-  p, li { font-size: 10.5pt !important; color: #333 !important; }
-
-  /* Table Handling - Crucial for Itineraries */
-  table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    margin-bottom: 1em !important;
-    font-size: 9.5pt !important;
-    page-break-inside: auto;
-    border: 1px solid #e2e8f0 !important;
-  }
-
-  thead {
-    display: table-header-group; /* Repeat header on new pages */
-    background-color: #f8fafc !important;
-    border-bottom: 2px solid #cbd5e1 !important;
-  }
-
-  tr {
-    page-break-inside: avoid;
-    page-break-after: auto;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  td, th {
-    padding: 6px 8px !important;
-    border-left: 1px solid #f1f5f9;
-  }
-
-  /* Links */
   a {
     text-decoration: none !important;
     color: #000 !important;
   }
 
-  /* Show the specific print header */
+  pre {
+    background: #f8fafc !important;
+    color: #000 !important;
+    border: 1px solid #e2e8f0 !important;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  code {
+    background: transparent !important;
+    color: #000 !important;
+    border: 0 !important;
+  }
+
+  blockquote {
+    background: #f8fafc !important;
+    border-inline-start: 3px solid #94a3b8 !important;
+  }
+
+  /* Page breaks — each day starts on a fresh sheet except the first
+     section, which flows directly under the print header. */
+  .trip-markdown h2[id] {
+    break-before: page;
+    page-break-before: always;
+  }
+  .trip-markdown h2[id]:first-of-type,
+  .trip-markdown h2[id]:first-child {
+    break-before: auto;
+    page-break-before: auto;
+  }
+  h2, h3, h4 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Tables: keep rows intact and repeat headers across pages; borders stay
+     light gray so dense itineraries remain scannable without heavy ink. */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 1em !important;
+    font-size: 9.5pt !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #e2e8f0 !important;
+  }
+  thead {
+    display: table-header-group;
+    background-color: #f8fafc !important;
+  }
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  th {
+    border-bottom: 1px solid #cbd5e1 !important;
+    text-align: start !important;
+    color: #334155 !important;
+  }
+  td {
+    border-top: 1px solid #e2e8f0 !important;
+    text-align: start !important;
+    color: #1f2937 !important;
+    vertical-align: top;
+  }
+  li {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* The print-only letterhead keeps its rule — no blanket border resets
+     upstream would strip it. */
   .print-only {
     display: block !important;
+    border-bottom: 2px solid #000 !important;
   }
 }
 

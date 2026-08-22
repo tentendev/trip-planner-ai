@@ -367,12 +367,18 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
         <WeatherStrip weather={plan.weather} language={language} />
       )}
 
-      {/* Jump-to-day navigation (sticky under the app header) */}
-      <DayNav
-        markdown={plan.markdown}
-        destination={tripInput?.destination}
-        language={language}
-      />
+      {/* Jump-to-day navigation (sticky under the app header).
+          display:contents keeps the wrapper box-free so the child's own
+          position:sticky still resolves against this whole card, not the
+          wrapper; .no-print/[data-daynav] give print a redundant hide hook
+          alongside DayNav's internal .no-print. */}
+      <div className="no-print contents" data-daynav>
+        <DayNav
+          markdown={plan.markdown}
+          destination={tripInput?.destination}
+          language={language}
+        />
+      </div>
 
       {/* Content */}
       <div className="px-5 md:px-12 py-8 md:py-12 relative z-10">

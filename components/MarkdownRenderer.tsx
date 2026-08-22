@@ -166,17 +166,19 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
               {children}
             </pre>
           ),
+          // Logical (ps-/pe-/border-s-/rounded-e) so Arabic RTL mirrors the
+          // accent edge; identical rendering in LTR.
           blockquote: ({ children }) => (
-            <blockquote className="relative my-6 pl-5 pr-4 py-4 bg-gradient-to-r from-blue-50 to-indigo-50/60 border-l-[3px] border-blue-500 rounded-r-xl text-slate-700 [&_p]:my-1 [&_p]:text-[15px] [&_p]:leading-relaxed">
+            <blockquote className="relative my-6 ps-5 pe-4 py-4 bg-gradient-to-r from-blue-50 to-indigo-50/60 border-s-[3px] border-blue-500 rounded-e-xl text-slate-700 [&_p]:my-1 [&_p]:text-[15px] [&_p]:leading-relaxed">
               {children}
             </blockquote>
           ),
           hr: () => (
             <hr className="my-10 border-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
           ),
-          ul: ({ children }) => <ul className="my-4 ml-1 space-y-2">{children}</ul>,
+          ul: ({ children }) => <ul className="my-4 ms-1 space-y-2">{children}</ul>,
           ol: ({ children }) => (
-            <ol className="my-4 ml-5 space-y-2 list-decimal marker:text-slate-400 marker:font-semibold">
+            <ol className="my-4 ms-5 space-y-2 list-decimal marker:text-slate-400 marker:font-semibold">
               {children}
             </ol>
           ),
@@ -194,7 +196,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             }
             return (
               <li
-                className="relative pl-6 text-[15px] leading-relaxed text-slate-700 before:absolute before:left-1 before:top-[0.65em] before:w-1.5 before:h-1.5 before:rounded-full before:bg-gradient-to-br before:from-blue-500 before:to-violet-500 marker:text-transparent"
+                className="relative ps-6 text-[15px] leading-relaxed text-slate-700 before:absolute before:start-1 before:top-[0.65em] before:w-1.5 before:h-1.5 before:rounded-full before:bg-gradient-to-br before:from-blue-500 before:to-violet-500 marker:text-transparent"
                 {...props}
               >
                 {highlightBrackets(children)}
@@ -227,7 +229,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           },
           table: ({ children }) => (
             <div className="my-7 -mx-2 md:mx-0 overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-8px_rgba(15,23,42,0.08)]">
-              <table className="w-full text-sm text-left border-collapse">{children}</table>
+              <table className="w-full text-sm text-start border-collapse">{children}</table>
             </div>
           ),
           thead: ({ children }) => (

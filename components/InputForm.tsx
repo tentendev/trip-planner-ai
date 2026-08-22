@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { TripInput, Language } from '../types';
 import { TRANSLATIONS } from '../utils/i18n';
 import { buildFullPrompt } from '../services/geminiService';
-import { Plane, Users, DollarSign, Activity, Heart, AlertTriangle, Coffee, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Bed, Utensils, PlaneLanding, PlaneTakeoff, Plus, Gauge, Zap, CheckCircle2, Code, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plane, Users, DollarSign, Activity, Heart, AlertTriangle, Coffee, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Bed, Utensils, PlaneLanding, PlaneTakeoff, Plus, Gauge, Zap, CheckCircle2, Code, Copy, Check, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 
 interface InputFormProps {
   onSubmit: (data: TripInput) => void;
@@ -11,6 +11,34 @@ interface InputFormProps {
   initialValues?: TripInput;
   language: Language;
 }
+
+// The raw prompt inspector is a developer tool — in the public interface it just
+// cluttered the form, so it only renders when the URL carries ?debug=1.
+const SHOW_RAW_PROMPT = typeof window !== 'undefined'
+  && new URLSearchParams(window.location.search).has('debug');
+
+// Shared text-field chrome. Focus indication comes from the global :focus-visible
+// outline in index.css (an unlayered rule that intentionally wins over Tailwind's
+// cascade layers): the old per-field focus rings doubled that indicator up on tap
+// and drifted off the single blue brand thread (pink/amber/slate/emerald).
+const INPUT_BASE = 'w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl transition shadow-sm';
+const INPUT_WITH_ICON = 'w-full pl-12 p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl transition shadow-sm';
+
+// Localized submitting label shown next to the spinner while the plan streams in
+// (kept inline to avoid i18n.ts churn for one string).
+const SUBMITTING_LABELS: Record<Language, string> = {
+  'en': 'Generating your plan…',
+  'zh-TW': '正在生成行程…',
+  'zh-CN': '正在生成行程…',
+  'ja': '旅程を生成中…',
+  'ko': '일정 생성 중…',
+  'es': 'Generando tu plan…',
+  'fr': 'Génération en cours…',
+  'pt': 'Gerando seu plano…',
+  'ru': 'Создаём ваш план…',
+  'ar': 'جارٍ إنشاء خطتك…',
+  'hi': 'आपकी योजना बन रही है…',
+};
 
 const RawPromptPreview: React.FC<{ formData: TripInput; language: Language; t: typeof TRANSLATIONS['en'] }> = ({ formData, language, t }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -485,7 +513,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
     );
   };
 
-  const renderSmartChips = (label: string, field: keyof TripInput, suggestions: string[], icon: React.ReactNode, colorClass: string, placeholder: string) => (
+  const renderSmartChips = (label: string, field: keyof TripInput, suggestions: string[], icon: React.ReactNode, placeholder: string) => (
     <div className="space-y-3">
       <label htmlFor={`trip-${field}`} className="text-sm font-medium text-slate-700 flex items-center gap-2">
         {icon} {label}
@@ -496,7 +524,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
         value={formData[field] as string}
         onChange={handleChange}
         placeholder={placeholder}
-        className={`w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:${colorClass} focus:border-transparent outline-none transition shadow-sm`}
+        className={INPUT_BASE}
       />
       <div className="flex flex-wrap gap-2 mt-2">
         {suggestions.map(s => {
@@ -655,10 +683,10 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
               placeholder={t.form.destination_placeholder}
               aria-invalid={validationError?.field === 'destination' || undefined}
               aria-describedby={validationError?.field === 'destination' ? 'trip-destination-error' : undefined}
-              className={`w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition shadow-sm ${validationError?.field === 'destination' ? 'border-red-400 ring-1 ring-red-300' : 'border-slate-200/60'}`}
+              className={`${INPUT_BASE} ${validationError?.field === 'destination' ? 'border-red-400' : ''}`}
             />
             {validationError?.field === 'destination' && (
-              <p id="trip-destination-error" role="alert" className="text-sm text-red-600 font-medium">{validationError.msg}</p>
+              <p id="trip-destination-error" role="alert" className="text-sm text-red-600 font-medium animate-in fade-in duration-200">{validationError.msg}</p>
             )}
           </div>
 
@@ -672,7 +700,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
                 value={formData.travelers}
                 onChange={handleChange}
                 placeholder={t.form.travelers_placeholder}
-                className="w-full pl-12 p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition shadow-sm"
+                className={INPUT_WITH_ICON}
               />
             </div>
           </div>
@@ -687,7 +715,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
               aria-expanded={showDatePicker}
               aria-haspopup="dialog"
               aria-invalid={validationError?.field === 'dates' || undefined}
-              className={`w-full flex bg-white/70 backdrop-blur-sm border rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition group text-left ${validationError?.field === 'dates' ? 'border-red-400 ring-1 ring-red-300' : 'border-slate-200/60'}`}
+              className={`w-full flex bg-white/70 backdrop-blur-sm border rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition group text-left ${validationError?.field === 'dates' ? 'border-red-400' : 'border-slate-200/60'}`}
             >
               <div className={`flex-1 p-4 border-r border-slate-200/60 group-hover:bg-white/50 transition ${!startDate ? 'text-slate-400' : 'text-slate-900'}`}>
                 <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">{t.form.dates_start}</div>
@@ -705,14 +733,16 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
               </div>
             </button>
             {validationError?.field === 'dates' && (
-              <p role="alert" className="text-sm text-red-600 font-medium">{validationError.msg}</p>
+              <p role="alert" className="text-sm text-red-600 font-medium animate-in fade-in duration-200">{validationError.msg}</p>
             )}
             {showDatePicker && (
               <div
                 role="dialog"
                 aria-label={t.form.dates}
                 onKeyDown={(e) => { if (e.key === 'Escape') setShowDatePicker(false); }}
-                className="absolute top-full left-0 mt-4 bg-white rounded-2xl shadow-2xl border border-slate-100 p-6 z-50 w-full md:w-[360px] animate-in fade-in zoom-in-95 duration-200 ring-4 ring-slate-100/50"
+                // z-50 keeps the popover above every section stack (z-30/20/10);
+                // the header sits outside this stacking context so it stays on top.
+                className="absolute top-full left-0 mt-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200/60 p-6 z-50 w-full md:w-[360px] animate-in fade-in zoom-in-95 duration-200 ease-out"
               >
                 <div className="flex items-center justify-between mb-6">
                   <button type="button" aria-label={`${viewDate.getFullYear()} / ${viewDate.getMonth()}`} onClick={handlePrevMonth} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition"><ChevronLeft className="w-5 h-5" /></button>
@@ -741,14 +771,14 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
             <label htmlFor="trip-arrivalDetail" className="text-sm font-medium text-slate-700 flex items-center gap-2">
                <PlaneLanding className="w-4 h-4 text-slate-500" /> {t.form.arrival}
             </label>
-            <input id="trip-arrivalDetail" name="arrivalDetail" value={formData.arrivalDetail} onChange={handleChange} placeholder={t.form.arrival_placeholder} className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition shadow-sm"/>
+            <input id="trip-arrivalDetail" name="arrivalDetail" value={formData.arrivalDetail} onChange={handleChange} placeholder={t.form.arrival_placeholder} className={INPUT_BASE}/>
           </div>
 
           <div className="space-y-3">
             <label htmlFor="trip-departureDetail" className="text-sm font-medium text-slate-700 flex items-center gap-2">
                <PlaneTakeoff className="w-4 h-4 text-slate-500" /> {t.form.departure}
             </label>
-            <input id="trip-departureDetail" name="departureDetail" value={formData.departureDetail} onChange={handleChange} placeholder={t.form.departure_placeholder} className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition shadow-sm"/>
+            <input id="trip-departureDetail" name="departureDetail" value={formData.departureDetail} onChange={handleChange} placeholder={t.form.departure_placeholder} className={INPUT_BASE}/>
           </div>
         </div>
       </div>
@@ -764,7 +794,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
             <label htmlFor="trip-budget" className="text-sm font-medium text-slate-700">{t.form.budget}</label>
             <div className="relative">
               <DollarSign className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
-              <input id="trip-budget" name="budget" value={formData.budget} onChange={handleChange} placeholder={t.form.budget_placeholder} className="w-full pl-12 p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition shadow-sm"/>
+              <input id="trip-budget" name="budget" value={formData.budget} onChange={handleChange} placeholder={t.form.budget_placeholder} className={INPUT_WITH_ICON}/>
             </div>
           </div>
            {renderPaceSelector()}
@@ -779,23 +809,26 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
         </h3>
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             {renderSmartChips(t.form.interests, "interests", t.chips.interests, <Zap className="w-4 h-4 text-pink-500" />, "ring-pink-500", t.form.interests_placeholder)}
+             {renderSmartChips(t.form.interests, "interests", t.chips.interests, <Zap className="w-4 h-4 text-pink-500" />, t.form.interests_placeholder)}
              
              <div className="space-y-3">
               <label htmlFor="trip-mustDos" className="text-sm font-medium text-slate-700 flex items-center gap-2">
                 <Heart className="w-4 h-4 text-pink-500" /> {t.form.mustDos}
               </label>
-              <input id="trip-mustDos" name="mustDos" value={formData.mustDos} onChange={handleChange} placeholder={t.form.mustDos_placeholder} className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition shadow-sm"/>
+              <input id="trip-mustDos" name="mustDos" value={formData.mustDos} onChange={handleChange} placeholder={t.form.mustDos_placeholder} className={INPUT_BASE}/>
             </div>
           </div>
           
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {renderSmartChips(t.form.constraints, "constraints", t.chips.constraints, <AlertTriangle className="w-4 h-4 text-amber-500" />, "ring-amber-500", t.form.constraints_placeholder)}
+            {renderSmartChips(t.form.constraints, "constraints", t.chips.constraints, <AlertTriangle className="w-4 h-4 text-amber-500" />, t.form.constraints_placeholder)}
 
             {renderMultiSelect(t.form.accommodation, "accommodation", t.chips.accommodation, <Bed className="w-4 h-4 text-blue-600" />)}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Three-up only on large screens: at md the diet chip group wraps into a
+              tall, cramped column. Mobile stacks in DOM order, which is already the
+              reading order we want: transport → diet → work. */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
              {renderMultiSelect(t.form.transport, "transportPref", t.chips.transport, <Plane className="w-4 h-4 text-slate-600" />)}
              {renderMultiSelect(t.form.diet, "diet", t.chips.diet, <Utensils className="w-4 h-4 text-emerald-600" />, t.chips.diet[0])}
              
@@ -803,25 +836,31 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
               <label htmlFor="trip-work" className="text-sm font-medium text-slate-700 flex items-center gap-2">
                 <Coffee className="w-4 h-4 text-slate-600" /> {t.form.work}
               </label>
-              <input id="trip-work" name="work" value={formData.work} onChange={handleChange} placeholder={t.form.work_placeholder} className="w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent outline-none transition shadow-sm"/>
+              <input id="trip-work" name="work" value={formData.work} onChange={handleChange} placeholder={t.form.work_placeholder} className={INPUT_BASE}/>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Raw Prompt Preview */}
-      <RawPromptPreview formData={formData} language={language} t={t} />
+      {/* Raw Prompt Preview — developer-only, gated behind ?debug=1 */}
+      {SHOW_RAW_PROMPT && (
+        <RawPromptPreview formData={formData} language={language} t={t} />
+      )}
 
       <div className="pt-6">
+        {/* Hover lift is a single pixel with a brand-tinted shadow: enough to feel
+            alive without the bouncy -4px jump. While loading, a spinner plus a
+            localized "generating" label replaces the bare ellipsis. */}
         <button
           type="submit"
           disabled={isLoading}
-          className={`w-full py-5 px-6 rounded-2xl font-bold text-lg text-white shadow-xl transition-all transform hover:-translate-y-1 hover:shadow-2xl
+          className={`w-full py-5 px-6 rounded-2xl font-bold text-lg text-white shadow-xl shadow-blue-900/10 transition-all duration-200 ease-out hover:-translate-y-px hover:shadow-blue-500/25
             ${isLoading ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800'}`}
         >
           {isLoading ? (
              <span className="flex items-center justify-center gap-3">
-               <span className="animate-pulse">{t.actions.submit}…</span>
+               <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+               <span>{SUBMITTING_LABELS[language] || SUBMITTING_LABELS.en}</span>
              </span>
           ) : (
             <span className="flex items-center justify-center gap-2">

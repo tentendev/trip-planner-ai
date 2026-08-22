@@ -53,6 +53,10 @@ const CARD_TRANSLATIONS: Record<Language, {
   shareWeChat: string;
   modalTitle: string;
   modalSubtitle: string;
+  travelers: string;
+  budget: string;
+  pace: string;
+  tip: string;
 }> = {
   'en': {
     title: 'My Trip Plan',
@@ -70,6 +74,10 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareWeChat: 'Share on WeChat',
     modalTitle: 'Share Your Trip',
     modalSubtitle: 'Create a beautiful share card',
+    travelers: 'Travelers',
+    budget: 'Budget',
+    pace: 'Pace',
+    tip: 'Download the image to share on social media',
   },
   'zh-TW': {
     title: '我的旅行計畫',
@@ -87,6 +95,10 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareWeChat: '分享到微信',
     modalTitle: '分享你的行程',
     modalSubtitle: '生成精美分享卡片',
+    travelers: '旅客',
+    budget: '預算',
+    pace: '節奏',
+    tip: '下載圖片後可直接分享到社群媒體',
   },
   'zh-CN': {
     title: '我的旅行计划',
@@ -104,6 +116,10 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareWeChat: '分享到微信',
     modalTitle: '分享你的行程',
     modalSubtitle: '生成精美分享卡片',
+    travelers: '出行人数',
+    budget: '预算',
+    pace: '节奏',
+    tip: '下载图片后可直接分享到社交媒体',
   },
   'ja': {
     title: '旅行プラン',
@@ -121,6 +137,10 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareWeChat: 'WeChatでシェア',
     modalTitle: '旅行をシェア',
     modalSubtitle: '美しいシェアカードを作成',
+    travelers: '人数',
+    budget: '予算',
+    pace: 'ペース',
+    tip: '画像をダウンロードしてSNSでシェアできます',
   },
   'ko': {
     title: '나의 여행 계획',
@@ -138,6 +158,10 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareWeChat: 'WeChat에서 공유',
     modalTitle: '여행 공유하기',
     modalSubtitle: '아름다운 공유 카드 만들기',
+    travelers: '인원',
+    budget: '예산',
+    pace: '페이스',
+    tip: '이미지를 다운로드해 SNS에 바로 공유할 수 있어요',
   },
   'es': {
     title: 'Mi Plan de Viaje',
@@ -155,6 +179,10 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareWeChat: 'Compartir en WeChat',
     modalTitle: 'Comparte tu Viaje',
     modalSubtitle: 'Crea una tarjeta para compartir',
+    travelers: 'Viajeros',
+    budget: 'Presupuesto',
+    pace: 'Ritmo',
+    tip: 'Descarga la imagen para compartirla en redes sociales',
   },
   'fr': {
     title: 'Mon Plan de Voyage',
@@ -172,6 +200,10 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareWeChat: 'Partager sur WeChat',
     modalTitle: 'Partagez votre Voyage',
     modalSubtitle: 'Créez une belle carte à partager',
+    travelers: 'Voyageurs',
+    budget: 'Budget',
+    pace: 'Rythme',
+    tip: 'Téléchargez l\'image pour la partager sur les réseaux sociaux',
   },
   'hi': {
     title: 'मेरी यात्रा योजना',
@@ -189,6 +221,10 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareWeChat: 'WeChat पर साझा करें',
     modalTitle: 'अपनी यात्रा साझा करें',
     modalSubtitle: 'एक सुंदर शेयर कार्ड बनाएं',
+    travelers: 'यात्री',
+    budget: 'बजट',
+    pace: 'गति',
+    tip: 'सोशल मीडिया पर साझा करने के लिए इमेज डाउनलोड करें',
   },
   'ar': {
     title: 'خطة رحلتي',
@@ -206,6 +242,10 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareWeChat: 'مشاركة على WeChat',
     modalTitle: 'شارك رحلتك',
     modalSubtitle: 'إنشاء بطاقة مشاركة جميلة',
+    travelers: 'المسافرون',
+    budget: 'الميزانية',
+    pace: 'الوتيرة',
+    tip: 'حمّل الصورة لمشاركتها على وسائل التواصل الاجتماعي',
   },
   'pt': {
     title: 'Meu Plano de Viagem',
@@ -223,6 +263,10 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareWeChat: 'Compartilhar no WeChat',
     modalTitle: 'Compartilhe sua Viagem',
     modalSubtitle: 'Crie um cartão de compartilhamento',
+    travelers: 'Viajantes',
+    budget: 'Orçamento',
+    pace: 'Ritmo',
+    tip: 'Baixe a imagem para compartilhar nas redes sociais',
   },
   'ru': {
     title: 'Мой План Путешествия',
@@ -240,7 +284,45 @@ const CARD_TRANSLATIONS: Record<Language, {
     shareWeChat: 'Поделиться в WeChat',
     modalTitle: 'Поделитесь путешествием',
     modalSubtitle: 'Создайте красивую карточку',
+    travelers: 'Путешественники',
+    budget: 'Бюджет',
+    pace: 'Темп',
+    tip: 'Скачайте изображение, чтобы поделиться в соцсетях',
   },
+};
+
+// X/Twitter intent copy, one line per locale with the destination interpolated.
+// Lives beside CARD_TRANSLATIONS (not TRANSLATIONS) because it speaks in the
+// sharer's first person and needs a {destination} slot rather than static UI
+// labels. zh-TW uses Taiwanese colloquial phrasing (排行程/完整行程都在這裡).
+const SHARE_INTENT_COPY: Record<Language, string> = {
+  en: 'Just planned my trip to {destination} with Trip OS - full itinerary inside',
+  'zh-TW': '我用 Trip OS 規劃了{destination}之旅 ✈️ 完整行程都在這裡',
+  'zh-CN': '我用 Trip OS 规划好了{destination}之行 ✈️ 完整行程看这里',
+  ja: 'Trip OSで{destination}の旅を計画しました ✈️ 全行程はこちら',
+  ko: 'Trip OS로 {destination} 여행 일정을 계획했어요 ✈️ 전체 일정은 여기서',
+  hi: 'Trip OS से {destination} की यात्रा की योजना बनाई ✈️ पूरा शेड्यूल देखें',
+  es: 'Planifiqué mi viaje a {destination} con Trip OS ✈️ Itinerario completo aquí',
+  fr: 'Voyage à {destination} planifié avec Trip OS ✈️ Itinéraire complet ici',
+  ar: 'خططت رحلتي إلى {destination} عبر Trip OS ✈️ المسار الكامل بالداخل',
+  pt: 'Planejei minha viagem para {destination} com o Trip OS ✈️ Roteiro completo aqui',
+  ru: 'Спланировал поездку в {destination} с Trip OS ✈️ Полный маршрут внутри',
+};
+
+// Inline failure message for image export — amber per palette discipline
+// (rose is reserved for the Share Card CTA).
+const IMAGE_ERROR_COPY: Record<Language, string> = {
+  en: 'Image generation failed. Please try again.',
+  'zh-TW': '圖片生成失敗，請再試一次。',
+  'zh-CN': '图片生成失败，请重试。',
+  ja: '画像の生成に失敗しました。もう一度お試しください。',
+  ko: '이미지 생성에 실패했습니다. 다시 시도해 주세요.',
+  hi: 'इमेज जेनरेट करने में विफल। कृपया पुनः प्रयास करें।',
+  es: 'No se pudo generar la imagen. Inténtalo de nuevo.',
+  fr: 'La génération de l\'image a échoué. Veuillez réessayer.',
+  ar: 'فشل إنشاء الصورة. حاول مرة أخرى.',
+  pt: 'Falha ao gerar a imagem. Tente novamente.',
+  ru: 'Не удалось создать изображение. Попробуйте снова.',
 };
 
 // Pace icons and colors
@@ -295,6 +377,7 @@ const ShareCard: React.FC<ShareCardProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [genError, setGenError] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [qrLoaded, setQrLoaded] = useState(false);
   const cardT = CARD_TRANSLATIONS[language] || CARD_TRANSLATIONS['en'];
@@ -319,12 +402,21 @@ const ShareCard: React.FC<ShareCardProps> = ({
 
   const generateImage = async (aspectRatio: '9:16' | '1:1') => {
     setIsGenerating(true);
+    setGenError(false);
 
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    // Every exit path must re-enable the buttons: a bare `return` here used to
+    // leave isGenerating stuck true forever.
+    if (!canvas) {
+      setIsGenerating(false);
+      return;
+    }
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      setIsGenerating(false);
+      return;
+    }
 
     // Set canvas size based on aspect ratio
     const width = aspectRatio === '1:1' ? 1080 : 1080;
@@ -563,13 +655,20 @@ const ShareCard: React.FC<ShareCardProps> = ({
     ctx.fillText(cardT.poweredBy, width / 2, footerY);
     ctx.textAlign = 'left';
 
-    // Download the image
-    const link = document.createElement('a');
-    link.download = `TripOS-${tripData.destination.replace(/[^a-zA-Z0-9]/g, '-')}-${aspectRatio.replace(':', 'x')}.png`;
-    link.href = canvas.toDataURL('image/png', 1.0);
-    link.click();
-
-    setIsGenerating(false);
+    // Download the image — toDataURL throws on a tainted canvas (the QR host
+    // missing CORS headers), so the export is the failure-prone step; catch it
+    // and always release the buttons.
+    try {
+      const link = document.createElement('a');
+      link.download = `TripOS-${tripData.destination.replace(/[^a-zA-Z0-9]/g, '-')}-${aspectRatio.replace(':', 'x')}.png`;
+      link.href = canvas.toDataURL('image/png', 1.0);
+      link.click();
+    } catch (err) {
+      console.error('Failed to generate share image', err);
+      setGenError(true);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleCopyLink = async () => {
@@ -583,7 +682,10 @@ const ShareCard: React.FC<ShareCardProps> = ({
   };
 
   const handleShareTwitter = () => {
-    const text = encodeURIComponent(`${tripData.destination} 旅行計畫 ✈️\n${cardT.poweredBy}`);
+    const destination = cleanMarkdown(tripData.destination);
+    const text = encodeURIComponent(
+      (SHARE_INTENT_COPY[language] || SHARE_INTENT_COPY['en']).replace('{destination}', destination),
+    );
     const url = encodeURIComponent(shareUrl);
     window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
   };
@@ -596,7 +698,7 @@ const ShareCard: React.FC<ShareCardProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div className="no-print fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-slate-900/80 backdrop-blur-md"
@@ -675,7 +777,7 @@ const ShareCard: React.FC<ShareCardProps> = ({
                       <div className="w-8 h-8 mx-auto mb-1.5 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-500 transition-colors">
                         <Users className="w-4 h-4 text-blue-600 group-hover:text-white transition-colors" />
                       </div>
-                      <p className="text-xs text-slate-500 mb-0.5">Travelers</p>
+                      <p className="text-xs text-slate-500 mb-0.5">{cardT.travelers}</p>
                       <p className="font-semibold text-slate-900 text-sm truncate">{cleanMarkdown(tripData.travelers)}</p>
                     </div>
                   )}
@@ -684,7 +786,7 @@ const ShareCard: React.FC<ShareCardProps> = ({
                       <div className="w-8 h-8 mx-auto mb-1.5 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-500 transition-colors">
                         <Wallet className="w-4 h-4 text-green-600 group-hover:text-white transition-colors" />
                       </div>
-                      <p className="text-xs text-slate-500 mb-0.5">Budget</p>
+                      <p className="text-xs text-slate-500 mb-0.5">{cardT.budget}</p>
                       <p className="font-semibold text-slate-900 text-sm truncate">{cleanMarkdown(tripData.budget)}</p>
                     </div>
                   )}
@@ -693,7 +795,7 @@ const ShareCard: React.FC<ShareCardProps> = ({
                       <div className="w-8 h-8 mx-auto mb-1.5 bg-amber-100 rounded-full flex items-center justify-center group-hover:bg-amber-500 transition-colors">
                         <Clock className="w-4 h-4 text-amber-600 group-hover:text-white transition-colors" />
                       </div>
-                      <p className="text-xs text-slate-500 mb-0.5">Pace</p>
+                      <p className="text-xs text-slate-500 mb-0.5">{cardT.pace}</p>
                       <p className="font-semibold text-slate-900 text-sm">{paceConfig.emoji}</p>
                     </div>
                   )}
@@ -760,6 +862,16 @@ const ShareCard: React.FC<ShareCardProps> = ({
             </button>
           </div>
 
+          {/* Inline generation failure — amber, per palette discipline */}
+          {genError && (
+            <p
+              role="alert"
+              className="text-center text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2"
+            >
+              {IMAGE_ERROR_COPY[language] || IMAGE_ERROR_COPY['en']}
+            </p>
+          )}
+
           {/* Share buttons */}
           <div className="flex gap-2">
             <button
@@ -791,7 +903,7 @@ const ShareCard: React.FC<ShareCardProps> = ({
 
           {/* Tip text */}
           <p className="text-center text-xs text-slate-400 pt-2">
-            {language.startsWith('zh') ? '下載圖片後可直接分享到社群媒體' : 'Download the image to share on social media'}
+            {cardT.tip}
           </p>
         </div>
 
