@@ -205,6 +205,15 @@ export default async function handler(req: any, res: any) {
     const ac = new AbortController();
     const headersTimer = setTimeout(() => ac.abort(), HEADERS_TIMEOUT_MS);
 
+    // If the client disconnects (closed tab, Stop button, network drop), abort the
+    // upstream stream too — otherwise we keep paying for tokens nobody will read.
+    req.on('close', () => {
+      if (!res.writableEnded) {
+        console.log('[api/chat] client disconnected — aborting upstream');
+        try { ac.abort(); } catch { /* already aborted */ }
+      }
+    });
+
     const upstream = await fetch(provider.url, {
       method: 'POST',
       headers: {

@@ -160,7 +160,8 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
       const startStr = startDate.toLocaleDateString(language, opts);
       const endStr = endDate.toLocaleDateString(language, opts);
       const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      // Math.round: Math.ceil mis-counts ranges spanning a DST fall-back (23h day)
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
       setFormData(prev => ({
         ...prev,
@@ -187,7 +188,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
   const handleMultiSelectToggle = (field: keyof TripInput, option: string, exclusiveOption?: string) => {
     const currentStr = formData[field] as string;
     const current = currentStr 
-      ? currentStr.split(',').map(s => s.trim()).filter(Boolean)
+      ? currentStr.split(/[,，、]/).map(s => s.trim()).filter(Boolean)
       : [];
     
     let updated: string[];
@@ -212,7 +213,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
 
   const handleChipClick = (field: keyof TripInput, value: string) => {
     const current = (formData[field] as string)
-      ? (formData[field] as string).split(',').map(s => s.trim()).filter(Boolean)
+      ? (formData[field] as string).split(/[,，、]/).map(s => s.trim()).filter(Boolean)
       : [];
     // Toggle on exact match — the substring includes() check previously made
     // "Food" and "Seafood" collide and left no way to remove a chip-added value.
@@ -462,7 +463,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
         </label>
         <div className="flex flex-wrap gap-2">
           {options.map((opt) => {
-            const currentVals = (formData[field] as string).split(',').map(s => s.trim());
+            const currentVals = (formData[field] as string).split(/[,，、]/).map(s => s.trim());
             const isActive = currentVals.includes(opt);
             return (
               <button
@@ -501,7 +502,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
         {suggestions.map(s => {
           // Exact-match against the comma-split list; the old substring check made
           // "Food" and "Seafood" collide.
-          const active = (formData[field] as string).split(',').map(x => x.trim()).includes(s);
+          const active = (formData[field] as string).split(/[,，、]/).map(x => x.trim()).includes(s);
           return (
             <button
               key={s}

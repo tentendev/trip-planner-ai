@@ -47,10 +47,10 @@ function formatDuration(min: number): string {
   return `${h}h ${m}m`;
 }
 
-function formatPrice(price: number, currency: string): string {
+function formatPrice(price: number, currency: string, lang?: string): string {
   if (!price) return '—';
   try {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(lang || 'en-US', {
       style: 'currency',
       currency,
       maximumFractionDigits: 0,
@@ -175,8 +175,8 @@ const FlightOffersSection: React.FC<FlightOffersSectionProps> = ({
             <span>
               {t.typicalRange}:{' '}
               <span className="font-mono text-slate-700">
-                {formatPrice(priceInsights.typical_range[0], flights[0].currency)} –{' '}
-                {formatPrice(priceInsights.typical_range[1], flights[0].currency)}
+                {formatPrice(priceInsights.typical_range[0], flights[0].currency, language)} –{' '}
+                {formatPrice(priceInsights.typical_range[1], flights[0].currency, language)}
               </span>
             </span>
           )}
@@ -310,7 +310,7 @@ const FlightOffersSection: React.FC<FlightOffersSectionProps> = ({
                 <div>
                   <div className="text-[11px] text-slate-500 font-medium">{t.totalPrice}</div>
                   <div className="text-xl md:text-2xl font-bold text-slate-900 tabular-nums">
-                    {formatPrice(f.price, f.currency)}
+                    {formatPrice(f.price, f.currency, language)}
                   </div>
                   {f.carbon_kg && (
                     <div className="text-[10px] text-emerald-600 flex items-center gap-1 mt-0.5">

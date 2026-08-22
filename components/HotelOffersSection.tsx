@@ -18,10 +18,10 @@ interface HotelOffersSectionProps {
   language: Language;
 }
 
-function formatPrice(price: number, currency: string): string {
+function formatPrice(price: number, currency: string, lang?: string): string {
   if (!price) return '—';
   try {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(lang || 'en-US', {
       style: 'currency',
       currency,
       maximumFractionDigits: 0,
@@ -237,7 +237,7 @@ const HotelOffersSection: React.FC<HotelOffersSectionProps> = ({
                   <div>
                     <div className="text-lg font-bold text-slate-900 tabular-nums leading-none">
                       {h.price_per_night
-                        ? formatPrice(h.price_per_night, h.currency)
+                        ? formatPrice(h.price_per_night, h.currency, language)
                         : '—'}
                     </div>
                     <div className="text-[10px] text-slate-500 mt-0.5">
@@ -245,7 +245,7 @@ const HotelOffersSection: React.FC<HotelOffersSectionProps> = ({
                       {h.total_price && (
                         <>
                           {' · '}
-                          {t.total}: {formatPrice(h.total_price, h.currency)}
+                          {t.total}: {formatPrice(h.total_price, h.currency, language)}
                         </>
                       )}
                     </div>
