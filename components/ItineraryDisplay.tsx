@@ -4,9 +4,11 @@ import MarkdownRenderer from './MarkdownRenderer';
 import FlightOffersSection from './FlightOffersSection';
 import HotelOffersSection from './HotelOffersSection';
 import WeatherStrip from './WeatherStrip';
+import DayNav from './DayNav';
 import {
   Download,
   Compass,
+  Calendar,
   Printer,
   Copy,
   FileDown,
@@ -22,6 +24,7 @@ import {
 import { GeneratedPlan, Language, TripInput } from '../types';
 import { TRANSLATIONS } from '../utils/i18n';
 import { saveSharedPlan, generateShareUrl } from '../utils/shareStorage';
+import { downloadIcs } from '../utils/exportCalendar';
 
 interface ItineraryDisplayProps {
   plan: GeneratedPlan;
@@ -106,6 +109,11 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
     setShowDropdown(false);
   };
 
+  const handleDownloadIcs = () => {
+    downloadIcs(plan, tripInput, language);
+    setShowDropdown(false);
+  };
+
   const handleCopyShareLink = async () => {
     if (isSharing) return;
     setIsSharing(true);
@@ -169,7 +177,9 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
   });
 
   return (
-    <div className="trip-fade-up bg-white rounded-[28px] shadow-[0_1px_3px_rgba(15,23,42,0.04),0_20px_60px_-20px_rgba(15,23,42,0.15)] border border-slate-200/60 overflow-hidden relative">
+    // overflow-clip instead of overflow-hidden: identical corner clipping, but
+    // it does not create a scroll container, so the sticky DayNav still works.
+    <div className="trip-fade-up bg-white rounded-[28px] shadow-[0_1px_3px_rgba(15,23,42,0.04),0_20px_60px_-20px_rgba(15,23,42,0.15)] border border-slate-200/60 overflow-clip relative">
       {/* Print-only header */}
       <div className="print-only mb-6 border-b-2 border-slate-900 pb-4">
         <div className="flex items-center gap-3">
@@ -302,6 +312,13 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
                         <Printer className="w-4 h-4 text-slate-400" />
                         <span>{t.actions.print}</span>
                       </button>
+                      <button
+                        onClick={handleDownloadIcs}
+                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                      >
+                        <Calendar className="w-4 h-4 text-slate-400" />
+                        <span>Calendar (.ics)</span>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -349,6 +366,13 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
       {plan.weather && plan.weather.days.length > 0 && (
         <WeatherStrip weather={plan.weather} language={language} />
       )}
+
+      {/* Jump-to-day navigation (sticky under the app header) */}
+      <DayNav
+        markdown={plan.markdown}
+        destination={tripInput?.destination}
+        language={language}
+      />
 
       {/* Content */}
       <div className="px-5 md:px-12 py-8 md:py-12 relative z-10">

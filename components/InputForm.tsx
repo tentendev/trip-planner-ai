@@ -562,9 +562,6 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
   return (
     <form onSubmit={handleSubmit} className="space-y-10 bg-white/60 backdrop-blur-xl p-6 md:p-10 rounded-3xl shadow-2xl border border-white/40 relative">
 
-      {/* Decorative Grid */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none rounded-3xl"></div>
-
       {/* Form Progress Indicator */}
       <div className="relative z-10 -mt-2 mb-6">
         <div className="flex items-center justify-between mb-3">

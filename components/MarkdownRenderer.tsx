@@ -3,9 +3,38 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
+import { createHeadingSlugger, normalizeHeadingText } from '../utils/exportCalendar';
 
 interface MarkdownRendererProps {
   content: string;
+}
+
+// Pull plain text out of already-parsed inline markdown (strings, [Context]
+// highlight spans, em/strong...) so heading ids are derived from the same text
+// that utils/exportCalendar sees in the raw source lines.
+const flattenText = (node: React.ReactNode): string => {
+  if (node == null || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(flattenText).join('');
+  if (React.isValidElement(node)) {
+    return flattenText((node.props as { children?: React.ReactNode }).children);
+  }
+  return '';
+};
+
+// Module-level counter shared by one render pass — reset at the top of the
+// component body so ids stay deterministic across streaming updates and
+// StrictMode double-renders. Only one MarkdownRenderer instance exists, so a
+// single module slugger cannot interleave passes.
+const headingSlugger = createHeadingSlugger();
+
+/**
+ * Stable ascii-safe anchor id for h2/h3/h4 headings. DayNav and the calendar
+ * export derive the identical ids from raw markdown via scanHeadings(), so the
+ * two paths must never diverge.
+ */
+export function slugifyHeading(text: string): string {
+  return headingSlugger.slug(normalizeHeadingText(text));
 }
 
 // Walk React children and wrap [Context] bracket patterns in highlighted spans.
@@ -44,6 +73,7 @@ const highlightBrackets = (node: React.ReactNode, keyPrefix = 'ctx'): React.Reac
 };
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
+  headingSlugger.reset();
   return (
     <div className="trip-markdown text-slate-700 leading-relaxed">
       <ReactMarkdown
@@ -54,25 +84,34 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
               {highlightBrackets(children)}
             </h1>
           ),
-          h2: ({ children }) => (
-            <h2 className="group text-2xl md:text-[1.75rem] font-bold text-slate-900 tracking-tight mt-14 mb-5 first:mt-0 leading-tight flex items-baseline gap-3 pb-3 border-b border-slate-200/70">
-              <span
-                className="block w-1 self-stretch bg-gradient-to-b from-blue-500 to-violet-500 rounded-full flex-shrink-0 mt-1"
-                aria-hidden
-              />
-              <span className="flex-1">{highlightBrackets(children)}</span>
-            </h2>
-          ),
-          h3: ({ children }) => (
-            <h3 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mt-10 mb-4 leading-snug">
-              {highlightBrackets(children)}
-            </h3>
-          ),
-          h4: ({ children }) => (
-            <h4 className="text-base md:text-lg font-bold text-slate-800 mt-6 mb-3 tracking-tight">
-              {highlightBrackets(children)}
-            </h4>
-          ),
+          h2: ({ children }) => {
+            const id = slugifyHeading(flattenText(children));
+            return (
+              <h2 id={id} className="group text-2xl md:text-[1.75rem] font-bold text-slate-900 tracking-tight mt-14 mb-5 first:mt-0 leading-tight flex items-baseline gap-3 pb-3 border-b border-slate-200/70 scroll-mt-28">
+                <span
+                  className="block w-1 self-stretch bg-gradient-to-b from-blue-500 to-violet-500 rounded-full flex-shrink-0 mt-1"
+                  aria-hidden
+                />
+                <span className="flex-1">{highlightBrackets(children)}</span>
+              </h2>
+            );
+          },
+          h3: ({ children }) => {
+            const id = slugifyHeading(flattenText(children));
+            return (
+              <h3 id={id} className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mt-10 mb-4 leading-snug scroll-mt-28">
+                {highlightBrackets(children)}
+              </h3>
+            );
+          },
+          h4: ({ children }) => {
+            const id = slugifyHeading(flattenText(children));
+            return (
+              <h4 id={id} className="text-base md:text-lg font-bold text-slate-800 mt-6 mb-3 tracking-tight scroll-mt-28">
+                {highlightBrackets(children)}
+              </h4>
+            );
+          },
           h5: ({ children }) => (
             <h5 className="text-sm md:text-base font-bold uppercase tracking-wider text-slate-500 mt-5 mb-2">
               {highlightBrackets(children)}

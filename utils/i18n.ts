@@ -35,7 +35,7 @@ const BASE_EN = {
       'Your pace preference helps us balance relaxation with exploration.',
       'Flight and hotel cards come from live Google Flights & Hotels data.',
     ],
-    estimated_time: 'Usually takes 30-60 seconds'
+    estimated_time: 'Usually takes 1-2 minutes'
   },
   actions: {
     submit: 'Generate Trip OS Plan',
@@ -185,7 +185,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
         '您的节奏偏好帮助我们平衡休闲与探索。',
         '机票和酒店卡片来自 Google Flights 和 Google Hotels 的实时数据。',
       ],
-      estimated_time: '通常需要 30-60 秒'
+      estimated_time: '通常需要 1-2 分钟'
     },
     error: '生成失败，请检查 API Key 或稍后再试。',
     actions: { ...BASE_EN.actions, submit: '生成行程计划', refine: '调整行程', export: '导出行程', copy: '复制 Markdown', copied: '已复制', download: '导出 Markdown 文件', print: '打印行程', clear: '清除历史', share: '分享链接', ready: '已就绪', errorTitle: '出错了', shareCard: '分享卡片', viewPrompt: '查看原始提示词', hidePrompt: '隐藏提示词', copyPrompt: '复制提示词', promptCopied: '提示词已复制！' },
@@ -306,7 +306,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
         '您的節奏偏好幫助我們平衡休閒與探索。',
         '機票與飯店卡片來自 Google Flights 與 Google Hotels 的即時資料。',
       ],
-      estimated_time: '通常需要 30-60 秒'
+      estimated_time: '通常需要 1-2 分鐘'
     },
     error: '行程生成失敗，請確認 API Key 設定或稍後再試。',
     actions: {
@@ -442,7 +442,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
         'お好みのペースに合わせて、リラックスと探索のバランスを取ります。',
         '航空券・ホテルのカードには Google Flights と Google Hotels のリアルタイムデータを使用しています。',
       ],
-      estimated_time: '通常30〜60秒かかります'
+      estimated_time: '通常1〜2分かかります'
     },
     error: '生成に失敗しました。後でもう一度お試しください。',
     actions: { ...BASE_EN.actions, submit: '旅程を作成する', refine: '条件を修正', export: 'エクスポート', copy: 'コピー', copied: 'コピー完了', download: 'Markdownをエクスポート', print: '印刷 / PDF', clear: '履歴削除', share: '共有リンク', ready: '準備完了', errorTitle: 'エラー', shareCard: 'シェアカード', viewPrompt: 'プロンプトを表示', hidePrompt: 'プロンプトを隠す', copyPrompt: 'プロンプトをコピー', promptCopied: 'コピーしました！' },
@@ -561,7 +561,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
         '선호하는 페이스에 맞춰 휴식과 탐험의 균형을 맞춥니다.',
         '실시간 데이터를 확인하여 최적의 식사 옵션을 제안합니다.',
       ],
-      estimated_time: '보통 30-60초 소요됩니다'
+      estimated_time: '보통 1~2분 소요됩니다'
     },
     actions: { ...BASE_EN.actions, submit: '일정 생성하기', refine: '일정 수정', export: '내보내기', copy: '복사', copied: '복사됨', download: 'Markdown 파일 내보내기', print: '인쇄 / PDF', clear: '기록 삭제', share: '링크 공유', ready: '준비됨', errorTitle: '오류', shareCard: '공유 카드', viewPrompt: '프롬프트 보기', hidePrompt: '프롬프트 숨기기', copyPrompt: '프롬프트 복사', promptCopied: '복사 완료!' },
     form: {
@@ -664,7 +664,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
         'Tu preferencia de ritmo nos ayuda a equilibrar descanso y exploración.',
         'Las tarjetas de vuelos y hoteles provienen de datos en vivo de Google Flights y Google Hotels.',
       ],
-      estimated_time: 'Generalmente toma 30-60 segundos'
+      estimated_time: 'Generalmente toma 1-2 minutos'
     },
     actions: { ...BASE_EN.actions, submit: 'Generar Plan', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Markdown', print: 'Imprimir', clear: 'Borrar', share: 'Compartir Enlace', ready: 'Listo', errorTitle: 'Error', shareCard: 'Tarjeta' },
     form: {
@@ -765,7 +765,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
         'Votre préférence de rythme nous aide à équilibrer détente et exploration.',
         'Les cartes de vols et d\'hôtels proviennent des données en direct de Google Flights et Google Hotels.',
       ],
-      estimated_time: 'Généralement 30 à 60 secondes'
+      estimated_time: 'Généralement 1 à 2 minutes'
     },
     actions: { ...BASE_EN.actions, submit: 'Générer le Plan', refine: 'Modifier', export: 'Exporter', copy: 'Copier', copied: 'Copié', download: 'Exporter Markdown', print: 'Imprimer', clear: 'Effacer', share: 'Partager le Lien', ready: 'Prêt', errorTitle: 'Erreur', shareCard: 'Carte' },
     form: {
@@ -866,7 +866,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
         'आपकी गति वरीयता हमें आराम और अन्वेषण में संतुलन बनाने में मदद करती है।',
         'उड़ान और होटल कार्ड Google Flights और Google Hotels के लाइव डेटा से आते हैं।',
       ],
-      estimated_time: 'आमतौर पर 30-60 सेकंड लगते हैं'
+      estimated_time: 'आमतौर पर 1-2 मिनट लगते हैं'
     },
     actions: { ...BASE_EN.actions, submit: 'यात्रा योजना बनाएं', refine: 'सुधारें', export: 'एक्सपोर्ट', copy: 'कॉपी', copied: 'कॉपी किया', download: 'मार्कडाउन फ़ाइल निर्यात करें', print: 'प्रिंट', clear: 'इतिहास मिटाएं', share: 'लिंक साझा करें', ready: 'तैयार', errorTitle: 'त्रुटि', shareCard: 'शेयर कार्ड' },
     form: {
@@ -958,7 +958,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
         'تفضيلات وتيرتك تساعدنا في تحقيق التوازن بين الاسترخاء والاستكشاف.',
         'بطاقات الطيران والفنادق مصدرها البيانات المباشرة من Google Flights و Google Hotels.',
       ],
-      estimated_time: 'عادة ما يستغرق 30-60 ثانية'
+      estimated_time: 'عادة ما يستغرق 1-2 دقيقة'
     },
     actions: { ...BASE_EN.actions, submit: 'إنشاء خطة السفر', refine: 'تعديل', export: 'تصدير', copy: 'نسخ', copied: 'تم النسخ', download: 'تصدير ملف Markdown', print: 'طباعة', clear: 'مسح التاريخ', share: 'مشاركة الرابط', ready: 'جاهز', errorTitle: 'خطأ', shareCard: 'بطاقة' },
     form: {
@@ -1050,7 +1050,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
         'Sua preferência de ritmo nos ajuda a equilibrar descanso e exploração.',
         'Os cartões de voos e hotéis vêm de dados ao vivo do Google Flights e do Google Hotels.',
       ],
-      estimated_time: 'Geralmente leva 30-60 segundos'
+      estimated_time: 'Geralmente leva 1-2 minutos'
     },
     actions: { ...BASE_EN.actions, submit: 'Gerar Plano', refine: 'Refinar', export: 'Exportar', copy: 'Copiar', copied: 'Copiado', download: 'Exportar Arquivo Markdown', print: 'Imprimir', clear: 'Limpar', share: 'Compartilhar Link', ready: 'Pronto', errorTitle: 'Erro', shareCard: 'Cartão' },
     form: {
@@ -1142,7 +1142,7 @@ export const TRANSLATIONS: Record<Language, typeof BASE_EN> = {
         'Ваши предпочтения темпа помогают нам балансировать отдых и исследования.',
         'Карточки авиабилетов и отелей используют актуальные данные Google Flights и Google Hotels.',
       ],
-      estimated_time: 'Обычно занимает 30-60 секунд'
+      estimated_time: 'Обычно занимает 1-2 минуты'
     },
     actions: { ...BASE_EN.actions, submit: 'Создать план', refine: 'Уточнить', export: 'Экспорт', copy: 'Копировать', copied: 'Скопировано', download: 'Экспорт файла Markdown', print: 'Печать', clear: 'Очистить', share: 'Поделиться ссылкой', ready: 'Готово', errorTitle: 'Ошибка', shareCard: 'Карточка' },
     form: {

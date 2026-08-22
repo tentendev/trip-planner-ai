@@ -41,7 +41,6 @@ const PreAnalysisView: React.FC<PreAnalysisViewProps> = ({ questions, language, 
 
   return (
     <div className="space-y-8 bg-white/60 backdrop-blur-xl p-6 md:p-10 rounded-3xl shadow-2xl border border-white/40 relative animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none rounded-3xl" />
 
       {/* Header */}
       <div className="relative z-10 text-center space-y-3">
@@ -101,6 +100,7 @@ const PreAnalysisView: React.FC<PreAnalysisViewProps> = ({ questions, language, 
                     <button
                       key={opt}
                       type="button"
+                      aria-pressed={isSelected}
                       onClick={() => handleToggle(q.id, opt, q.allowMultiple)}
                       className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all border ${
                         isSelected

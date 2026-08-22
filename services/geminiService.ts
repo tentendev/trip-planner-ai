@@ -1,5 +1,16 @@
 
 import { TripInput, GeneratedPlan, Language, PreAnalysisQuestion } from "../types";
+import { isDemoRequested, streamDemoPlan } from "./demoPlan";
+
+/**
+ * Streaming/cancellation controls for generateTripPlan. onDelta receives the
+ * ACCUMULATED markdown so the UI can render progressively; signal aborts fetch,
+ * the SSE reader loop and (via App) resets the flow silently.
+ */
+export interface GenerateOptions {
+  signal?: AbortSignal;
+  onDelta?: (accumulated: string) => void;
+}
 
 // Export model name for UI display. The actual provider (OpenRouter vs NVIDIA)
 // is decided server-side in api/chat.ts based on which env var is set.
@@ -432,7 +443,21 @@ export const preAnalyzeTrip = async (input: TripInput, lang: Language): Promise<
   }
 };
 
-export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW', preAnalysisAnswers?: Record<string, string[]>, preAnalysisQuestions?: PreAnalysisQuestion[]): Promise<GeneratedPlan> => {
+export const generateTripPlan = async (
+  input: TripInput,
+  lang: Language = 'zh-TW',
+  preAnalysisAnswers?: Record<string, string[]>,
+  preAnalysisQuestions?: PreAnalysisQuestion[],
+  opts?: GenerateOptions
+): Promise<GeneratedPlan> => {
+  // Zero-config path: ?demo=1 bypasses the backend entirely so the product can be
+  // tried without any keys. No travel-data network calls either — fully offline.
+  if (isDemoRequested()) {
+    console.info('[geminiService] ?demo=1 requested — streaming built-in demo plan');
+    const markdown = await streamDemoPlan(lang, opts?.onDelta || (() => {}), opts?.signal);
+    return { markdown, sources: [] };
+  }
+
   const model = CURRENT_MODEL;
   const baseSystemInstruction = LANGUAGE_INSTRUCTIONS[lang];
   const userPrompt = buildUserPrompt(input, lang, preAnalysisAnswers, preAnalysisQuestions);
@@ -459,9 +484,20 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
     ? `${baseSystemInstruction}\n\n---\n${travelDataBlock}`
     : baseSystemInstruction;
 
+  // Hoisted so the catch can also detach: chain the caller's signal (Stop button)
+  // into our timeout controller so a single fetch signal covers both cancellation
+  // and the hard deadline.
+  let detachSignal = () => {};
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 295000);
+
+    const onExternalAbort = () => controller.abort();
+    if (opts?.signal) {
+      if (opts.signal.aborted) controller.abort();
+      else opts.signal.addEventListener('abort', onExternalAbort, { once: true });
+    }
+    detachSignal = () => opts?.signal?.removeEventListener('abort', onExternalAbort);
 
     const response = await fetch(CHAT_API_URL, {
       method: "POST",
@@ -484,6 +520,7 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
     });
 
     clearTimeout(timeoutId);
+    detachSignal();
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -492,7 +529,8 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
 
     if (!response.body) throw new Error("No response body");
 
-    const content = await readSSEContent(response.body);
+    const content = await readSSEContent(response.body, opts?.onDelta, controller.signal);
+    detachSignal();
 
     console.log("API Response received:", { content_chars: content.length });
 
@@ -508,7 +546,29 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
       flightPriceInsights: travelData?.flight_price_insights || undefined,
     };
   } catch (error: any) {
+    detachSignal();
+
+    // Backend deployed without keys (/api/chat answered CONFIG_ERROR): degrade to the
+    // streamed demo plan instead of dead-ending. The product stays fully explorable —
+    // live flight/hotel data gathered above still renders as cards.
+    if (error instanceof FriendlyError && error.code === 'CONFIG_ERROR') {
+      console.info('[geminiService] backend unconfigured (CONFIG_ERROR) — engaging demo mode');
+      const markdown = await streamDemoPlan(lang, opts?.onDelta || (() => {}), opts?.signal);
+      return {
+        markdown,
+        sources: [],
+        flights: travelData?.flights || undefined,
+        hotels: travelData?.hotels || undefined,
+        weather: travelData?.weather || undefined,
+        searchParams: travelData?.params || undefined,
+        flightPriceInsights: travelData?.flight_price_insights || undefined,
+      };
+    }
+
     if (error.name === 'AbortError') {
+      // A caller-initiated cancel (Stop button) must propagate raw so App can reset
+      // silently; only our internal 295s deadline maps onto the TIMEOUT copy.
+      if (opts?.signal?.aborted) throw error;
       console.error("Request timed out after ~5 minutes");
       const msg = FRIENDLY_MESSAGES.TIMEOUT[lang] || FRIENDLY_MESSAGES.TIMEOUT.en;
       throw new FriendlyError('TIMEOUT', msg);
@@ -526,8 +586,15 @@ export const generateTripPlan = async (input: TripInput, lang: Language = 'zh-TW
 /**
  * Read an SSE stream of OpenAI-format chat completion chunks and return the
  * concatenated assistant content. Tolerates malformed chunks and the [DONE] sentinel.
+ * Each new delta is reported via onDelta as the ACCUMULATED content, and `signal`
+ * aborts the reader loop cleanly mid-stream (the read() promise rejects because the
+ * stream is bound to the fetch signal).
  */
-async function readSSEContent(stream: ReadableStream<Uint8Array>): Promise<string> {
+async function readSSEContent(
+  stream: ReadableStream<Uint8Array>,
+  onDelta?: (accumulated: string) => void,
+  signal?: AbortSignal
+): Promise<string> {
   const reader = stream.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
@@ -535,6 +602,8 @@ async function readSSEContent(stream: ReadableStream<Uint8Array>): Promise<strin
   let upstreamError: string | null = null;
 
   while (true) {
+    // Covers gaps between reads (e.g. abort fired while a chunk was queued).
+    if (signal?.aborted) throw new DOMException('Generation aborted', 'AbortError');
     const { value, done } = await reader.read();
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
@@ -552,7 +621,10 @@ async function readSSEContent(stream: ReadableStream<Uint8Array>): Promise<strin
           continue;
         }
         const delta = chunk.choices?.[0]?.delta?.content;
-        if (delta) content += delta;
+        if (delta) {
+          content += delta;
+          onDelta?.(content);
+        }
       } catch {
         // ignore malformed chunks
       }

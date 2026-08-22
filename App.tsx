@@ -14,6 +14,9 @@ import { getSharedPlan } from './utils/shareStorage';
 
 const STORAGE_KEY = 'trip_os_v1_state';
 
+// Persisted shape. Partial streaming markdown is intentionally kept OUT of here:
+// it changes many times per second and would spam localStorage writes (and restore
+// a half-finished plan after a reload). Only final GeneratedPlans are persisted.
 interface AppState {
   lastInput?: TripInput;
   tripPlan?: GeneratedPlan | null;
@@ -44,6 +47,17 @@ const App: React.FC = () => {
   const [isSharedView, setIsSharedView] = useState(false);
   const [isFetchingShare, setIsFetchingShare] = useState(false);
   const [preAnalysisQuestions, setPreAnalysisQuestions] = useState<PreAnalysisQuestion[] | null>(null);
+
+  // Live-generation state (see AppState note above — deliberately NOT persisted).
+  const [partialMarkdown, setPartialMarkdown] = useState<string | undefined>(undefined);
+  const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // rAF coalescing for token deltas: at most one re-render per frame no matter how
+  // chatty the upstream stream is.
+  const pendingPartialRef = useRef<string>('');
+  const rafIdRef = useRef<number | null>(null);
 
   // Language Dropdown State
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -271,27 +285,81 @@ const App: React.FC = () => {
     }
   };
 
+  // Coalesce streaming deltas into one setState per animation frame.
+  const queuePartialUpdate = (accumulated: string) => {
+    pendingPartialRef.current = accumulated;
+    if (rafIdRef.current == null) {
+      rafIdRef.current = requestAnimationFrame(() => {
+        rafIdRef.current = null;
+        setPartialMarkdown(pendingPartialRef.current);
+      });
+    }
+  };
+
+  // Drop any in-flight frame when the component unmounts mid-generation.
+  useEffect(() => () => {
+    if (rafIdRef.current != null) cancelAnimationFrame(rafIdRef.current);
+  }, []);
+
+  // Tick the elapsed timer once per second while generating; the overlay reads it
+  // as its big monospace clock. Interval only exists during GENERATING.
+  useEffect(() => {
+    if (loadingState !== LoadingState.GENERATING || generationStartedAt == null) return;
+    setElapsedMs(Date.now() - generationStartedAt);
+    const id = setInterval(() => setElapsedMs(Date.now() - generationStartedAt), 1000);
+    return () => clearInterval(id);
+  }, [loadingState, generationStartedAt]);
+
   const handleGenerate = async (data: TripInput, answers?: Record<string, string[]>) => {
     setLoadingState(LoadingState.GENERATING);
     setErrorMsg(null);
+    setPartialMarkdown(undefined);
+
+    // Fresh controller per attempt — Stop aborts exactly this generation.
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    setGenerationStartedAt(Date.now());
 
     try {
-      const result = await generateTripPlan(data, language, answers, preAnalysisQuestions || undefined);
+      const result = await generateTripPlan(data, language, answers, preAnalysisQuestions || undefined, {
+        signal: controller.signal,
+        onDelta: queuePartialUpdate,
+      });
       setTripPlan(result);
       setPreAnalysisQuestions(null);
       setLoadingState(LoadingState.SUCCESS);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
-      console.error('[handleGenerate] generation failed', err);
-      setLoadingState(LoadingState.ERROR);
-      // FriendlyError messages are already localized and user-appropriate — show them
-      // as-is. Anything else gets the generic localized error plus the technical detail.
-      const detail = err?.name === 'FriendlyError'
-        ? err.message
-        : err?.message ? `${t.error} (${err.message})` : t.error;
-      setErrorMsg(detail);
-      setPreAnalysisQuestions(null);
+      if (err?.name === 'AbortError') {
+        // Graceful cancel via Stop: no error banner, and any previously generated
+        // plan stays exactly where it was on screen.
+        console.info('[App] generation cancelled by user');
+        setPreAnalysisQuestions(null);
+        setLoadingState(LoadingState.IDLE);
+      } else {
+        console.error('[handleGenerate] generation failed', err);
+        setLoadingState(LoadingState.ERROR);
+        // FriendlyError messages are already localized and user-appropriate — show them
+        // as-is. Anything else gets the generic localized error plus the technical detail.
+        const detail = err?.name === 'FriendlyError'
+          ? err.message
+          : err?.message ? `${t.error} (${err.message})` : t.error;
+        setErrorMsg(detail);
+        setPreAnalysisQuestions(null);
+      }
+    } finally {
+      abortControllerRef.current = null;
+      setGenerationStartedAt(null);
+      setPartialMarkdown(undefined);
+      if (rafIdRef.current != null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
     }
+  };
+
+  const handleCancelGeneration = () => {
+    abortControllerRef.current?.abort();
   };
 
   const handlePreAnalysisConfirm = (answers: Record<string, string[]>) => {
@@ -367,7 +435,12 @@ const App: React.FC = () => {
 
       {/* Loading Overlay */}
       {loadingState === LoadingState.GENERATING && (
-        <LoadingOverlay language={language} />
+        <LoadingOverlay
+          language={language}
+          partialMarkdown={partialMarkdown}
+          elapsedMs={elapsedMs}
+          onCancel={handleCancelGeneration}
+        />
       )}
       
       <header className="bg-white/70 backdrop-blur-md border-b border-white/20 sticky top-0 z-50 no-print flex-none supports-[backdrop-filter]:bg-white/60">
