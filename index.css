@@ -161,6 +161,92 @@ html {
 }
 
 /* ------------------------------------------------------------------ */
+/* Map view (components/MapView.tsx) — Leaflet chrome brought in line   */
+/* with the app's rounded-surface look. Scoped under .trip-map so any   */
+/* other Leaflet instance keeps stock styling.                          */
+/* ------------------------------------------------------------------ */
+
+.trip-map .leaflet-container {
+  font-family: inherit;
+  /* Slate-100 ground behind tiles so the skeleton-to-tiles handoff reads
+     as one continuous surface instead of a gray flash. */
+  background: #f1f5f9;
+}
+
+/* Rounded popups with soft shadows, matching card language elsewhere */
+.trip-map .leaflet-popup-content-wrapper,
+.trip-map .leaflet-popup-tip {
+  box-shadow: 0 12px 32px -12px rgba(30, 41, 59, 0.28);
+}
+.trip-map .leaflet-popup-content-wrapper {
+  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+.trip-map .leaflet-popup-content {
+  margin: 10px 14px;
+  line-height: 1.45;
+}
+
+/* Popup internals are built imperatively (no Tailwind scan), so they carry
+   their own minimal classes here. */
+.trip-map-popup-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+.trip-map-popup-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+.trip-map-popup-link:hover { text-decoration: underline; }
+
+/* Hover tooltip above pins — quiet pill, no default black box */
+.trip-map .leaflet-tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  color: #334155;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px -8px rgba(30, 41, 59, 0.25);
+  font-weight: 500;
+  font-size: 11px;
+  padding: 2px 8px;
+}
+.trip-map .leaflet-tooltip-top::before { border-top-color: rgba(255, 255, 255, 0.95); }
+
+/* Zoom control as a single rounded pill instead of two square corners */
+.trip-map .leaflet-bar {
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px -8px rgba(30, 41, 59, 0.25) !important;
+}
+.trip-map .leaflet-bar a { color: #334155; }
+.trip-map .leaflet-bar a:first-child { border-radius: 11px 11px 0 0; }
+.trip-map .leaflet-bar a:last-child { border-radius: 0 0 11px 11px; }
+
+/* Attribution stays legible but quiet */
+.trip-map .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.85);
+  color: #64748b;
+  font-size: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Static spinner/pulse inside the map card; pan/zoom animation is already
+     disabled per-frame from MapView via fitBounds({ animate: false }). */
+  .trip-map .animate-spin,
+  .trip-map .animate-pulse {
+    animation-play-state: paused !important;
+  }
+  .trip-map .leaflet-fade-anim .leaflet-popup {
+    transition: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Print Optimization Styles                                           */
 /* Everything below is scoped to @media print — screen styles above     */
 /* are untouched.                                                       */

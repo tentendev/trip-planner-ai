@@ -654,7 +654,14 @@ const App: React.FC = () => {
         )}
 
         {tripPlan ? (
-          <ItineraryDisplay plan={tripPlan} onReset={handleRefineTrip} language={language} tripInput={lastInput} onOpenShareCard={handleOpenShareCard} />
+          <ItineraryDisplay
+            plan={tripPlan}
+            onReset={handleRefineTrip}
+            language={language}
+            tripInput={lastInput}
+            onOpenShareCard={handleOpenShareCard}
+            onMarkdownChange={(markdown) => setTripPlan((prev) => (prev ? { ...prev, markdown } : prev))}
+          />
         ) : preAnalysisQuestions ? (
           <PreAnalysisView
             questions={preAnalysisQuestions}

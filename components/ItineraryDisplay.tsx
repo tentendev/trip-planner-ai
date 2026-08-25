@@ -7,6 +7,11 @@ import FlightOffersSection from './FlightOffersSection';
 import HotelOffersSection from './HotelOffersSection';
 import WeatherStrip from './WeatherStrip';
 import DayNav from './DayNav';
+import TripProgress from './TripProgress';
+import BudgetTracker from './BudgetTracker';
+import { deriveTripKey } from '../utils/budgetState';
+// Deferred chunks: leaflet + its tiles are heavy and only needed on demand.
+const MapView = React.lazy(() => import('./MapView'));
 import {
   Download,
   Compass,
@@ -28,6 +33,11 @@ import { TRANSLATIONS } from '../utils/i18n';
 import { saveSharedPlan, generateShareUrl } from '../utils/shareStorage';
 import { downloadIcs } from '../utils/exportCalendar';
 
+const CONTENT_TABS: Record<Language, string> = {
+  'en': 'Map', 'zh-TW': '地圖', 'zh-CN': '地图', 'ja': '地図', 'ko': '지도',
+  'es': 'Mapa', 'fr': 'Carte', 'pt': 'Mapa', 'ru': 'Карта', 'ar': 'الخريطة', 'hi': 'नक्शा',
+};
+
 interface ItineraryDisplayProps {
   plan: GeneratedPlan;
   onReset: () => void;
@@ -35,6 +45,7 @@ interface ItineraryDisplayProps {
   planId?: string;
   tripInput?: TripInput;
   onOpenShareCard?: (shareUrl: string, highlights: string[]) => void;
+  onMarkdownChange?: (markdown: string) => void;
 }
 
 /**
@@ -65,12 +76,21 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
   language,
   tripInput,
   onOpenShareCard,
+  onMarkdownChange,
 }) => {
   const t = TRANSLATIONS[language];
   const [showDropdown, setShowDropdown] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  // Itinerary/Map content switch — the map is a heavy lazy chunk, so it only
+  // mounts when the user actually opens the tab.
+  const [contentTab, setContentTab] = useState<'itinerary' | 'map'>('itinerary');
+  // Day regeneration replaces the plan's markdown; the override renders instantly
+  // while onMarkdownChange lets App persist it into tripPlan.
+  const [markdownOverride, setMarkdownOverride] = useState<string | null>(null);
+  const effectiveMarkdown = markdownOverride ?? plan.markdown;
+  useEffect(() => { setMarkdownOverride(null); }, [plan.markdown]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -369,6 +389,28 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
         <WeatherStrip weather={plan.weather} language={language} />
       )}
 
+      {/* Trip progress tracker (check off activities, regenerate a single day) */}
+      <div className="px-6 md:px-10 mb-6 no-print">
+        <TripProgress
+          markdown={effectiveMarkdown}
+          destination={tripInput?.destination}
+          language={language}
+          onRegenerated={(newMarkdown) => {
+            setMarkdownOverride(newMarkdown);
+            onMarkdownChange?.(newMarkdown);
+          }}
+        />
+      </div>
+
+      {/* Expense budget tracker */}
+      <div className="no-print">
+        <BudgetTracker
+          tripKey={deriveTripKey(tripInput?.destination || '', tripInput?.dates || '')}
+          initialBudget={tripInput?.budget}
+          language={language}
+        />
+      </div>
+
       {/* Jump-to-day navigation (sticky under the app header).
           display:contents keeps the wrapper box-free so the child's own
           position:sticky still resolves against this whole card, not the
@@ -384,9 +426,39 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
 
       {/* Content */}
       <div className="px-5 md:px-12 py-8 md:py-12 relative z-10">
-        <React.Suspense fallback={<div className="h-40 animate-pulse bg-slate-50 rounded-xl" />}>
-          <MarkdownRenderer content={plan.markdown} />
-        </React.Suspense>
+        {/* Itinerary / Map tabs */}
+        <div className="flex items-center gap-1 mb-6 p-1 rounded-xl bg-slate-100/80 w-fit no-print" role="tablist">
+          {(['itinerary', 'map'] as const).map((tab) => (
+            <button
+              key={tab}
+              role="tab"
+              aria-selected={contentTab === tab}
+              onClick={() => setContentTab(tab)}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                contentTab === tab
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {tab === 'itinerary' ? (t.itinerary.title) : (CONTENT_TABS[language] || CONTENT_TABS.en)}
+            </button>
+          ))}
+        </div>
+
+        {contentTab === 'map' ? (
+          <React.Suspense fallback={<div className="h-[420px] animate-pulse bg-slate-50 rounded-2xl" />}>
+            <MapView
+              markdown={effectiveMarkdown}
+              destination={tripInput?.destination}
+              language={language}
+              tripInput={tripInput}
+            />
+          </React.Suspense>
+        ) : (
+          <React.Suspense fallback={<div className="h-40 animate-pulse bg-slate-50 rounded-xl" />}>
+            <MarkdownRenderer content={effectiveMarkdown} />
+          </React.Suspense>
+        )}
 
         {plan.sources && plan.sources.length > 0 && (
           <div className="mt-16 pt-8 border-t border-slate-100 no-print">
