@@ -11,6 +11,8 @@ import { TripInput, LoadingState, GeneratedPlan, Language, PreAnalysisQuestion }
 import { Globe, Compass, ChevronDown, Check } from 'lucide-react';
 import { TRANSLATIONS, LANGUAGE_NAMES } from './utils/i18n';
 import { getSharedPlan } from './utils/shareStorage';
+import { saveTripToHistory, loadTripHistory, TripHistoryEntry } from './utils/tripHistory';
+import TripHistory from './components/TripHistory';
 
 const STORAGE_KEY = 'trip_os_v1_state';
 
@@ -106,6 +108,7 @@ const App: React.FC = () => {
   // Summary captured from a shared plan, so visitors opening ?share= links can
   // still open a meaningful Share Card (they have no lastInput of their own).
   const [sharedSummary, setSharedSummary] = useState<import('./utils/shareStorage').SharedPlanSummary | undefined>(undefined);
+  const [tripHistory, setTripHistory] = useState<TripHistoryEntry[]>([]);
   const [shareNotFound, setShareNotFound] = useState(false);
 
   // Initialize language priority: URL -> Browser -> Default (zh-TW)
@@ -251,6 +254,7 @@ const App: React.FC = () => {
     // every language switch used to clobber fresh in-memory state.
     if (!hasRestoredRef.current) {
       hasRestoredRef.current = true;
+      setTripHistory(loadTripHistory());
       let savedState: string | null = null;
       try {
         savedState = localStorage.getItem(STORAGE_KEY);
@@ -392,6 +396,9 @@ const App: React.FC = () => {
       setTripPlan(result);
       setPreAnalysisQuestions(null);
       setLoadingState(LoadingState.SUCCESS);
+      // Multi-trip history: planning trip #2 must not erase trip #1.
+      saveTripToHistory(result, data.destination, data.dates, language);
+      setTripHistory(loadTripHistory());
       window.scrollTo({ top: 0, behavior: 'smooth' });
       // Tag the history stack once per itinerary view so Back returns to the form
       // (see ownsTripViewEntryRef). An already-tagged top entry — left there by a
@@ -494,6 +501,11 @@ const App: React.FC = () => {
         try {
           localStorage.removeItem(STORAGE_KEY);
         } catch { /* storage unavailable */ }
+        // "Clear" covers the trips dashboard too — wipe everything local.
+        try {
+          localStorage.removeItem('trip_os_history_v1');
+        } catch { /* storage unavailable */ }
+        setTripHistory([]);
         setLastInput(undefined);
         setTripPlan(null);
         setLoadingState(LoadingState.IDLE);
