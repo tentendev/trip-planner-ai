@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Trip OS">
+  <defs>
+    <linearGradient id="needleGrad" x1="230" y1="170" x2="295" y2="265" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#6366f1"/>
+    </linearGradient>
+    <radialGradient id="glowNE" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(408 104) scale(300)">
+      <stop offset="0" stop-color="#8b5cf6" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowSW" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(96 424) scale(320)">
+      <stop offset="0" stop-color="#3b82f6" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Slate-900 base, full bleed so OS masks crop cleanly (safe zone kept clear) -->
+  <rect width="512" height="512" rx="112" fill="#0f172a"/>
+
+  <!-- Blue-violet brand glow -->
+  <rect width="512" height="512" rx="112" fill="url(#glowNE)"/>
+  <rect width="512" height="512" rx="112" fill="url(#glowSW)"/>
+
+  <!-- Compass ring + cardinal ticks -->
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="14"/>
+  <g stroke="#ffffff" stroke-opacity="0.45" stroke-width="10" stroke-linecap="round">
+    <line x1="256" y1="120" x2="256" y2="140"/>
+    <line x1="256" y1="372" x2="256" y2="392"/>
+    <line x1="120" y1="256" x2="140" y2="256"/>
+    <line x1="372" y1="256" x2="392" y2="256"/>
+  </g>
+
+  <!-- Needle tilted NE: violet-gradient north half, white south half -->
+  <g transform="rotate(45 256 256)">
+    <path d="M256 152 L290 256 L222 256 Z" fill="url(#needleGrad)"/>
+    <path d="M256 360 L222 256 L290 256 Z" fill="#ffffff" fill-opacity="0.88"/>
+  </g>
+
+  <!-- Pivot -->
+  <circle cx="256" cy="256" r="24" fill="#ffffff"/>
+  <circle cx="256" cy="256" r="10" fill="#0f172a"/>
+</svg>

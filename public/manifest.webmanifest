@@ -1,0 +1,19 @@
+{
+  "name": "Trip OS - AI Travel Planner",
+  "short_name": "Trip OS",
+  "description": "Your AI-powered comprehensive travel planner. Actionable, optimized itineraries based on your pace, budget, and constraints.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
