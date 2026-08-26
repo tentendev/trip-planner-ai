@@ -201,7 +201,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
   return (
     // overflow-clip instead of overflow-hidden: identical corner clipping, but
     // it does not create a scroll container, so the sticky DayNav still works.
-    <div className="trip-fade-up bg-white rounded-[28px] shadow-[0_1px_3px_rgba(15,23,42,0.04),0_20px_60px_-20px_rgba(15,23,42,0.15)] border border-slate-200/60 overflow-clip relative">
+    <div className="trip-fade-up bg-white dark:bg-slate-900 rounded-[28px] shadow-[0_1px_3px_rgba(15,23,42,0.04),0_20px_60px_-20px_rgba(15,23,42,0.15)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.3),0_20px_60px_-20px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-slate-700/60 overflow-clip relative">
       {/* Print-only header */}
       <div className="print-only mb-6 border-b-2 border-slate-900 pb-4">
         <div className="flex items-center gap-3">
@@ -227,16 +227,16 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
         <div className="px-6 md:px-10 pt-8 md:pt-10 pb-6">
           {/* Meta row */}
           <div className="flex flex-wrap items-center gap-2 mb-5 text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-500/20">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               {t.actions.ready || 'Ready'}
             </span>
-            <span className="text-slate-300">·</span>
-            <span className="font-mono normal-case tracking-normal text-slate-400">{generatedAt}</span>
+            <span className="text-slate-300 dark:text-slate-600">·</span>
+            <span className="font-mono normal-case tracking-normal text-slate-400 dark:text-slate-500">{generatedAt}</span>
             {tripInput?.destination && (
               <>
-                <span className="text-slate-300">·</span>
-                <span className="normal-case tracking-normal text-slate-500 truncate max-w-[220px]">
+                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="normal-case tracking-normal text-slate-500 dark:text-slate-400 truncate max-w-[220px]">
                   {tripInput.destination}
                 </span>
               </>
@@ -245,10 +245,10 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="flex-1 min-w-0">
-              <h2 className="text-[28px] md:text-[40px] leading-[1.1] font-bold tracking-tight text-slate-900">
+              <h2 className="text-[28px] md:text-[40px] leading-[1.1] font-bold tracking-tight text-slate-900 dark:text-slate-100">
                 {t.itinerary.title}
               </h2>
-              <p className="mt-2.5 text-slate-500 text-[15px] md:text-base max-w-xl leading-relaxed">
+              <p className="mt-2.5 text-slate-500 dark:text-slate-400 text-[15px] md:text-base max-w-xl leading-relaxed">
                 {t.itinerary.verified} · {t.subtitle}
               </p>
             </div>
@@ -257,7 +257,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
             <div className="flex flex-wrap items-center gap-2 md:gap-2.5">
               <button
                 onClick={onReset}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors"
               >
                 <PenLine className="w-4 h-4" />
                 <span className="hidden sm:inline">{t.actions.refine}</span>
@@ -270,11 +270,11 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
                 className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-colors disabled:opacity-70 ${
                   shareSuccess
                     ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'
                 }`}
               >
                 {isSharing ? (
-                  <span className="w-4 h-4 rounded-full border-2 border-slate-400 border-t-slate-700 animate-spin" />
+                  <span className="w-4 h-4 rounded-full border-2 border-slate-400 border-t-slate-700 dark:border-slate-500 dark:border-t-slate-200 animate-spin" />
                 ) : shareSuccess ? (
                   <Check className="w-4 h-4" />
                 ) : (
@@ -307,38 +307,38 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
                 </button>
 
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-[0_8px_32px_rgba(15,23,42,0.12)] border border-slate-200/70 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-slate-800 rounded-2xl shadow-[0_8px_32px_rgba(15,23,42,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] border border-slate-200/70 dark:border-slate-700/70 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                     <div className="py-1.5">
                       <button
                         onClick={handleCopyMarkdown}
-                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
                       >
                         {copySuccess ? (
-                          <Check className="w-4 h-4 text-emerald-600" />
+                          <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         ) : (
-                          <Copy className="w-4 h-4 text-slate-400" />
+                          <Copy className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                         )}
                         <span>{copySuccess ? t.actions.copied : t.actions.copy}</span>
                       </button>
                       <button
                         onClick={handleDownloadMarkdown}
-                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
                       >
-                        <FileDown className="w-4 h-4 text-slate-400" />
+                        <FileDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                         <span>{t.actions.download}</span>
                       </button>
                       <button
                         onClick={handlePrint}
-                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
                       >
-                        <Printer className="w-4 h-4 text-slate-400" />
+                        <Printer className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                         <span>{t.actions.print}</span>
                       </button>
                       <button
                         onClick={handleDownloadIcs}
-                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
                       >
-                        <Calendar className="w-4 h-4 text-slate-400" />
+                        <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                         <span>Calendar (.ics)</span>
                       </button>
                     </div>
@@ -351,18 +351,18 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
 
         {/* Weather callout */}
         {plan.sources && plan.sources.length > 0 && (
-          <div className="mx-6 md:mx-10 mb-6 flex items-start gap-4 p-4 md:p-5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/60 border border-blue-100/80">
-            <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-blue-100 flex items-center justify-center flex-shrink-0">
+          <div className="mx-6 md:mx-10 mb-6 flex items-start gap-4 p-4 md:p-5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/60 dark:from-blue-500/10 dark:to-indigo-500/10 border border-blue-100/80 dark:border-blue-500/20">
+            <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-blue-100 dark:border-blue-500/20 flex items-center justify-center flex-shrink-0">
               <CloudSun className="w-5 h-5 text-blue-600" />
             </div>
-            <div className="text-sm text-slate-700 flex-1 min-w-0">
-              <div className="font-semibold text-slate-900 mb-0.5">{t.itinerary.weather_title}</div>
-              <p className="text-slate-600 leading-relaxed">{t.itinerary.weather_desc}</p>
+            <div className="text-sm text-slate-700 dark:text-slate-300 flex-1 min-w-0">
+              <div className="font-semibold text-slate-900 dark:text-slate-100 mb-0.5">{t.itinerary.weather_title}</div>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{t.itinerary.weather_desc}</p>
             </div>
           </div>
         )}
 
-        <div className="h-px bg-slate-100" />
+        <div className="h-px bg-slate-100 dark:bg-slate-800" />
       </div>
 
       {/* Real-time flight offers (data-driven, not LLM-rendered) */}
@@ -405,7 +405,10 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
       {/* Expense budget tracker */}
       <div className="no-print">
         <BudgetTracker
-          tripKey={deriveTripKey(tripInput?.destination || '', tripInput?.dates || '')}
+          tripKey={deriveTripKey(
+            tripInput?.destination || '',
+            tripInput?.dates || effectiveMarkdown.slice(0, 256)
+          )}
           initialBudget={tripInput?.budget}
           language={language}
         />
@@ -427,7 +430,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
       {/* Content */}
       <div className="px-5 md:px-12 py-8 md:py-12 relative z-10">
         {/* Itinerary / Map tabs */}
-        <div className="flex items-center gap-1 mb-6 p-1 rounded-xl bg-slate-100/80 w-fit no-print" role="tablist">
+        <div className="flex items-center gap-1 mb-6 p-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 w-fit no-print" role="tablist">
           {(['itinerary', 'map'] as const).map((tab) => (
             <button
               key={tab}
@@ -436,8 +439,8 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
               onClick={() => setContentTab(tab)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                 contentTab === tab
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
               }`}
             >
               {tab === 'itinerary' ? (t.itinerary.title) : (CONTENT_TABS[language] || CONTENT_TABS.en)}
@@ -446,7 +449,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
         </div>
 
         {contentTab === 'map' ? (
-          <React.Suspense fallback={<div className="h-[420px] animate-pulse bg-slate-50 rounded-2xl" />}>
+          <React.Suspense fallback={<div className="h-[420px] animate-pulse bg-slate-50 dark:bg-slate-800/50 rounded-2xl" />}>
             <MapView
               markdown={effectiveMarkdown}
               destination={tripInput?.destination}
@@ -455,14 +458,14 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
             />
           </React.Suspense>
         ) : (
-          <React.Suspense fallback={<div className="h-40 animate-pulse bg-slate-50 rounded-xl" />}>
+          <React.Suspense fallback={<div className="h-40 animate-pulse bg-slate-50 dark:bg-slate-800/50 rounded-xl" />}>
             <MarkdownRenderer content={effectiveMarkdown} />
           </React.Suspense>
         )}
 
         {plan.sources && plan.sources.length > 0 && (
-          <div className="mt-16 pt-8 border-t border-slate-100 no-print">
-            <h4 className="text-[11px] font-bold text-slate-400 mb-4 uppercase tracking-[0.14em] font-mono flex items-center gap-2">
+          <div className="mt-16 pt-8 border-t border-slate-100 dark:border-slate-800 no-print">
+            <h4 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-4 uppercase tracking-[0.14em] font-mono flex items-center gap-2">
               <Globe className="w-3 h-3" />
               {t.itinerary.sources}
             </h4>
@@ -473,7 +476,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
                   href={source.uri}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-50 border border-slate-200/70 text-slate-600 text-xs hover:bg-white hover:border-slate-300 hover:text-slate-900 transition-all"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-400 text-xs hover:bg-white dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-900 dark:hover:text-slate-200 transition-all"
                 >
                   <span className="w-1 h-1 rounded-full bg-blue-500" />
                   {source.title}
@@ -484,7 +487,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
         )}
       </div>
 
-      <div className="bg-slate-50/60 px-8 py-6 text-center text-slate-400 text-xs border-t border-slate-100 no-print">
+      <div className="bg-slate-50/60 dark:bg-slate-800/40 px-8 py-6 text-center text-slate-400 dark:text-slate-500 text-xs border-t border-slate-100 dark:border-slate-800 no-print">
         <p className="uppercase tracking-widest opacity-70">
           {t.itinerary.footer_disclaimer}
         </p>

@@ -11,18 +11,18 @@ interface WeatherStripProps {
  * Map WMO weather interpretation codes to an icon + accent color.
  */
 function wmoIcon(code: number): { Icon: React.FC<any>; className: string } {
-  if (code < 0) return { Icon: Cloud, className: 'text-slate-400' };
+  if (code < 0) return { Icon: Cloud, className: 'text-slate-400 dark:text-slate-500' };
   if (code === 0) return { Icon: Sun, className: 'text-amber-500' };
   if (code === 1 || code === 2) return { Icon: CloudSun, className: 'text-amber-400' };
-  if (code === 3) return { Icon: Cloud, className: 'text-slate-500' };
-  if (code >= 45 && code <= 48) return { Icon: CloudFog, className: 'text-slate-400' };
+  if (code === 3) return { Icon: Cloud, className: 'text-slate-500 dark:text-slate-400' };
+  if (code >= 45 && code <= 48) return { Icon: CloudFog, className: 'text-slate-400 dark:text-slate-500' };
   if (code >= 51 && code <= 57) return { Icon: CloudRain, className: 'text-sky-500' };
-  if (code >= 61 && code <= 67) return { Icon: CloudRain, className: 'text-sky-600' };
+  if (code >= 61 && code <= 67) return { Icon: CloudRain, className: 'text-sky-600 dark:text-sky-400' };
   if (code >= 71 && code <= 77) return { Icon: CloudSnow, className: 'text-blue-300' };
-  if (code >= 80 && code <= 82) return { Icon: CloudRain, className: 'text-sky-700' };
+  if (code >= 80 && code <= 82) return { Icon: CloudRain, className: 'text-sky-600 dark:text-sky-400' };
   if (code === 85 || code === 86) return { Icon: CloudSnow, className: 'text-blue-300' };
   if (code >= 95) return { Icon: CloudLightning, className: 'text-violet-500' };
-  return { Icon: Cloud, className: 'text-slate-400' };
+  return { Icon: Cloud, className: 'text-slate-400 dark:text-slate-500' };
 }
 
 /**
@@ -38,7 +38,7 @@ const WeatherStrip: React.FC<WeatherStripProps> = ({ weather, language }) => {
     <div className="mx-6 md:mx-10 mb-8 no-print">
       <div className="flex items-center gap-2 mb-3">
         <Droplets className="w-4 h-4 text-sky-500" />
-        <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.14em] font-mono">
+        <h4 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.14em] font-mono">
           {weather.location.name} · Open-Meteo
         </h4>
       </div>
@@ -54,22 +54,22 @@ const WeatherStrip: React.FC<WeatherStripProps> = ({ weather, language }) => {
               key={d.date}
               className={`flex-shrink-0 min-w-[104px] rounded-2xl border p-3 text-center transition-colors ${
                 rainy
-                  ? 'bg-sky-50/80 border-sky-100'
-                  : 'bg-white border-slate-200/70 shadow-sm'
+                  ? 'bg-sky-50/80 dark:bg-sky-500/10 border-sky-100 dark:border-sky-500/20'
+                  : 'bg-white dark:bg-slate-800/60 border-slate-200/70 dark:border-slate-700/70 shadow-sm'
               }`}
               title={d.condition}
             >
-              <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5">
                 {fmtDay.format(dateObj)}
               </div>
               <Icon className={`w-6 h-6 mx-auto mb-1.5 ${className}`} aria-hidden />
-              <div className="text-sm font-bold text-slate-800 leading-none mb-1">
+              <div className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none mb-1">
                 {d.temp_max_c !== null ? `${Math.round(d.temp_max_c)}°` : '—'}
-                <span className="text-slate-400 font-medium">
+                <span className="text-slate-400 dark:text-slate-500 font-medium">
                   {' / '}{d.temp_min_c !== null ? `${Math.round(d.temp_min_c)}°` : '—'}
                 </span>
               </div>
-              <div className={`text-[11px] font-medium ${rainy ? 'text-sky-600' : 'text-slate-400'}`}>
+              <div className={`text-[11px] font-medium ${rainy ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400 dark:text-slate-500'}`}>
                 {d.precip_prob_pct !== null ? `💧 ${d.precip_prob_pct}%` : d.condition}
               </div>
             </div>

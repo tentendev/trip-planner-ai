@@ -342,20 +342,20 @@ const TripProgress: React.FC<TripProgressProps> = ({ markdown, destination, lang
   };
 
   return (
-    <section className="no-print mb-6 rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm shadow-sm p-4 md:p-5">
+    <section className="no-print mb-6 rounded-2xl border border-white/60 dark:border-slate-700/40 bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm shadow-sm p-4 md:p-5">
       {/* Header: aggregate completion rides the brand gradient; per-day bars
           below are emerald because checking off is a success signal. */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <ListChecks className="w-5 h-5 text-blue-600 flex-shrink-0" />
-          <h2 className="text-sm font-semibold text-slate-900 truncate">{t.panelTitle}</h2>
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{t.panelTitle}</h2>
         </div>
-        <span className="text-xs font-semibold text-emerald-600 whitespace-nowrap">
+        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
           {t.percentComplete.replace('{pct}', String(pct))}
         </span>
       </div>
 
-      <div className="mt-2.5 h-1.5 rounded-full bg-gradient-to-r from-blue-100 to-violet-100 overflow-hidden">
+      <div className="mt-2.5 h-1.5 rounded-full bg-gradient-to-r from-blue-100 to-violet-100 dark:from-blue-500/20 dark:to-violet-500/20 overflow-hidden">
         <div
           className="h-full rounded-full bg-gradient-to-r from-blue-600 to-violet-600 transition-[width] duration-300 motion-reduce:transition-none"
           style={{ width: `${pct}%` }}
@@ -380,20 +380,20 @@ const TripProgress: React.FC<TripProgressProps> = ({ markdown, destination, lang
               <button
                 onClick={() => toggleExpanded(day.dayNumber)}
                 aria-expanded={isOpen}
-                className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-white/80 cursor-pointer text-left transition-colors duration-150 motion-reduce:transition-none"
+                className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-white/80 dark:hover:bg-slate-700/40 cursor-pointer text-left transition-colors duration-150 motion-reduce:transition-none"
               >
                 <ChevronDown
-                  className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`}
+                  className={`w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0 transition-transform duration-200 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`}
                 />
-                <span className="text-sm font-medium text-slate-800 truncate flex-1 min-w-0">{day.title}</span>
+                <span className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate flex-1 min-w-0">{day.title}</span>
                 <span className="flex items-center gap-2 flex-shrink-0">
-                  <span className="hidden sm:block h-1.5 w-16 rounded-full bg-slate-100 overflow-hidden">
+                  <span className="hidden sm:block h-1.5 w-16 rounded-full bg-slate-100 dark:bg-slate-700/60 overflow-hidden">
                     <span
                       className="block h-full rounded-full bg-emerald-500 transition-[width] duration-300 motion-reduce:transition-none"
                       style={{ width: `${dayPct}%` }}
                     />
                   </span>
-                  <span className={`text-xs tabular-nums ${done === visible.length && visible.length > 0 ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
+                  <span className={`text-xs tabular-nums ${done === visible.length && visible.length > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
                     {done}/{visible.length}
                   </span>
                 </span>
@@ -405,7 +405,7 @@ const TripProgress: React.FC<TripProgressProps> = ({ markdown, destination, lang
                     {visible.map((activity) => {
                       const isChecked = state.checkedActivities.includes(activity);
                       return (
-                        <li key={activity} className="group flex items-center gap-1 rounded-lg pr-1 hover:bg-slate-50/80 transition-colors duration-150 motion-reduce:transition-none">
+                        <li key={activity} className="group flex items-center gap-1 rounded-lg pr-1 hover:bg-slate-50/80 dark:hover:bg-slate-700/40 transition-colors duration-150 motion-reduce:transition-none">
                           <button
                             onClick={() => toggleCheck(activity)}
                             aria-pressed={isChecked}
@@ -414,13 +414,13 @@ const TripProgress: React.FC<TripProgressProps> = ({ markdown, destination, lang
                           >
                             <span
                               className={`flex-shrink-0 w-[18px] h-[18px] rounded-full border flex items-center justify-center transition-colors duration-150 motion-reduce:transition-none ${
-                                isChecked ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 bg-white group-hover:border-emerald-400'
+                                isChecked ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-emerald-400'
                               }`}
                               aria-hidden
                             >
                               <Check className={`w-3 h-3 ${isChecked ? 'text-white' : 'text-transparent'}`} />
                             </span>
-                            <span className={`text-sm truncate ${isChecked ? 'line-through text-slate-400' : 'text-slate-700'}`}>
+                            <span className={`text-sm truncate ${isChecked ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}`}>
                               {activity}
                             </span>
                           </button>
@@ -428,7 +428,7 @@ const TripProgress: React.FC<TripProgressProps> = ({ markdown, destination, lang
                             onClick={() => toggleHide(activity)}
                             title={t.hideActivity}
                             aria-label={t.hideActivity}
-                            className="flex-shrink-0 p-1.5 rounded-md text-slate-300 hover:text-slate-600 hover:bg-slate-100 cursor-pointer opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-150 motion-reduce:transition-none"
+                            className="flex-shrink-0 p-1.5 rounded-md text-slate-300 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-150 motion-reduce:transition-none"
                           >
                             <EyeOff className="w-3.5 h-3.5" />
                           </button>
@@ -439,7 +439,7 @@ const TripProgress: React.FC<TripProgressProps> = ({ markdown, destination, lang
 
                   {hidden.length > 0 && (
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                      <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+                      <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 dark:text-slate-500">
                         <EyeOff className="w-3 h-3" />
                         {t.hiddenLabel}
                       </span>
@@ -449,7 +449,7 @@ const TripProgress: React.FC<TripProgressProps> = ({ markdown, destination, lang
                           onClick={() => toggleHide(activity)}
                           title={t.restoreActivity}
                           aria-label={`${t.restoreActivity}: ${activity}`}
-                          className="inline-flex items-center gap-1 max-w-full px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-xs text-slate-500 hover:bg-slate-200 cursor-pointer transition-colors duration-150 motion-reduce:transition-none"
+                          className="inline-flex items-center gap-1 max-w-full px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer transition-colors duration-150 motion-reduce:transition-none"
                         >
                           <span className="truncate max-w-[180px] line-through">{activity}</span>
                           <Eye className="w-3 h-3 flex-shrink-0" />
@@ -460,7 +460,7 @@ const TripProgress: React.FC<TripProgressProps> = ({ markdown, destination, lang
 
                   {/* Scoped edit: regenerate just this day. Full-plan
                       regeneration destroys trust; one day is cheap to redo. */}
-                  <div className="mt-2.5 pt-2.5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center gap-2">
+                  <div className="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center gap-2">
                     <input
                       value={hintDrafts[day.dayNumber] ?? ''}
                       onChange={(e) => setHintDrafts((prev) => ({ ...prev, [day.dayNumber]: e.target.value }))}
@@ -470,7 +470,7 @@ const TripProgress: React.FC<TripProgressProps> = ({ markdown, destination, lang
                       placeholder={t.hintPlaceholder}
                       maxLength={120}
                       disabled={busyDay !== null}
-                      className="flex-1 min-w-0 text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 placeholder:text-slate-300 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors duration-150 motion-reduce:transition-none disabled:opacity-60"
+                      className="flex-1 min-w-0 text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-500 outline-none focus:border-blue-400 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500/20 transition-colors duration-150 motion-reduce:transition-none disabled:opacity-60"
                     />
                     <button
                       onClick={() => handleRegenerate(day.dayNumber)}
@@ -491,7 +491,7 @@ const TripProgress: React.FC<TripProgressProps> = ({ markdown, destination, lang
                     </button>
                   </div>
                   {dayError && (
-                    <p role="alert" className="mt-2 text-xs text-rose-600">
+                    <p role="alert" className="mt-2 text-xs text-rose-600 dark:text-rose-400">
                       {dayError === 'rateLimited' ? t.errorRateLimited : dayError === 'busy' ? t.errorBusy : t.errorGeneric}
                     </p>
                   )}

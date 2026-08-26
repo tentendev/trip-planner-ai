@@ -43,21 +43,21 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, Error
       const lang = document.documentElement.lang || 'en';
       const zh = lang.startsWith('zh');
       return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-          <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 p-8 text-center">
-            <div className="w-14 h-14 mx-auto mb-5 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-2xl">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
+          <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-8 text-center">
+            <div className="w-14 h-14 mx-auto mb-5 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 flex items-center justify-center text-2xl">
               ⚠️
             </div>
-            <h1 className="text-xl font-bold text-slate-900 mb-2">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
               {zh ? '發生未預期的錯誤' : 'Something went wrong'}
             </h1>
-            <p className="text-sm text-slate-500 leading-relaxed mb-6">
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
               {zh
                 ? '應用程式遇到錯誤。你可以重新載入，或清除本機資料後重新開始（不會影響雲端分享的行程）。'
                 : 'The app hit an unexpected error. You can reload, or clear local data and start fresh (shared itineraries in the cloud are not affected).'}
             </p>
             {this.state.error && (
-              <pre className="text-left text-[11px] font-mono text-slate-400 bg-slate-50 rounded-lg p-3 mb-6 overflow-x-auto max-h-24">
+              <pre className="text-left text-[11px] font-mono text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-lg p-3 mb-6 overflow-x-auto max-h-24">
                 {this.state.error.message}
               </pre>
             )}
@@ -70,7 +70,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, Error
               </button>
               <button
                 onClick={this.handleReset}
-                className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition-colors"
+                className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
               >
                 {zh ? '清除資料並重設' : 'Reset local data'}
               </button>

@@ -417,28 +417,28 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({ tripKey, initialBudget, l
       aria-label={t.title}
       className="mx-6 md:mx-10 mb-8 no-print"
     >
-      <div className="rounded-2xl border border-slate-200/70 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-slate-200/70 dark:border-slate-700/70 bg-white dark:bg-slate-800/60 shadow-sm overflow-hidden">
         {/* Header: identity + editable total budget */}
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-5 pt-4 pb-3 bg-gradient-to-r from-blue-50/70 via-white to-violet-50/70 border-b border-slate-100">
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-5 pt-4 pb-3 bg-gradient-to-r from-blue-50/70 via-white to-violet-50/70 dark:from-blue-500/10 dark:via-slate-800/60 dark:to-violet-500/10 border-b border-slate-100 dark:border-slate-700/70">
           <div className="flex items-center gap-2 min-w-0">
             <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 text-white flex items-center justify-center shrink-0 shadow-sm">
               <Wallet className="w-4 h-4" aria-hidden />
             </span>
             <div className="min-w-0">
-              <h3 className="text-sm font-bold text-slate-800 leading-tight">{t.title}</h3>
-              <p className="text-[11px] text-slate-400 truncate">{t.subtitle}</p>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">{t.title}</h3>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{t.subtitle}</p>
             </div>
           </div>
 
           <label className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 font-mono">
+            <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 font-mono">
               {t.totalBudget}
             </span>
             <select
               value={ledger.currency}
               onChange={handleCurrencyChange}
               aria-label={t.currency}
-              className="rounded-lg border border-slate-200 bg-white px-1.5 py-1 text-xs font-semibold text-slate-600 hover:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200 transition-colors cursor-pointer"
+              className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-1.5 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:border-violet-300 dark:hover:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-500/20 transition-colors cursor-pointer"
             >
               {(SUPPORTED_CURRENCIES as readonly string[]).map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -460,7 +460,7 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({ tripKey, initialBudget, l
                 }
               }}
               aria-label={t.totalBudget}
-              className="w-24 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-800 tabular-nums focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-300 transition-colors"
+              className="w-24 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1 text-sm font-semibold text-slate-800 dark:text-slate-100 tabular-nums focus:outline-none focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-500/20 focus:border-violet-300 dark:focus:border-violet-500 transition-colors"
             />
           </label>
         </div>
@@ -468,10 +468,10 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({ tripKey, initialBudget, l
         {/* Big figure: spent vs remaining */}
         <div className="flex items-end justify-between gap-4 px-5 py-4">
           <div className="min-w-0">
-            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 font-mono mb-0.5">
+            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 font-mono mb-0.5">
               {t.spent}
             </div>
-            <div className="text-3xl font-extrabold tracking-tight text-slate-900 tabular-nums leading-none">
+            <div className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 tabular-nums leading-none">
               {fmt(s.spent)}
             </div>
           </div>
@@ -480,21 +480,21 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({ tripKey, initialBudget, l
               <>
                 <div
                   className={`text-[10px] font-bold uppercase tracking-[0.14em] font-mono mb-0.5 ${
-                    over ? 'text-amber-500' : 'text-slate-400'
+                    over ? 'text-amber-500' : 'text-slate-400 dark:text-slate-500'
                   }`}
                 >
                   {over ? t.overBy : t.remaining}
                 </div>
                 <div
                   className={`text-xl font-bold tabular-nums leading-none ${
-                    over ? 'text-amber-600' : 'text-emerald-600'
+                    over ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
                   }`}
                 >
                   {fmt(Math.abs(s.remaining))}
                 </div>
               </>
             ) : (
-              <p className="text-[11px] text-slate-400 max-w-[170px] leading-snug">
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 max-w-[170px] leading-snug">
                 {t.noBudgetHint}
               </p>
             )}
@@ -504,7 +504,7 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({ tripKey, initialBudget, l
         {/* Overall progress against the budget */}
         {hasBudget && (
           <div className="px-5 pb-4">
-            <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-700/50 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-500 ease-out motion-reduce:transition-none ${
                   over
@@ -530,15 +530,15 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({ tripKey, initialBudget, l
               return (
                 <div key={cat}>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="flex items-center gap-1.5 font-medium text-slate-600">
+                    <span className="flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300">
                       <span className={`w-2 h-2 rounded-full ${CATEGORY_COLORS[cat].dot}`} aria-hidden />
                       {t[CATEGORY_LABEL_KEYS[cat]]}
                     </span>
-                    <span className={`tabular-nums ${v > 0 ? 'text-slate-700 font-semibold' : 'text-slate-300'}`}>
+                    <span className={`tabular-nums ${v > 0 ? 'text-slate-700 dark:text-slate-300 font-semibold' : 'text-slate-300 dark:text-slate-600'}`}>
                       {fmt(v)}
                     </span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-700/50 overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ease-out motion-reduce:transition-none ${CATEGORY_COLORS[cat].bar}`}
                       style={{ width: `${w}%` }}
@@ -553,7 +553,7 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({ tripKey, initialBudget, l
         {/* Quick add-expense row */}
         <form
           onSubmit={handleAdd}
-          className="flex flex-wrap items-center gap-2 px-5 py-3 border-t border-slate-100 bg-slate-50/60"
+          className="flex flex-wrap items-center gap-2 px-5 py-3 border-t border-slate-100 dark:border-slate-700/70 bg-slate-50/60 dark:bg-slate-900/40"
         >
           <input
             type="number"
@@ -565,13 +565,13 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({ tripKey, initialBudget, l
             placeholder={t.amount}
             aria-label={t.amount}
             required
-            className="w-24 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-300 transition-colors"
+            className="w-24 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-500/20 focus:border-violet-300 dark:focus:border-violet-500 transition-colors"
           />
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
             aria-label={t.category}
-            className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700 cursor-pointer hover:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200 transition-colors"
+            className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1.5 text-sm text-slate-700 dark:text-slate-300 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-500/20 transition-colors"
           >
             {EXPENSE_CATEGORIES.map((c) => (
               <option key={c} value={c}>
@@ -586,7 +586,7 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({ tripKey, initialBudget, l
             placeholder={t.note}
             maxLength={120}
             aria-label={t.note}
-            className="flex-1 min-w-[110px] rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-300 transition-colors"
+            className="flex-1 min-w-[110px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-500/20 focus:border-violet-300 dark:focus:border-violet-500 transition-colors"
           />
           <button
             type="submit"
@@ -600,35 +600,35 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({ tripKey, initialBudget, l
 
         {/* Expense list — recent first, scrollable to keep the card compact */}
         {s.count === 0 ? (
-          <div className="px-5 py-6 text-center border-t border-slate-100">
-            <p className="text-sm font-semibold text-slate-500">{t.emptyTitle}</p>
-            <p className="mt-1 text-xs text-slate-400 max-w-xs mx-auto leading-snug">{t.emptyBody}</p>
+          <div className="px-5 py-6 text-center border-t border-slate-100 dark:border-slate-700/70">
+            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">{t.emptyTitle}</p>
+            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500 max-w-xs mx-auto leading-snug">{t.emptyBody}</p>
           </div>
         ) : (
-          <ul className="max-h-44 overflow-y-auto divide-y divide-slate-50 border-t border-slate-100">
+          <ul className="max-h-44 overflow-y-auto divide-y divide-slate-50 dark:divide-slate-700/50 border-t border-slate-100 dark:border-slate-700/70">
             {ledger.expenses.map((ex) => (
               <li
                 key={ex.id}
-                className="group flex items-center gap-3 px-5 py-2.5 hover:bg-slate-50/70 transition-colors motion-reduce:transition-none"
+                className="group flex items-center gap-3 px-5 py-2.5 hover:bg-slate-50/70 dark:hover:bg-slate-700/30 transition-colors motion-reduce:transition-none"
               >
                 <span className={`w-2 h-2 rounded-full shrink-0 ${CATEGORY_COLORS[ex.category].dot}`} aria-hidden />
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-medium text-slate-700 truncate">
+                  <div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
                     {ex.note || t[CATEGORY_LABEL_KEYS[ex.category]]}
                   </div>
-                  <div className="text-[10px] text-slate-400">
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500">
                     {t[CATEGORY_LABEL_KEYS[ex.category]]}
                     {ex.dateISO ? ` · ${formatDateShort(ex.dateISO, locale)}` : ''}
                   </div>
                 </div>
-                <span className="text-xs font-semibold tabular-nums text-slate-800 shrink-0">
+                <span className="text-xs font-semibold tabular-nums text-slate-800 dark:text-slate-200 shrink-0">
                   {fmt(ex.amount)}
                 </span>
                 <button
                   type="button"
                   onClick={() => handleRemove(ex.id)}
                   aria-label={`${t.deleteExpense}: ${ex.note || ex.category}`}
-                  className="shrink-0 p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 focus-visible:text-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-200 transition-colors motion-reduce:transition-none"
+                  className="shrink-0 p-1.5 rounded-lg text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 focus-visible:text-red-500 dark:focus-visible:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-200 dark:focus-visible:ring-red-500/30 transition-colors motion-reduce:transition-none"
                 >
                   <Trash2 className="w-3.5 h-3.5" aria-hidden />
                 </button>

@@ -97,7 +97,7 @@ const DayNav: React.FC<DayNavProps> = ({ markdown, destination, language }) => {
   };
 
   return (
-    <div className="no-print sticky top-[76px] z-30 bg-white/95 backdrop-blur-sm border-b border-slate-100">
+    <div className="no-print sticky top-[76px] z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-100 dark:border-slate-800">
       <div ref={listRef} className="flex items-center gap-2 px-5 md:px-12 py-3 overflow-x-auto">
         {days.map((day) => {
           const isActive = day.anchorId === activeAnchor;
@@ -110,7 +110,7 @@ const DayNav: React.FC<DayNavProps> = ({ markdown, destination, language }) => {
               className={`flex items-center rounded-full flex-shrink-0 transition-colors ${
                 isActive
                   ? 'bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-sm shadow-blue-500/25'
-                  : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-white hover:border-slate-300'
+                  : 'bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600'
               }`}
             >
               <button
@@ -122,7 +122,7 @@ const DayNav: React.FC<DayNavProps> = ({ markdown, destination, language }) => {
                 {label}
               </button>
               <span
-                className={`w-px h-3.5 ${isActive ? 'bg-white/40' : 'bg-slate-200'}`}
+                className={`w-px h-3.5 ${isActive ? 'bg-white/40' : 'bg-slate-200 dark:bg-slate-700'}`}
                 aria-hidden
               />
               <button

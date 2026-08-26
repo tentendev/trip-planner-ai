@@ -61,18 +61,18 @@ function computeTiers(hotels: HotelOffer[]): Map<number, Tier> {
 const TierBadge: React.FC<{ tier: Tier; label: string }> = ({ tier, label }) => {
   const styles: Record<Tier, { bg: string; fg: string; icon: React.ReactNode }> = {
     budget: {
-      bg: 'bg-emerald-50 border-emerald-200',
-      fg: 'text-emerald-700',
+      bg: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20',
+      fg: 'text-emerald-700 dark:text-emerald-300',
       icon: <Wallet className="w-3 h-3" />,
     },
     mid: {
-      bg: 'bg-blue-50 border-blue-200',
-      fg: 'text-blue-700',
+      bg: 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20',
+      fg: 'text-blue-700 dark:text-blue-300',
       icon: <Coins className="w-3 h-3" />,
     },
     luxury: {
-      bg: 'bg-violet-50 border-violet-200',
-      fg: 'text-violet-700',
+      bg: 'bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-500/20',
+      fg: 'text-violet-700 dark:text-violet-300',
       icon: <Gem className="w-3 h-3" />,
     },
   };
@@ -91,10 +91,10 @@ const StarRating: React.FC<{ rating: number; reviews?: number }> = ({ rating, re
   <div className="flex items-center gap-1 text-[11px]">
     <span className="flex items-center gap-0.5 text-amber-500">
       <Star className="w-3 h-3 fill-current" />
-      <span className="font-semibold text-slate-900">{rating.toFixed(1)}</span>
+      <span className="font-semibold text-slate-900 dark:text-slate-100">{rating.toFixed(1)}</span>
     </span>
     {typeof reviews === 'number' && reviews > 0 && (
-      <span className="text-slate-400">({reviews.toLocaleString()})</span>
+      <span className="text-slate-400 dark:text-slate-500">({reviews.toLocaleString()})</span>
     )}
   </div>
 );
@@ -122,29 +122,29 @@ const HotelOffersSection: React.FC<HotelOffersSectionProps> = ({
   };
 
   return (
-    <section className="no-print px-6 md:px-10 py-8 md:py-10 border-b border-slate-100">
+    <section className="no-print px-6 md:px-10 py-8 md:py-10 border-b border-slate-100 dark:border-slate-800">
       <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-sm shadow-rose-500/20">
             <Hotel className="w-5 h-5 text-white" strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900">
+            <h3 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
               {t.title}
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
               <Sparkles className="w-3 h-3 text-pink-500" />
               {t.subtitle}
               {searchParams?.dest_name && (
                 <>
                   <span className="text-slate-300">·</span>
-                  <span className="text-slate-600">{searchParams.dest_name}</span>
+                  <span className="text-slate-600 dark:text-slate-400">{searchParams.dest_name}</span>
                 </>
               )}
               {searchParams?.check_in && searchParams?.check_out && (
                 <>
                   <span className="text-slate-300">·</span>
-                  <span className="font-mono text-slate-600">
+                  <span className="font-mono text-slate-600 dark:text-slate-400">
                     {searchParams.check_in} → {searchParams.check_out}
                   </span>
                 </>
@@ -158,7 +158,7 @@ const HotelOffersSection: React.FC<HotelOffersSectionProps> = ({
             href={ghUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-white transition"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-white dark:hover:bg-slate-800/50 transition"
           >
             {t.seeMore} <ExternalLink className="w-3 h-3" />
           </a>
@@ -171,10 +171,10 @@ const HotelOffersSection: React.FC<HotelOffersSectionProps> = ({
           return (
             <article
               key={h.rank}
-              className="group bg-white rounded-2xl border border-slate-200/70 overflow-hidden hover:border-slate-300 hover:shadow-[0_8px_32px_rgba(15,23,42,0.08)] transition-all flex flex-col"
+              className="group bg-white dark:bg-slate-800/60 rounded-2xl border border-slate-200/70 dark:border-slate-700/70 overflow-hidden hover:border-slate-300 dark:hover:border-slate-600 transition-all flex flex-col"
             >
               {/* Thumbnail */}
-              <div className="relative w-full aspect-[4/3] bg-slate-100 overflow-hidden">
+              <div className="relative w-full aspect-[4/3] bg-slate-100 dark:bg-slate-700/40 overflow-hidden">
                 {h.thumbnail ? (
                   <img
                     src={h.thumbnail}
@@ -184,7 +184,7 @@ const HotelOffersSection: React.FC<HotelOffersSectionProps> = ({
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-300">
+                  <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600">
                     <Hotel className="w-10 h-10" />
                   </div>
                 )}
@@ -200,20 +200,20 @@ const HotelOffersSection: React.FC<HotelOffersSectionProps> = ({
 
               {/* Body */}
               <div className="p-4 flex-1 flex flex-col">
-                <h4 className="font-semibold text-slate-900 text-[15px] leading-tight line-clamp-2 mb-1.5">
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-[15px] leading-tight line-clamp-2 mb-1.5">
                   {h.name}
                 </h4>
 
                 {h.rating && <StarRating rating={h.rating} reviews={h.reviews} />}
 
                 {h.nearby && h.nearby.length > 0 && (
-                  <div className="mt-2 flex items-start gap-1.5 text-[11px] text-slate-500">
+                  <div className="mt-2 flex items-start gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
                     <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
                     <div className="min-w-0">
                       {h.nearby.slice(0, 2).map((n, i) => (
                         <div key={i} className="truncate">
                           {n.name}
-                          {n.walk && <span className="text-slate-400"> · {t.walk} {n.walk}</span>}
+                          {n.walk && <span className="text-slate-400 dark:text-slate-500"> · {t.walk} {n.walk}</span>}
                         </div>
                       ))}
                     </div>
@@ -225,7 +225,7 @@ const HotelOffersSection: React.FC<HotelOffersSectionProps> = ({
                     {h.amenities.slice(0, 3).map((a, i) => (
                       <span
                         key={i}
-                        className="text-[10px] px-1.5 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-100"
+                        className="text-[10px] px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-700"
                       >
                         {a}
                       </span>
@@ -233,14 +233,14 @@ const HotelOffersSection: React.FC<HotelOffersSectionProps> = ({
                   </div>
                 )}
 
-                <div className="mt-auto pt-3 border-t border-slate-100 flex items-end justify-between gap-2">
+                <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex items-end justify-between gap-2">
                   <div>
-                    <div className="text-lg font-bold text-slate-900 tabular-nums leading-none">
+                    <div className="text-lg font-bold text-slate-900 dark:text-slate-100 tabular-nums leading-none">
                       {h.price_per_night
                         ? formatPrice(h.price_per_night, h.currency, language)
                         : '—'}
                     </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                       {t.perNight}
                       {h.total_price && (
                         <>

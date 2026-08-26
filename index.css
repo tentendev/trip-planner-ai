@@ -7,6 +7,11 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Class-based dark mode (Tailwind v4). Redefines the built-in `dark:` variant
+   from the OS-level media query to a `.dark` class on <html>, so the in-app
+   toggle can override the system preference. App.tsx owns the class. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 body {
   font-family: 'Inter', sans-serif;
   background-color: #f8fafc;
@@ -14,6 +19,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: 'cv11', 'ss01', 'ss03';
+}
+
+/* Deep navy ground for dark mode. Specificity beats the light rule above. */
+.dark body {
+  background-color: #0b1120;
 }
 
 /* Tech/OS Monospace Font Class */
@@ -36,11 +46,25 @@ body {
   z-index: -1;
 }
 
+/* Dark variant: same radials, dimmed onto the deep navy base so the glows
+   read as ambient light rather than pastel washes. */
+.dark .aurora-bg {
+  background:
+    radial-gradient(ellipse at 15% 10%, rgba(99, 102, 241, 0.14), transparent 55%),
+    radial-gradient(ellipse at 85% 20%, rgba(236, 72, 153, 0.07), transparent 55%),
+    radial-gradient(ellipse at 50% 90%, rgba(20, 184, 166, 0.07), transparent 55%),
+    linear-gradient(180deg, #0b1120 0%, #0e1526 100%);
+}
+
 /* Markdown — Context brackets */
 .trip-context {
   color: #b45309;
   font-weight: 500;
   letter-spacing: -0.005em;
+}
+.dark .trip-context {
+  /* amber-400 — the light-mode amber-700 is too murky on navy */
+  color: #fbbf24;
 }
 
 /* Markdown — inline emoji alignment */
@@ -57,6 +81,10 @@ body {
 ::selection {
   background-color: #dbeafe;
   color: #1e3a8a;
+}
+.dark ::selection {
+  background-color: rgba(59, 130, 246, 0.40);
+  color: #f1f5f9;
 }
 
 /* Table column wrapping — allow cells to wrap gracefully on mobile */
@@ -89,6 +117,17 @@ html {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Dark scrollbars — one step up from the navy ground */
+.dark {
+  scrollbar-color: #334155 transparent;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 /* ------------------------------------------------------------------ */
@@ -234,6 +273,55 @@ html {
   font-size: 10px;
 }
 
+/* --- Dark theme chrome (MapView swaps to CARTO dark_all tiles via JS; the
+       surrounding Leaflet UI is themed here) ------------------------------ */
+
+.dark .trip-map .leaflet-container {
+  background: #1e293b;
+}
+
+.dark .trip-map .leaflet-popup-content-wrapper,
+.dark .trip-map .leaflet-popup-tip {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+.dark .trip-map .leaflet-popup-content-wrapper {
+  border: 1px solid rgba(51, 65, 85, 0.9);
+}
+
+.dark .trip-map-popup-name { color: #f1f5f9; }
+.dark .trip-map-popup-link { color: #60a5fa; }
+
+.dark .trip-map .leaflet-tooltip {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(51, 65, 85, 0.9);
+  color: #cbd5e1;
+}
+.dark .trip-map .leaflet-tooltip-top::before {
+  border-top-color: rgba(15, 23, 42, 0.95);
+}
+
+.dark .trip-map .leaflet-bar {
+  border-color: rgba(51, 65, 85, 0.9) !important;
+}
+.dark .trip-map .leaflet-bar a {
+  background-color: #1e293b;
+  color: #cbd5e1;
+  border-bottom-color: rgba(51, 65, 85, 0.8);
+}
+.dark .trip-map .leaflet-bar a:hover {
+  background-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark .trip-map .leaflet-control-attribution {
+  background: rgba(11, 17, 32, 0.8);
+  color: #94a3b8;
+}
+.dark .trip-map .leaflet-control-attribution a {
+  color: #60a5fa;
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Static spinner/pulse inside the map card; pan/zoom animation is already
      disabled per-frame from MapView via fitBounds({ animate: false }). */
@@ -256,6 +344,18 @@ html {
   @page {
     margin: 14mm;
     size: auto;
+  }
+
+  /* Class-based dark mode never reaches paper. These zero-specificity
+     (:where) declarations are unlayered, so they outrank every
+     cascade-layered Tailwind utility — any dark:bg-slate-900 / dark:text-* /
+     dark:border-* surface collapses back to light ink — while the
+     hand-tuned print rules below carry higher specificity and keep their
+     own values (slate-50 pre/thead/blockquote tints, black typography). */
+  :where(.dark, .dark *) {
+    background-color: #ffffff;
+    color: #000000;
+    border-color: #e2e8f0;
   }
 
   html, body {

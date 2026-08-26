@@ -38,8 +38,8 @@ const TripHistory: React.FC<TripHistoryProps> = ({ entries, language, onOpen, on
   return (
     <div className="mt-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex items-center gap-2 mb-3 justify-center">
-        <History className="w-4 h-4 text-slate-400" />
-        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.14em] font-mono">
+        <History className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+        <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.14em] font-mono">
           {t.title}
         </span>
       </div>
@@ -47,7 +47,7 @@ const TripHistory: React.FC<TripHistoryProps> = ({ entries, language, onOpen, on
         {entries.map((e) => (
           <div
             key={e.id}
-            className="group relative bg-white/70 backdrop-blur-sm border border-slate-200/70 rounded-2xl p-4 text-start hover:shadow-md hover:border-slate-300 transition-all cursor-pointer"
+            className="group relative bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border border-slate-200/70 dark:border-slate-700/70 rounded-2xl p-4 text-start hover:shadow-md dark:hover:shadow-black/30 hover:border-slate-300 dark:hover:border-slate-600 transition-all cursor-pointer"
             onClick={() => onOpen(e)}
             role="button"
             tabIndex={0}
@@ -56,10 +56,10 @@ const TripHistory: React.FC<TripHistoryProps> = ({ entries, language, onOpen, on
             <div className="flex items-start gap-2.5">
               <MapPin className="w-4 h-4 mt-0.5 text-rose-500 flex-shrink-0" />
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-slate-900 text-sm truncate">{e.destination}</div>
-                <div className="text-xs text-slate-400 truncate">{e.dates || formatSavedAt(e.savedAt, language)}</div>
+                <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm truncate">{e.destination}</div>
+                <div className="text-xs text-slate-400 dark:text-slate-500 truncate">{e.dates || formatSavedAt(e.savedAt, language)}</div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0" />
+              <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors flex-shrink-0" />
             </div>
             <button
               type="button"
@@ -77,8 +77,8 @@ const TripHistory: React.FC<TripHistoryProps> = ({ entries, language, onOpen, on
               }}
               className={`absolute top-3 end-3 p-1.5 rounded-lg transition-all ${
                 confirmId === e.id
-                  ? 'bg-red-100 text-red-600'
-                  : 'text-slate-300 hover:text-slate-500 opacity-0 group-hover:opacity-100'
+                  ? 'bg-red-100 dark:bg-red-500/15 text-red-600 dark:text-red-400'
+                  : 'text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 opacity-0 group-hover:opacity-100'
               }`}
             >
               <Trash2 className="w-3.5 h-3.5" />

@@ -143,38 +143,38 @@ const SocialProof: React.FC<SocialProofProps> = ({ language }) => {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-300">
-      <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 text-sm text-slate-600">
+      <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 text-sm text-slate-600 dark:text-slate-400">
         {/* Live travel data */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/40 shadow-sm">
+        <div className="flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-full border border-white/40 dark:border-slate-700/40 shadow-sm">
           <Plane className="w-4 h-4 text-blue-600" />
-          <span className="font-semibold text-slate-900">{t.liveData}</span>
-          <span className="text-xs text-slate-400 hidden md:inline">({t.liveDataSub})</span>
+          <span className="font-semibold text-slate-900 dark:text-slate-100">{t.liveData}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 hidden md:inline">({t.liveDataSub})</span>
         </div>
 
         {/* Languages */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/40 shadow-sm">
+        <div className="flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-full border border-white/40 dark:border-slate-700/40 shadow-sm">
           <Languages className="w-4 h-4 text-violet-600" />
-          <span className="font-semibold text-slate-900">{t.languages}</span>
-          <span className="text-xs text-slate-400 hidden md:inline">({t.languagesSub})</span>
+          <span className="font-semibold text-slate-900 dark:text-slate-100">{t.languages}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 hidden md:inline">({t.languagesSub})</span>
         </div>
 
         {/* Free */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/40 shadow-sm">
+        <div className="flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-full border border-white/40 dark:border-slate-700/40 shadow-sm">
           <Sparkles className="w-4 h-4 text-emerald-600" />
-          <span className="font-semibold text-slate-900">{t.free}</span>
-          <span className="text-xs text-slate-400 hidden md:inline">({t.freeSub})</span>
+          <span className="font-semibold text-slate-900 dark:text-slate-100">{t.free}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 hidden md:inline">({t.freeSub})</span>
         </div>
       </div>
 
       {/* Top Destinations */}
       <div className="mt-4 flex items-center justify-center gap-2 text-sm">
         <MapPin className="w-4 h-4 text-rose-500" />
-        <span className="text-slate-500">{t.topDestinations}:</span>
+        <span className="text-slate-500 dark:text-slate-400">{t.topDestinations}:</span>
         <div className="flex flex-wrap justify-center gap-2">
           {destinations.map((dest, idx) => (
             <span
               key={idx}
-              className="px-2 py-0.5 bg-gradient-to-r from-blue-50 to-purple-50 text-slate-700 rounded-full text-xs font-medium border border-white/50"
+              className="px-2 py-0.5 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-500/10 dark:to-purple-500/10 text-slate-700 dark:text-slate-300 rounded-full text-xs font-medium border border-white/50 dark:border-slate-700/40"
             >
               {dest}
             </span>

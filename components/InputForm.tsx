@@ -21,8 +21,8 @@ const SHOW_RAW_PROMPT = typeof window !== 'undefined'
 // outline in index.css (an unlayered rule that intentionally wins over Tailwind's
 // cascade layers): the old per-field focus rings doubled that indicator up on tap
 // and drifted off the single blue brand thread (pink/amber/slate/emerald).
-const INPUT_BASE = 'w-full p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl transition shadow-sm';
-const INPUT_WITH_ICON = 'w-full pl-12 p-4 bg-white/70 backdrop-blur-sm text-slate-900 placeholder-slate-400 border border-slate-200/60 rounded-xl transition shadow-sm';
+const INPUT_BASE = 'w-full p-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 border border-slate-200/60 dark:border-slate-700/60 rounded-xl transition shadow-sm';
+const INPUT_WITH_ICON = 'w-full pl-12 p-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 border border-slate-200/60 dark:border-slate-700/60 rounded-xl transition shadow-sm';
 
 // Localized submitting label shown next to the spinner while the plan streams in
 // (kept inline to avoid i18n.ts churn for one string).
@@ -68,11 +68,11 @@ const RawPromptPreview: React.FC<{ formData: TripInput; language: Language; t: t
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-700 transition"
+        className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition"
       >
         <Code className="w-4 h-4" />
         {isOpen ? t.actions.hidePrompt : t.actions.viewPrompt}
-        <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 text-xs font-mono">{filledCount}/16</span>
+        <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-mono">{filledCount}/16</span>
         {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
       </button>
 
@@ -377,7 +377,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
 
   // Progress bar color based on completion
   const getProgressColor = (progress: number) => {
-    if (progress < 30) return 'bg-slate-300';
+    if (progress < 30) return 'bg-slate-300 dark:bg-slate-600';
     if (progress < 60) return 'bg-blue-400';
     if (progress < 90) return 'bg-blue-500';
     return 'bg-green-500';
@@ -427,7 +427,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
     for (let i = 0; i < 7; i++) {
       const d = new Date(2024, 0, 7 + i); 
       days.push(
-        <div key={i} className="text-center text-xs font-bold text-slate-400 py-2 uppercase tracking-wide">
+        <div key={i} className="text-center text-xs font-bold text-slate-400 dark:text-slate-500 py-2 uppercase tracking-wide">
           {d.toLocaleDateString(language, { weekday: 'short' })}
         </div>
       );
@@ -453,17 +453,17 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
       const isEnd = endDate && new Date(year, month, day).getTime() === endDate.getTime();
 
       let wrapperClass = "h-10 w-full flex items-center justify-center relative";
-      let btnClass = "h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors z-10 hover:bg-blue-100 hover:text-blue-600";
+      let btnClass = "h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors z-10 hover:bg-blue-100 dark:hover:bg-blue-500/20 hover:text-blue-600 dark:hover:text-blue-300";
       
-      if (inRange) { wrapperClass += " bg-blue-50"; btnClass = "h-10 w-10 flex items-center justify-center text-sm font-medium text-blue-700"; }
+      if (inRange) { wrapperClass += " bg-blue-50 dark:bg-blue-500/15"; btnClass = "h-10 w-10 flex items-center justify-center text-sm font-medium text-blue-700 dark:text-blue-300"; }
       if (isStart) { wrapperClass += endDate ? " bg-gradient-to-r from-transparent to-blue-50" : ""; btnClass = "h-10 w-10 rounded-full bg-blue-600 text-white shadow-md"; }
       if (isEnd) { wrapperClass += " bg-gradient-to-l from-transparent to-blue-50"; btnClass = "h-10 w-10 rounded-full bg-blue-600 text-white shadow-md"; }
 
       days.push(
         <div key={day} className={wrapperClass}>
-           {inRange && <div className="absolute inset-0 bg-blue-50" />}
-           {(isStart && endDate) && <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-blue-50" />}
-           {(isEnd && startDate) && <div className="absolute left-0 top-0 bottom-0 w-1/2 bg-blue-50" />}
+           {inRange && <div className="absolute inset-0 bg-blue-50 dark:bg-blue-500/15" />}
+           {(isStart && endDate) && <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-blue-50 dark:bg-blue-500/15" />}
+           {(isEnd && startDate) && <div className="absolute left-0 top-0 bottom-0 w-1/2 bg-blue-50 dark:bg-blue-500/15" />}
           <button type="button" onClick={() => handleDateClick(day)} className={`${btnClass} relative`}>{day}</button>
         </div>
       );
@@ -485,7 +485,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
   ) => {
     return (
       <div className="space-y-3">
-        <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
           {icon}
           {label}
         </label>
@@ -500,8 +500,8 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
                 onClick={() => handleMultiSelectToggle(field, opt, exclusiveOption)}
                 className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all border ${
                   isActive 
-                  ? 'bg-slate-800 text-white border-slate-800 shadow-md transform scale-105' 
-                  : 'bg-white/50 text-slate-600 border-slate-200 hover:bg-white hover:border-slate-300'
+                  ? 'bg-slate-800 dark:bg-slate-700 text-white border-slate-800 dark:border-slate-600 shadow-md transform scale-105' 
+                  : 'bg-white/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600'
                 }`}
               >
                 {opt}
@@ -515,7 +515,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
 
   const renderSmartChips = (label: string, field: keyof TripInput, suggestions: string[], icon: React.ReactNode, placeholder: string) => (
     <div className="space-y-3">
-      <label htmlFor={`trip-${field}`} className="text-sm font-medium text-slate-700 flex items-center gap-2">
+      <label htmlFor={`trip-${field}`} className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
         {icon} {label}
       </label>
       <input
@@ -539,8 +539,8 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
               onClick={() => handleChipClick(field, s)}
               className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs transition border ${
                 active
-                  ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
-                  : 'bg-slate-100/80 text-slate-600 hover:bg-slate-200 border-slate-200'
+                  ? 'bg-slate-800 dark:bg-slate-700 text-white border-slate-800 dark:border-slate-600 shadow-sm'
+                  : 'bg-slate-100/80 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700/60 border-slate-200 dark:border-slate-700'
               }`}
             >
               {active ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />} {s}
@@ -557,7 +557,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
     
     return (
         <div className="space-y-3">
-            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <Gauge className="w-4 h-4 text-orange-500" /> {t.form.pace}
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -573,11 +573,11 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
                             onClick={() => handlePaceChange(opt)}
                             className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
                                 isSelected 
-                                ? 'border-slate-800 bg-white shadow-lg scale-105 z-10' 
-                                : 'border-transparent bg-white/40 hover:bg-white/60 text-slate-500'
+                                ? 'border-slate-800 dark:border-slate-500 bg-white dark:bg-slate-800 shadow-lg scale-105 z-10' 
+                                : 'border-transparent bg-white/40 dark:bg-slate-800/40 hover:bg-white/60 dark:hover:bg-slate-800/60 text-slate-500 dark:text-slate-400'
                             }`}
                         >
-                            <span className={`text-sm font-bold ${isSelected ? 'text-slate-900' : 'text-slate-500'}`}>{label}</span>
+                            <span className={`text-sm font-bold ${isSelected ? 'text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}>{label}</span>
                             <span className="text-[10px] opacity-70 mt-1 text-center leading-tight">{desc}</span>
                         </button>
                     )
@@ -588,7 +588,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-10 bg-white/60 backdrop-blur-xl p-6 md:p-10 rounded-3xl shadow-2xl border border-white/40 relative">
+    <form onSubmit={handleSubmit} className="space-y-10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-6 md:p-10 rounded-3xl shadow-2xl border border-white/40 dark:border-slate-700/40 relative">
 
       {/* Form Progress Indicator */}
       <div className="relative z-10 -mt-2 mb-6">
@@ -598,8 +598,8 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
             <div className="flex items-center gap-2">
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 sectionCompletion.basics
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-blue-100 text-blue-700'
+                  ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-300'
+                  : 'bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300'
               }`}>
                 {sectionCompletion.basics ? (
                   <CheckCircle2 className="w-3.5 h-3.5" />
@@ -609,36 +609,36 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
                 <span className="hidden md:inline">{t.form.section_basics}</span>
               </div>
 
-              <div className="w-8 h-0.5 bg-slate-200 hidden md:block" />
+              <div className="w-8 h-0.5 bg-slate-200 dark:bg-slate-700 hidden md:block" />
 
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 sectionCompletion.style
-                  ? 'bg-green-100 text-green-700'
+                  ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-300'
                   : sectionCompletion.basics
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-slate-100 text-slate-400'
+                    ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
               }`}>
                 {sectionCompletion.style ? (
                   <CheckCircle2 className="w-3.5 h-3.5" />
                 ) : (
-                  <span className={`w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center ${sectionCompletion.basics ? 'bg-emerald-500' : 'bg-slate-300'}`}>2</span>
+                  <span className={`w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center ${sectionCompletion.basics ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}>2</span>
                 )}
                 <span className="hidden md:inline">{t.form.section_style}</span>
               </div>
 
-              <div className="w-8 h-0.5 bg-slate-200 hidden md:block" />
+              <div className="w-8 h-0.5 bg-slate-200 dark:bg-slate-700 hidden md:block" />
 
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 sectionCompletion.prefs
-                  ? 'bg-green-100 text-green-700'
+                  ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-300'
                   : sectionCompletion.style
-                    ? 'bg-pink-100 text-pink-700'
-                    : 'bg-slate-100 text-slate-400'
+                    ? 'bg-pink-100 dark:bg-pink-500/15 text-pink-700 dark:text-pink-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
               }`}>
                 {sectionCompletion.prefs ? (
                   <CheckCircle2 className="w-3.5 h-3.5" />
                 ) : (
-                  <span className={`w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center ${sectionCompletion.style ? 'bg-pink-500' : 'bg-slate-300'}`}>3</span>
+                  <span className={`w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center ${sectionCompletion.style ? 'bg-pink-500' : 'bg-slate-300 dark:bg-slate-600'}`}>3</span>
                 )}
                 <span className="hidden md:inline">{t.form.section_prefs}</span>
               </div>
@@ -647,17 +647,17 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
 
           {/* Completion percentage */}
           <div className="flex items-center gap-2">
-            <span className={`text-sm font-bold transition-colors ${formProgress >= 90 ? 'text-green-600' : 'text-slate-600'}`}>
+            <span className={`text-sm font-bold transition-colors ${formProgress >= 90 ? 'text-green-600 dark:text-green-400' : 'text-slate-600 dark:text-slate-400'}`}>
               {formProgress}%
             </span>
             {formProgress >= 90 && (
-              <span className="text-xs text-green-600 hidden md:inline animate-in fade-in">✓</span>
+              <span className="text-xs text-green-600 dark:text-green-400 hidden md:inline animate-in fade-in">✓</span>
             )}
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
           <div
             className={`h-full transition-all duration-500 ease-out rounded-full ${getProgressColor(formProgress)}`}
             style={{ width: `${formProgress}%` }}
@@ -667,13 +667,13 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
 
       {/* Section 1: The Basics - High Z-Index for DatePicker */}
       <div className="space-y-6 relative z-30">
-        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-200/50">
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 pb-2 border-b border-slate-200/50 dark:border-slate-700/50">
           <Plane className="w-5 h-5 text-blue-600" /> {t.form.section_basics}
           {sectionCompletion.basics && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-3">
-            <label htmlFor="trip-destination" className="text-sm font-medium text-slate-700">{t.form.destination}</label>
+            <label htmlFor="trip-destination" className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.form.destination}</label>
             <input
               required
               id="trip-destination"
@@ -686,12 +686,12 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
               className={`${INPUT_BASE} ${validationError?.field === 'destination' ? 'border-red-400' : ''}`}
             />
             {validationError?.field === 'destination' && (
-              <p id="trip-destination-error" role="alert" className="text-sm text-red-600 font-medium animate-in fade-in duration-200">{validationError.msg}</p>
+              <p id="trip-destination-error" role="alert" className="text-sm text-red-600 dark:text-red-400 font-medium animate-in fade-in duration-200">{validationError.msg}</p>
             )}
           </div>
 
           <div className="space-y-3">
-            <label htmlFor="trip-travelers" className="text-sm font-medium text-slate-700">{t.form.travelers}</label>
+            <label htmlFor="trip-travelers" className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.form.travelers}</label>
             <div className="relative">
               <Users className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
               <input
@@ -706,7 +706,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
           </div>
 
           <div className="space-y-3 relative md:col-span-2" ref={datePickerRef}>
-            <label className="text-sm font-medium text-slate-700">{t.form.dates}</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.form.dates}</label>
             {/* Keyboard-accessible trigger: was an onClick div invisible to keyboards/screen readers */}
             <button
               type="button"
@@ -715,17 +715,17 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
               aria-expanded={showDatePicker}
               aria-haspopup="dialog"
               aria-invalid={validationError?.field === 'dates' || undefined}
-              className={`w-full flex bg-white/70 backdrop-blur-sm border rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition group text-left ${validationError?.field === 'dates' ? 'border-red-400' : 'border-slate-200/60'}`}
+              className={`w-full flex bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition group text-left ${validationError?.field === 'dates' ? 'border-red-400 dark:border-red-500' : 'border-slate-200/60 dark:border-slate-700/60'}`}
             >
-              <div className={`flex-1 p-4 border-r border-slate-200/60 group-hover:bg-white/50 transition ${!startDate ? 'text-slate-400' : 'text-slate-900'}`}>
-                <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">{t.form.dates_start}</div>
+              <div className={`flex-1 p-4 border-r border-slate-200/60 dark:border-slate-700/60 group-hover:bg-white/50 dark:group-hover:bg-slate-800/50 transition ${!startDate ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-slate-100'}`}>
+                <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 uppercase tracking-wider">{t.form.dates_start}</div>
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="w-5 h-5 text-blue-500" />
                   <span className="font-medium text-lg">{formatDateDisplay(startDate)}</span>
                 </div>
               </div>
-              <div className={`flex-1 p-4 group-hover:bg-white/50 transition ${!endDate ? 'text-slate-400' : 'text-slate-900'}`}>
-                <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">{t.form.dates_end}</div>
+              <div className={`flex-1 p-4 group-hover:bg-white/50 dark:group-hover:bg-slate-800/50 transition ${!endDate ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-slate-100'}`}>
+                <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 uppercase tracking-wider">{t.form.dates_end}</div>
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="w-5 h-5 text-blue-500" />
                   <span className="font-medium text-lg">{formatDateDisplay(endDate)}</span>
@@ -733,7 +733,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
               </div>
             </button>
             {validationError?.field === 'dates' && (
-              <p role="alert" className="text-sm text-red-600 font-medium animate-in fade-in duration-200">{validationError.msg}</p>
+              <p role="alert" className="text-sm text-red-600 dark:text-red-400 font-medium animate-in fade-in duration-200">{validationError.msg}</p>
             )}
             {showDatePicker && (
               <div
@@ -742,21 +742,21 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
                 onKeyDown={(e) => { if (e.key === 'Escape') setShowDatePicker(false); }}
                 // z-50 keeps the popover above every section stack (z-30/20/10);
                 // the header sits outside this stacking context so it stays on top.
-                className="absolute top-full left-0 mt-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200/60 p-6 z-50 w-full md:w-[360px] animate-in fade-in zoom-in-95 duration-200 ease-out"
+                className="absolute top-full left-0 mt-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-black/30 border border-slate-200/60 dark:border-slate-700/60 p-6 z-50 w-full md:w-[360px] animate-in fade-in zoom-in-95 duration-200 ease-out"
               >
                 <div className="flex items-center justify-between mb-6">
-                  <button type="button" aria-label={`${viewDate.getFullYear()} / ${viewDate.getMonth()}`} onClick={handlePrevMonth} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition"><ChevronLeft className="w-5 h-5" /></button>
-                  <span className="font-bold text-slate-800 text-lg" aria-live="polite">{viewDate.getFullYear()} / {viewDate.getMonth() + 1}</span>
-                  <button type="button" aria-label={`${viewDate.getFullYear()} / ${viewDate.getMonth() + 2}`} onClick={handleNextMonth} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition"><ChevronRight className="w-5 h-5" /></button>
+                  <button type="button" aria-label={`${viewDate.getFullYear()} / ${viewDate.getMonth()}`} onClick={handlePrevMonth} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300 transition"><ChevronLeft className="w-5 h-5" /></button>
+                  <span className="font-bold text-slate-800 dark:text-slate-100 text-lg" aria-live="polite">{viewDate.getFullYear()} / {viewDate.getMonth() + 1}</span>
+                  <button type="button" aria-label={`${viewDate.getFullYear()} / ${viewDate.getMonth() + 2}`} onClick={handleNextMonth} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300 transition"><ChevronRight className="w-5 h-5" /></button>
                 </div>
 
-                <div className="grid grid-cols-7 mb-2 border-b border-slate-100 pb-2">
+                <div className="grid grid-cols-7 mb-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                     {renderWeekDays()}
                 </div>
                 <div className="grid grid-cols-7 gap-y-2">{renderCalendar()}</div>
 
-                <div className="mt-6 flex justify-between items-center border-t border-slate-100 pt-4">
-                   <div className="text-xs text-slate-500 font-mono" aria-live="polite">
+                <div className="mt-6 flex justify-between items-center border-t border-slate-100 dark:border-slate-800 pt-4">
+                   <div className="text-xs text-slate-500 dark:text-slate-400 font-mono" aria-live="polite">
                       {startDate && endDate ?
                         `${Math.ceil(Math.abs(endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1} ${t.form.dates_days.toUpperCase()} ✓`
                         : "→ → →"}
@@ -768,14 +768,14 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
           </div>
           
           <div className="space-y-3">
-            <label htmlFor="trip-arrivalDetail" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+            <label htmlFor="trip-arrivalDetail" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                <PlaneLanding className="w-4 h-4 text-slate-500" /> {t.form.arrival}
             </label>
             <input id="trip-arrivalDetail" name="arrivalDetail" value={formData.arrivalDetail} onChange={handleChange} placeholder={t.form.arrival_placeholder} className={INPUT_BASE}/>
           </div>
 
           <div className="space-y-3">
-            <label htmlFor="trip-departureDetail" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+            <label htmlFor="trip-departureDetail" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                <PlaneTakeoff className="w-4 h-4 text-slate-500" /> {t.form.departure}
             </label>
             <input id="trip-departureDetail" name="departureDetail" value={formData.departureDetail} onChange={handleChange} placeholder={t.form.departure_placeholder} className={INPUT_BASE}/>
@@ -785,13 +785,13 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
 
       {/* Section 2: Constraints & Style - Lower Z-Index */}
       <div className="space-y-6 relative z-20">
-        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-200/50">
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 pb-2 border-b border-slate-200/50 dark:border-slate-700/50">
           <Activity className="w-5 h-5 text-emerald-600" /> {t.form.section_style}
           {sectionCompletion.style && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
            <div className="space-y-3">
-            <label htmlFor="trip-budget" className="text-sm font-medium text-slate-700">{t.form.budget}</label>
+            <label htmlFor="trip-budget" className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.form.budget}</label>
             <div className="relative">
               <DollarSign className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
               <input id="trip-budget" name="budget" value={formData.budget} onChange={handleChange} placeholder={t.form.budget_placeholder} className={INPUT_WITH_ICON}/>
@@ -803,7 +803,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
 
       {/* Section 3: Preferences - Lowest Z-Index */}
       <div className="space-y-6 relative z-10">
-        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-200/50">
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 pb-2 border-b border-slate-200/50 dark:border-slate-700/50">
           <Heart className="w-5 h-5 text-pink-600" /> {t.form.section_prefs}
           {sectionCompletion.prefs && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />}
         </h3>
@@ -812,7 +812,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
              {renderSmartChips(t.form.interests, "interests", t.chips.interests, <Zap className="w-4 h-4 text-pink-500" />, t.form.interests_placeholder)}
              
              <div className="space-y-3">
-              <label htmlFor="trip-mustDos" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <label htmlFor="trip-mustDos" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <Heart className="w-4 h-4 text-pink-500" /> {t.form.mustDos}
               </label>
               <input id="trip-mustDos" name="mustDos" value={formData.mustDos} onChange={handleChange} placeholder={t.form.mustDos_placeholder} className={INPUT_BASE}/>
@@ -833,7 +833,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialValue
              {renderMultiSelect(t.form.diet, "diet", t.chips.diet, <Utensils className="w-4 h-4 text-emerald-600" />, t.chips.diet[0])}
              
              <div className="space-y-3">
-              <label htmlFor="trip-work" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <label htmlFor="trip-work" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <Coffee className="w-4 h-4 text-slate-600" /> {t.form.work}
               </label>
               <input id="trip-work" name="work" value={formData.work} onChange={handleChange} placeholder={t.form.work_placeholder} className={INPUT_BASE}/>

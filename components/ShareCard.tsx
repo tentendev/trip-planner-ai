@@ -706,23 +706,23 @@ const ShareCard: React.FC<ShareCardProps> = ({
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-slate-900">{cardT.modalTitle}</h3>
-              <p className="text-sm text-slate-500">{cardT.modalSubtitle}</p>
+              <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100">{cardT.modalTitle}</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{cardT.modalSubtitle}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
           >
-            <X className="w-5 h-5 text-slate-400" />
+            <X className="w-5 h-5 text-slate-400 dark:text-slate-500" />
           </button>
         </div>
 
@@ -841,7 +841,7 @@ const ShareCard: React.FC<ShareCardProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="p-6 pt-0 space-y-4 bg-gradient-to-b from-white to-slate-50">
+        <div className="p-6 pt-0 space-y-4 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-800">
           {/* Download buttons */}
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -866,7 +866,7 @@ const ShareCard: React.FC<ShareCardProps> = ({
           {genError && (
             <p
               role="alert"
-              className="text-center text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2"
+              className="text-center text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl px-3 py-2"
             >
               {IMAGE_ERROR_COPY[language] || IMAGE_ERROR_COPY['en']}
             </p>
@@ -878,8 +878,8 @@ const ShareCard: React.FC<ShareCardProps> = ({
               onClick={handleCopyLink}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
                 copySuccess
-                  ? 'bg-green-100 text-green-700 ring-2 ring-green-200'
-                  : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 hover:border-slate-300 shadow-sm'
+                  ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-300 ring-2 ring-green-200 dark:ring-green-500/30'
+                  : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm'
               }`}
             >
               {copySuccess ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -902,7 +902,7 @@ const ShareCard: React.FC<ShareCardProps> = ({
           </div>
 
           {/* Tip text */}
-          <p className="text-center text-xs text-slate-400 pt-2">
+          <p className="text-center text-xs text-slate-400 dark:text-slate-500 pt-2">
             {cardT.tip}
           </p>
         </div>

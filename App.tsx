@@ -8,13 +8,56 @@ import SocialProof from './components/SocialProof';
 import ShareCard from './components/ShareCard';
 import { generateTripPlan, preAnalyzeTrip } from './services/geminiService';
 import { TripInput, LoadingState, GeneratedPlan, Language, PreAnalysisQuestion } from './types';
-import { Globe, Compass, ChevronDown, Check } from 'lucide-react';
+import { Globe, Compass, ChevronDown, Check, Sun, Moon } from 'lucide-react';
 import { TRANSLATIONS, LANGUAGE_NAMES } from './utils/i18n';
 import { getSharedPlan } from './utils/shareStorage';
 import { saveTripToHistory, loadTripHistory, TripHistoryEntry } from './utils/tripHistory';
 import TripHistory from './components/TripHistory';
 
 const STORAGE_KEY = 'trip_os_v1_state';
+
+// --- Theme (class-based dark mode) ------------------------------------------
+type Theme = 'light' | 'dark';
+const THEME_STORAGE_KEY = 'trip_os_theme';
+// MapView listens for this to hot-swap its tile layer when the theme flips.
+export const THEME_CHANGE_EVENT = 'tripos-theme-change';
+
+const getStoredTheme = (): Theme | null => {
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    return stored === 'light' || stored === 'dark' ? stored : null;
+  } catch {
+    return null; // storage unavailable
+  }
+};
+
+const getInitialTheme = (): Theme => {
+  if (typeof window === 'undefined') return 'light';
+  return getStoredTheme() ??
+    (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+};
+
+// Applied at import time — before first paint — so returning dark-mode users
+// never see a white flash while React boots.
+if (typeof document !== 'undefined') {
+  document.documentElement.classList.toggle('dark', getInitialTheme() === 'dark');
+}
+
+// Localized aria-label for the theme toggle (same inline-record pattern as
+// RETRY_LABELS below — one string per locale doesn't justify i18n.ts churn).
+const THEME_LABELS: Record<Language, string> = {
+  'en': 'Toggle dark mode',
+  'zh-TW': '切換深色模式',
+  'zh-CN': '切换深色模式',
+  'ja': 'ダークモードを切り替え',
+  'ko': '다크 모드 전환',
+  'es': 'Alternar modo oscuro',
+  'fr': 'Basculer le mode sombre',
+  'pt': 'Alternar modo escuro',
+  'ru': 'Переключить тёмную тему',
+  'ar': 'تبديل الوضع الداكن',
+  'hi': 'डार्क मोड टॉगल करें',
+};
 
 // Localized label for the generation-error Retry action. Kept inline so this pass
 // doesn't churn i18n.ts for a single string (same pattern as CONFIRM_CLEAR below).
@@ -95,6 +138,26 @@ const App: React.FC = () => {
   // Language Dropdown State
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
+
+  // Theme state — persisted choice wins over the OS preference. The <html>
+  // class is kept in sync in an effect; the import-time block above already
+  // set the correct initial class before first paint.
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+
+  const toggleTheme = () => {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, next);
+    } catch {
+      /* storage unavailable — toggle still works for this session */
+    }
+    window.dispatchEvent(new CustomEvent(THEME_CHANGE_EVENT, { detail: next }));
+  };
 
   // One-shot flag so localStorage restore runs on mount only
   const hasRestoredRef = useRef(false);
@@ -519,7 +582,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen text-slate-800 pb-20 flex flex-col font-sans relative">
+    <div className="min-h-screen text-slate-800 dark:text-slate-100 pb-20 flex flex-col font-sans relative">
       <div className="aurora-bg"></div>
 
       {/* Loading Overlay */}
@@ -532,21 +595,21 @@ const App: React.FC = () => {
         />
       )}
       
-      <header className="bg-white/70 backdrop-blur-md border-b border-white/20 sticky top-0 z-50 no-print flex-none supports-[backdrop-filter]:bg-white/60">
+      <header className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-b border-white/20 dark:border-slate-700/40 sticky top-0 z-50 no-print flex-none supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-slate-900/60">
         <div className="max-w-5xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.location.href = `/?lang=${language}`}>
             <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:shadow-blue-500/30 transition-all duration-300">
               <Compass className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="font-bold text-xl tracking-tight text-slate-900 leading-none flex items-center gap-2">
-                {t.title} <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 text-slate-500 font-mono">v1.0</span>
+              <h1 className="font-bold text-xl tracking-tight text-slate-900 dark:text-slate-100 leading-none flex items-center gap-2">
+                {t.title} <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-mono">v1.0</span>
               </h1>
-              <span className="text-xs text-slate-500 font-medium tracking-wide">{t.subtitle}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wide">{t.subtitle}</span>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2 md:gap-4 text-sm font-medium text-slate-500">
+
+          <div className="flex items-center gap-2 md:gap-4 text-sm font-medium text-slate-500 dark:text-slate-400">
             {/* Clear History - Desktop only */}
             {(lastInput || tripPlan) && (
                 <button onClick={handleClearHistory} className="hidden md:block hover:text-red-500 transition mr-2 text-xs font-mono opacity-60 hover:opacity-100">
@@ -554,11 +617,27 @@ const App: React.FC = () => {
                 </button>
             )}
 
+            {/* Theme toggle — sits beside the language dropdown */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={THEME_LABELS[language] || THEME_LABELS.en}
+              aria-pressed={theme === 'dark'}
+              title={THEME_LABELS[language] || THEME_LABELS.en}
+              className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-white/50 dark:hover:bg-slate-700/50 backdrop-blur-sm transition"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+            </button>
+
             {/* Language Dropdown - Works on both mobile and desktop */}
             <div className="relative" ref={langMenuRef}>
                <button
                 onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                className="flex items-center gap-1 md:gap-2 hover:text-blue-600 transition px-2 md:px-3 py-2 rounded-lg hover:bg-white/50 backdrop-blur-sm"
+                className="flex items-center gap-1 md:gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition px-2 md:px-3 py-2 rounded-lg hover:bg-white/50 dark:hover:bg-slate-700/50 backdrop-blur-sm"
                >
                  <Globe className="w-4 h-4" />
                  <span className="hidden md:inline">{LANGUAGE_NAMES[language]}</span>
@@ -566,12 +645,12 @@ const App: React.FC = () => {
                </button>
 
                {isLangMenuOpen && (
-                 <div className="absolute right-0 top-full mt-2 w-48 bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/20 py-2 z-50 animate-in fade-in zoom-in-95 duration-100 max-h-[80vh] overflow-y-auto">
+                 <div className="absolute right-0 top-full mt-2 w-48 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/20 dark:border-slate-700/40 py-2 z-50 animate-in fade-in zoom-in-95 duration-100 max-h-[80vh] overflow-y-auto">
                     {Object.entries(LANGUAGE_NAMES).map(([code, name]) => (
                       <button
                         key={code}
                         onClick={() => switchLanguage(code as Language)}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50/50 flex items-center justify-between transition-colors ${language === code ? 'text-blue-600 font-bold bg-blue-50/80' : 'text-slate-700'}`}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50/50 dark:hover:bg-blue-500/10 flex items-center justify-between transition-colors ${language === code ? 'text-blue-600 dark:text-blue-300 font-bold bg-blue-50/80 dark:bg-blue-500/10' : 'text-slate-700 dark:text-slate-300'}`}
                       >
                         {name}
                         {language === code && <Check className="w-3.5 h-3.5" />}
@@ -587,7 +666,7 @@ const App: React.FC = () => {
       <main className="max-w-5xl mx-auto px-4 md:px-8 pt-8 md:pt-12 flex-grow w-full relative z-10">
 
         {shareNotFound && !tripPlan && !isFetchingShare && (
-          <div className="mb-8 p-4 bg-amber-50/80 backdrop-blur border border-amber-200 rounded-xl text-amber-800 flex items-center gap-3 shadow-lg" role="status">
+          <div className="mb-8 p-4 bg-amber-50/80 dark:bg-amber-500/10 backdrop-blur border border-amber-200 dark:border-amber-500/20 rounded-xl text-amber-800 dark:text-amber-300 flex items-center gap-3 shadow-lg" role="status">
             <div className="w-6 h-6 flex items-center justify-center">🔗</div>
             <p className="text-sm font-medium">{t.shareNotFound || 'This shared itinerary link is invalid or has expired.'}</p>
           </div>
@@ -596,10 +675,10 @@ const App: React.FC = () => {
         {isFetchingShare && (
           <div className="flex flex-col items-center justify-center py-24 animate-in fade-in duration-300" role="status" aria-live="polite">
             <div className="relative w-14 h-14 mb-5">
-              <div className="absolute inset-0 rounded-full border-4 border-slate-200"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-700"></div>
               <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 animate-spin"></div>
             </div>
-            <p className="text-sm text-slate-500 font-medium">{t.loading.subtitle}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t.loading.subtitle}</p>
           </div>
         )}
 
@@ -608,10 +687,10 @@ const App: React.FC = () => {
             {/* Staggered entrance: short ease-out steps (150-300ms) beat the old
                 single 700ms sweep, and fill-mode-both keeps delayed rows hidden
                 until their turn. */}
-            <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-4 md:mb-5 tracking-tight animate-in fade-in slide-in-from-bottom-3 duration-300 ease-out">
+            <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 dark:text-slate-100 mb-4 md:mb-5 tracking-tight animate-in fade-in slide-in-from-bottom-3 duration-300 ease-out">
                {renderHeroTitle(t.hero.title)}
             </h2>
-            <p className="text-lg md:text-xl text-slate-600 leading-relaxed font-light mb-6 animate-in fade-in slide-in-from-bottom-3 duration-300 ease-out delay-100 fill-mode-both">
+            <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 leading-relaxed font-light mb-6 animate-in fade-in slide-in-from-bottom-3 duration-300 ease-out delay-100 fill-mode-both">
               {t.hero.desc}
             </p>
 
@@ -623,7 +702,7 @@ const App: React.FC = () => {
         )}
 
         {loadingState === LoadingState.ERROR && (
-          <div className="mb-8 p-4 bg-red-50/80 backdrop-blur border border-red-200 rounded-xl text-red-700 flex items-center gap-3 shadow-lg shadow-red-100/50 animate-in fade-in duration-200" role="alert">
+          <div className="mb-8 p-4 bg-red-50/80 dark:bg-red-500/10 backdrop-blur border border-red-200 dark:border-red-500/20 rounded-xl text-red-700 dark:text-red-300 flex items-center gap-3 shadow-lg shadow-red-100/50 dark:shadow-none animate-in fade-in duration-200" role="alert">
              <div className="w-8 h-8 shrink-0 flex items-center justify-center" aria-hidden="true">⚠️</div>
              <div className="flex-1 min-w-0">
                <p className="font-bold font-mono text-xs uppercase tracking-wider">{t.actions.errorTitle || 'Error'}</p>
@@ -645,11 +724,11 @@ const App: React.FC = () => {
         {loadingState === LoadingState.PRE_ANALYZING && (
           <div className="flex flex-col items-center justify-center py-20 animate-in fade-in duration-300">
             <div className="relative w-16 h-16 mb-6">
-              <div className="absolute inset-0 rounded-full border-4 border-slate-200"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-700"></div>
               <div className="absolute inset-0 rounded-full border-4 border-t-amber-500 animate-spin"></div>
             </div>
-            <p className="text-lg font-bold text-slate-800">{t.preAnalysis.analyzing}</p>
-            <p className="text-sm text-slate-500 mt-2">{t.preAnalysis.analyzingSubtitle}</p>
+            <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{t.preAnalysis.analyzing}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{t.preAnalysis.analyzingSubtitle}</p>
           </div>
         )}
 
@@ -683,8 +762,8 @@ const App: React.FC = () => {
           names are internal details, not end-user information — and the pulsing
           dot implied a live-status signal we don't actually provide. */}
       <footer className="py-8 text-center no-print relative z-10">
-         <p className="text-xs text-slate-400/80">
-           © Built with Love ❤️ by <a href="https://tenten.co/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-600 underline-offset-2 hover:underline transition-colors">Tenten AI</a> | The Leading AI-First Agency in Asia
+         <p className="text-xs text-slate-400/80 dark:text-slate-500/80">
+           © Built with Love ❤️ by <a href="https://tenten.co/" target="_blank" rel="noopener noreferrer" className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 underline-offset-2 hover:underline transition-colors">Tenten AI</a> | The Leading AI-First Agency in Asia
         </p>
       </footer>
 
